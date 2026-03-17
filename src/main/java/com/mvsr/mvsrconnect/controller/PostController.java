@@ -2,16 +2,12 @@ package com.mvsr.mvsrconnect.controller;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-import com.mvsr.mvsrconnect.model.Post;
-import com.mvsr.mvsrconnect.model.Report;
-import com.mvsr.mvsrconnect.model.Role;
-import com.mvsr.mvsrconnect.model.User;
-import com.mvsr.mvsrconnect.repository.PostRepository;
-import com.mvsr.mvsrconnect.repository.ReportRepository;
-import com.mvsr.mvsrconnect.repository.UserRepository;
+import com.mvsr.mvsrconnect.model.*;
+import com.mvsr.mvsrconnect.repository.*;
 import com.mvsr.mvsrconnect.service.ClubService;
 import com.mvsr.mvsrconnect.service.ModerationService;
 import com.mvsr.mvsrconnect.service.ReportService;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -25,8 +21,10 @@ import java.util.List;
 public class PostController {
 
     private final PostRepository postRepository;
-    private final ReportRepository reportRepository;
     private final UserRepository userRepository;
+    private final ClubRepository clubRepository;
+    private final TagRepository tagRepository;
+    private final ReportRepository reportRepository;
     private final Cloudinary cloudinary;
     private final ModerationService moderationService;
     private final ClubService clubService;
@@ -34,6 +32,8 @@ public class PostController {
 
     public PostController(PostRepository postRepository,
                           UserRepository userRepository,
+                          ClubRepository clubRepository,
+                          TagRepository tagRepository,
                           Cloudinary cloudinary,
                           ModerationService moderationService,
                           ClubService clubService,
@@ -42,20 +42,20 @@ public class PostController {
 
         this.postRepository = postRepository;
         this.userRepository = userRepository;
+        this.clubRepository = clubRepository;
+        this.tagRepository = tagRepository;
         this.cloudinary = cloudinary;
         this.moderationService = moderationService;
         this.clubService = clubService;
         this.reportService = reportService;
         this.reportRepository = reportRepository;
     }
+
+    // ---------------- DELETE MEDIA ----------------
     private void deleteMediaIfExists(Post post){
-
         try{
-
             if(post.getMediaPublicId() != null){
-
                 String resourceType = "image";
-
                 if("video".equals(post.getMediaType())){
                     resourceType = "video";
                 }
@@ -65,66 +65,73 @@ public class PostController {
                         ObjectUtils.asMap("resource_type", resourceType)
                 );
             }
-
         }catch(Exception e){
             e.printStackTrace();
         }
     }
 
-    public void resolveReportsByPost(Long postId){
-
-        List<Report> reports = reportRepository.findByPostId(postId);
-
-        for(Report r : reports){
-            r.setStatus("RESOLVED");
-        }
-
-        reportRepository.saveAll(reports);
-    }
+    // ---------------- CREATE POST ----------------
     @PostMapping
     public ResponseEntity<?> createPost(@RequestBody Post post,
                                         @AuthenticationPrincipal OAuth2User principal) {
 
+        if (principal == null) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+
         String email = principal.getAttribute("email");
         User user = userRepository.findByEmail(email).orElseThrow();
 
-        // moderation
-        if(
+        // 🔒 TEXT MODERATION
+        if (
                 (post.getTitle() != null && moderationService.isTextToxic(post.getTitle(), "")) ||
-                        (post.getContent() != null && moderationService.isTextToxic(post.getContent(),""))
-        ){
-            return ResponseEntity
-                    .badRequest()
-                    .body("Toxic language detected. Please keep discussions respectful.");
+                        (post.getContent() != null && moderationService.isTextToxic(post.getContent(), ""))
+        ) {
+            return ResponseEntity.badRequest()
+                    .body("Toxic language detected.");
         }
 
+        // 🔒 IMAGE MODERATION
         if(post.getMediaUrl() != null && "image".equals(post.getMediaType())){
             if(moderationService.isImageUnsafe(post.getMediaUrl())){
                 deleteMediaIfExists(post);
-                return ResponseEntity.badRequest().body("Unsafe image detected.");
+                return ResponseEntity.badRequest().body("Unsafe image.");
             }
         }
 
+        // 🔒 VIDEO MODERATION
         if(post.getMediaUrl() != null && "video".equals(post.getMediaType())){
             if(moderationService.isVideoUnsafe(post.getMediaUrl())){
                 deleteMediaIfExists(post);
-                return ResponseEntity.badRequest().body("Unsafe video detected.");
+                return ResponseEntity.badRequest().body("Unsafe video.");
             }
         }
 
-        // club membership check
+        // 🔒 CLUB VALIDATION
+        Club club = null;
         if(post.getClub() != null){
-
             Long clubId = post.getClub().getId();
+
+            club = clubRepository.findById(clubId)
+                    .orElseThrow(() -> new RuntimeException("Club not found"));
 
             if(!clubService.isMember(user.getId(), clubId)){
                 return ResponseEntity.badRequest()
-                        .body("You must join the club before posting.");
+                        .body("Join the club before posting.");
             }
         }
 
-        Post newPost = new Post();
+        // 🔒 TAG VALIDATION
+        List<Tag> tags = null;
+        if(post.getTags() != null && !post.getTags().isEmpty()){
+            tags = post.getTags().stream()
+                    .map(t -> tagRepository.findById(t.getId())
+                            .orElseThrow(() -> new RuntimeException("Tag not found")))
+                    .toList();
+        }
 
+        // ✅ CREATE CLEAN ENTITY
+        Post newPost = new Post();
         newPost.setTitle(post.getTitle());
         newPost.setContent(post.getContent());
         newPost.setMediaUrl(post.getMediaUrl());
@@ -133,15 +140,13 @@ public class PostController {
         newPost.setAuthorId(user.getId());
         newPost.setAuthorName(user.getName());
         newPost.setCreatedAt(LocalDateTime.now());
+        newPost.setClub(club);
+        newPost.setTags(tags);
 
-        if(post.getClub() != null){
-            newPost.setClub(post.getClub());
-        }
-        if(post.getTags() != null){
-            newPost.setTags(post.getTags());
-        }
         return ResponseEntity.ok(postRepository.save(newPost));
     }
+
+    // ---------------- GET POSTS ----------------
     @GetMapping
     public List<Post> getAllPosts(){
         return postRepository.findAllByOrderByCreatedAtDesc();
@@ -149,15 +154,9 @@ public class PostController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getPost(@PathVariable Long id){
-
         return postRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
-    }
-
-    @GetMapping("/new")
-    public List<Post> newestPosts(){
-        return postRepository.findAllByOrderByCreatedAtDesc();
     }
 
     @GetMapping("/hot")
@@ -170,12 +169,12 @@ public class PostController {
         return postRepository.findTopPosts();
     }
 
+    // ---------------- DELETE POST ----------------
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletePost(@PathVariable Long id,
                                         @AuthenticationPrincipal OAuth2User principal){
 
         String email = principal.getAttribute("email");
-
         User user = userRepository.findByEmail(email).orElseThrow();
 
         Post post = postRepository.findById(id).orElseThrow();
@@ -189,37 +188,10 @@ public class PostController {
         }
 
         if(!isAuthor && !isAdmin && !isClubModerator){
-            System.out.println("User ID: " + user.getId());
-            System.out.println("User Role: " + user.getRole());
-            System.out.println("Post Author ID: " + post.getAuthorId());
-            System.out.println("Post Club: " + post.getClub());
-            System.out.println("isAuthor: " + isAuthor);
-            System.out.println("isAdmin: " + isAdmin);
-            System.out.println("isClubModerator: " + isClubModerator);
             return ResponseEntity.status(403).body("Not authorized");
         }
-        try{
 
-            if(post.getMediaPublicId()!=null){
-
-                String resourceType = "image";
-
-                if("video".equals(post.getMediaType())){
-                    resourceType = "video";
-                }
-
-                cloudinary.uploader().destroy(
-                        post.getMediaPublicId(),
-                        ObjectUtils.asMap(
-                                "resource_type", resourceType,
-                                "invalidate", true
-                        )
-                );
-            }
-
-        }catch(Exception e){
-            System.out.println("Cloudinary delete failed: " + e.getMessage());
-        }
+        deleteMediaIfExists(post);
         reportService.resolveReportsByPost(id);
         postRepository.deleteById(id);
 
