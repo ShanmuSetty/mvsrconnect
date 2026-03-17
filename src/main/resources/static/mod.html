@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mod · MVSR Connect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+          --bg:       #f5f4f0;
+          --bg2:      #eeecea;
+          --surface:  #ffffff;
+          --border:   #e0deda;
+          --border2:  #c8c4be;
+          --ink:      #1a1916;
+          --ink2:     #6b6760;
+          --ink3:     #a09c97;
+          --red:      #c0392b;
+          --green:    #2d6a4f;
+          --radius:   10px;
+          --sans:     'Geist', sans-serif;
+          --serif:    'Instrument Serif', serif;
+          --topbar-bg: rgba(245,244,240,0.88);
+        }
+
+        [data-theme="dark"] {
+          --bg:       #111110;
+          --bg2:      #1a1917;
+          --surface:  #1f1e1c;
+          --border:   #2a2825;
+          --border2:  #3d3a35;
+          --ink:      #e8e6e1;
+          --ink2:     #9a9690;
+          --ink3:     #605c57;
+          --red:      #e05c4b;
+          --green:    #4ade80;
+          --topbar-bg: rgba(17,17,16,0.88);
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+          background: var(--bg); color: var(--ink);
+          font-family: var(--sans); font-size: 15px; line-height: 1.6;
+          min-height: 100vh; -webkit-font-smoothing: antialiased;
+          transition: background 0.2s, color 0.2s;
+        }
+
+        body::before {
+          content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+          opacity: 0.035;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+          background-size: 180px 180px;
+        }
+
+        /* ── TOPBAR ── */
+        .topbar {
+          position: sticky; top: 0; z-index: 200; height: 56px;
+          background: var(--topbar-bg); backdrop-filter: blur(16px);
+          border-bottom: 1px solid var(--border);
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 0 32px;
+        }
+
+        .logo {
+          font-family: var(--serif); font-size: 1.2rem;
+          letter-spacing: -0.2px; color: var(--ink);
+          display: flex; align-items: center; gap: 7px;
+          text-decoration: none;
+        }
+
+        .logo-dot { width: 8px; height: 8px; background: var(--ink); border-radius: 50%; display: inline-block; }
+        .topbar-right { display: flex; align-items: center; gap: 8px; }
+
+        /* ── BUTTONS ── */
+        .btn {
+          font-family: var(--sans); font-size: 0.8rem; font-weight: 500;
+          padding: 7px 18px; border-radius: 99px; cursor: pointer;
+          border: none; transition: all 0.15s ease; white-space: nowrap;
+        }
+        .btn-dark { background: #1a1916; color: #fff; }
+        .btn-dark:hover { background: #333; }
+        [data-theme="dark"] .btn-dark { background: #e8e6e1; color: #1a1916; }
+        [data-theme="dark"] .btn-dark:hover { background: #fff; }
+
+        .btn-ghost { background: transparent; color: var(--ink2); border: 1px solid var(--border2); }
+        .btn-ghost:hover { background: var(--bg2); color: var(--ink); }
+
+        .btn-sm { padding: 5px 13px; font-size: 0.75rem; }
+
+        .btn-approve {
+          background: transparent; color: var(--green); border: 1px solid var(--green);
+          font-family: var(--sans); font-size: 0.75rem; font-weight: 500;
+          padding: 5px 13px; border-radius: 99px; cursor: pointer; transition: all 0.15s;
+        }
+        .btn-approve:hover { background: var(--green); color: #fff; }
+        [data-theme="dark"] .btn-approve:hover { color: #111; }
+
+        .btn-reject, .btn-delete {
+          background: transparent; color: var(--red); border: 1px solid var(--red);
+          font-family: var(--sans); font-size: 0.75rem; font-weight: 500;
+          padding: 5px 13px; border-radius: 99px; cursor: pointer; transition: all 0.15s;
+        }
+        .btn-reject:hover, .btn-delete:hover { background: var(--red); color: #fff; }
+
+        .btn-warn {
+          background: transparent; color: #b45309; border: 1px solid #b45309;
+          font-family: var(--sans); font-size: 0.75rem; font-weight: 500;
+          padding: 5px 13px; border-radius: 99px; cursor: pointer; transition: all 0.15s;
+        }
+        .btn-warn:hover { background: #b45309; color: #fff; }
+        [data-theme="dark"] .btn-warn { color: #fbbf24; border-color: #fbbf24; }
+        [data-theme="dark"] .btn-warn:hover { background: #fbbf24; color: #111; }
+
+        /* ── THEME TOGGLE ── */
+        .theme-toggle {
+          width: 34px; height: 34px; border-radius: 99px;
+          background: transparent; border: 1px solid var(--border2);
+          color: var(--ink2); cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 0.95rem; transition: all 0.15s;
+        }
+        .theme-toggle:hover { background: var(--bg2); color: var(--ink); }
+
+        /* ── LAYOUT ── */
+        .page { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; position: relative; z-index: 1; }
+
+        .page-header { margin-bottom: 32px; }
+        .page-eyebrow { font-size: 0.7rem; font-weight: 600; letter-spacing: 1.3px; text-transform: uppercase; color: var(--ink3); margin-bottom: 8px; }
+        .page-title { font-family: var(--serif); font-size: 2rem; letter-spacing: -0.5px; }
+
+        /* ── CLUB SELECTOR ── */
+        .club-tabs {
+          display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 32px;
+        }
+
+        .club-tab {
+          font-family: var(--sans); font-size: 0.82rem; font-weight: 500;
+          padding: 7px 16px; border-radius: 99px; cursor: pointer;
+          border: 1px solid var(--border2); color: var(--ink2);
+          background: transparent; transition: all 0.15s;
+        }
+        .club-tab:hover { background: var(--bg2); color: var(--ink); }
+        .club-tab.active { background: #1a1916; color: #fff; border-color: #1a1916; }
+        [data-theme="dark"] .club-tab.active { background: #e8e6e1; color: #1a1916; border-color: #e8e6e1; }
+
+        /* ── GRID ── */
+        .dashboard-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+        }
+
+        @media (max-width: 700px) { .dashboard-grid { grid-template-columns: 1fr; } }
+
+        .grid-full { grid-column: 1 / -1; }
+
+        /* ── SECTION ── */
+        .section { margin-bottom: 0; }
+
+        .section-header {
+          display: flex; align-items: baseline; gap: 10px;
+          margin-bottom: 12px; padding-bottom: 10px;
+          border-bottom: 1px solid var(--border);
+        }
+
+        .section-title { font-family: var(--serif); font-size: 1.1rem; letter-spacing: -0.2px; }
+
+        .section-count {
+          font-size: 0.7rem; font-weight: 500; color: var(--ink3);
+          background: var(--bg2); border: 1px solid var(--border);
+          border-radius: 99px; padding: 1px 8px; font-family: var(--sans);
+        }
+
+        /* ── CARD ── */
+        .card {
+          background: var(--surface); border: 1px solid var(--border);
+          border-radius: var(--radius); padding: 14px 16px; margin-bottom: 8px;
+          transition: border-color 0.15s; animation: fadeUp 0.25s ease both;
+        }
+        .card:hover { border-color: var(--border2); }
+
+        .card-meta {
+          font-size: 0.7rem; color: var(--ink3); margin-bottom: 4px;
+          display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+        }
+        .meta-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--ink3); display: inline-block; }
+        .card-label { font-size: 0.875rem; color: var(--ink2); line-height: 1.5; }
+        .card-label strong { color: var(--ink); font-weight: 600; }
+
+        .card-content {
+          font-size: 0.82rem; color: var(--ink2);
+          background: var(--bg2); border: 1px solid var(--border);
+          border-radius: 6px; padding: 7px 11px; margin: 8px 0;
+          line-height: 1.5;
+        }
+
+        .card-actions { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+
+        /* role badge */
+        .role-badge {
+          font-size: 0.62rem; font-weight: 600; letter-spacing: 0.6px;
+          text-transform: uppercase; padding: 2px 7px; border-radius: 99px;
+          border: 1px solid var(--border2); color: var(--ink3);
+        }
+        .role-badge.mod { color: #b45309; border-color: #b45309; background: rgba(180,83,9,0.07); }
+        [data-theme="dark"] .role-badge.mod { color: #fbbf24; border-color: #fbbf24; background: rgba(251,191,36,0.08); }
+        .role-badge.president { color: #1d4ed8; border-color: #1d4ed8; background: rgba(29,78,216,0.07); }
+        [data-theme="dark"] .role-badge.president { color: #93c5fd; border-color: #93c5fd; background: rgba(147,197,253,0.08); }
+
+        /* ── EMPTY / LOADING ── */
+        .empty { text-align: center; padding: 30px 20px; color: var(--ink3); font-size: 0.82rem; }
+        .empty-icon { font-size: 1.3rem; margin-bottom: 6px; }
+        .loading { text-align: center; padding: 24px; color: var(--ink3); font-size: 0.82rem; }
+        .spinner {
+          display: inline-block; width: 15px; height: 15px;
+          border: 1.5px solid var(--border2); border-top-color: var(--ink);
+          border-radius: 50%; animation: spin 0.6s linear infinite;
+          margin-right: 7px; vertical-align: middle;
+        }
+
+        /* ── NO CLUBS STATE ── */
+        .no-clubs {
+          text-align: center; padding: 80px 24px; color: var(--ink3);
+        }
+        .no-clubs-title { font-family: var(--serif); font-size: 1.4rem; color: var(--ink2); margin-bottom: 10px; }
+        .no-clubs-sub { font-size: 0.875rem; max-width: 360px; margin: 0 auto 24px; line-height: 1.7; }
+
+        /* ── APPEAL FORM ── */
+        .appeal-form {
+          background: var(--surface); border: 1px solid var(--border);
+          border-radius: var(--radius); padding: 20px; margin-top: 16px;
+        }
+        .appeal-form-title { font-size: 0.72rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--ink3); margin-bottom: 12px; }
+
+        .field { margin-bottom: 10px; }
+        .field select, .field textarea {
+          width: 100%; background: var(--bg); border: 1px solid var(--border);
+          border-radius: 7px; color: var(--ink); padding: 9px 13px;
+          font-family: var(--sans); font-size: 0.875rem;
+          outline: none; transition: border-color 0.15s; resize: none;
+          appearance: none;
+        }
+        .field textarea { min-height: 80px; line-height: 1.6; }
+        .field select:focus, .field textarea:focus { border-color: var(--ink); background: var(--surface); }
+        .field textarea::placeholder { color: var(--ink3); }
+
+        /* ── TOAST ── */
+        .toast {
+          position: fixed; bottom: 24px; right: 24px;
+          background: #1a1916; color: #fff;
+          border-radius: 99px; padding: 10px 18px;
+          font-size: 0.82rem; font-weight: 500; z-index: 999;
+          animation: slideUp 0.22s ease; max-width: 280px;
+        }
+        .toast.error { background: var(--red); }
+        [data-theme="dark"] .toast { background: #e8e6e1; color: #1a1916; }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+        @media (max-width: 600px) {
+          .topbar { padding: 0 16px; }
+          .page { padding: 24px 16px 60px; }
+          .page-title { font-size: 1.6rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<nav class="topbar">
+    <a class="logo" href="/"><span class="logo-dot"></span> MVSR Connect</a>
+    <div class="topbar-right">
+        <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">☀</button>
+        <a href="/" class="btn btn-ghost btn-sm">← Back</a>
+    </div>
+</nav>
+
+<!-- PAGE -->
+<div class="page" id="page">
+    <div class="loading"><span class="spinner"></span>Loading…</div>
+</div>
+
+<script>
+    /* ── THEME ── */
+    (function() {
+      const saved = localStorage.getItem('mvsr-theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
+    })();
+
+    function toggleTheme() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const next = isDark ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('mvsr-theme', next);
+      updateToggleIcon();
+    }
+
+    function updateToggleIcon() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const btn = document.getElementById('theme-toggle');
+      if (btn) { btn.textContent = isDark ? '☽' : '☀'; }
+    }
+
+    /* ── STATE ── */
+    let myClubs = [];
+    let selectedClubId = null;
+    let clubData = null;
+
+    /* ── INIT ── */
+    window.addEventListener('load', async () => {
+      updateToggleIcon();
+      try {
+        const res = await fetch('/mod/my-clubs');
+        if (!res.ok) { showNoAccess(); return; }
+        myClubs = await res.json();
+        if (!myClubs.length) { showAppealPage(); return; }
+        selectedClubId = myClubs[0].id;
+        renderPage();
+        loadClubDashboard(selectedClubId);
+      } catch { showNoAccess(); }
+    });
+
+    /* ── NO ACCESS ── */
+    function showNoAccess() {
+      document.getElementById('page').innerHTML = `
+        <div class="no-clubs">
+          <div class="no-clubs-title">No moderator access</div>
+          <p class="no-clubs-sub">You are not a moderator of any club yet. You can request to become a moderator below.</p>
+          ${renderAppealForm()}
+        </div>`;
+      loadAllClubsForAppeal();
+    }
+
+    /* ── APPEAL PAGE (user is not a mod of any club) ── */
+    function showAppealPage() {
+      document.getElementById('page').innerHTML = `
+        <div class="page-header">
+          <div class="page-eyebrow">Moderator Access</div>
+          <h1 class="page-title">Apply to Moderate</h1>
+        </div>
+        <p style="color:var(--ink2);font-size:0.9rem;max-width:480px;margin-bottom:24px;line-height:1.7">
+          You are not currently a moderator of any club. Submit an appeal to the admin explaining why you'd like to moderate a club.
+        </p>
+        ${renderAppealForm()}`;
+      loadAllClubsForAppeal();
+    }
+
+    function renderAppealForm() {
+      return `
+        <div class="appeal-form">
+          <div class="appeal-form-title">Appeal for Moderator Role</div>
+          <div class="field">
+            <select id="appeal-club">
+              <option value="">Select a club…</option>
+            </select>
+          </div>
+          <div class="field">
+            <textarea id="appeal-reason" placeholder="Why do you want to be a moderator for this club?"></textarea>
+          </div>
+          <button class="btn btn-dark" onclick="submitAppeal()">Submit Appeal →</button>
+        </div>`;
+    }
+
+    /* ── RENDER MAIN PAGE ── */
+    function renderPage() {
+      document.getElementById('page').innerHTML = `
+        <div class="page-header">
+          <div class="page-eyebrow">Moderator Panel</div>
+          <h1 class="page-title">Club Dashboard</h1>
+        </div>
+
+        <div class="club-tabs" id="club-tabs">
+          ${myClubs.map(c => `
+            <button class="club-tab ${c.id === selectedClubId ? 'active' : ''}"
+                    onclick="switchClub(${c.id}, this)">
+              ${escHtml(c.name)}
+            </button>`).join('')}
+        </div>
+
+        <div id="dashboard-content">
+          <div class="loading"><span class="spinner"></span>Loading club data…</div>
+        </div>
+
+        <!-- Apply for another club -->
+        <div style="margin-top:48px;padding-top:32px;border-top:1px solid var(--border)">
+          <div style="font-size:0.7rem;font-weight:600;letter-spacing:1.3px;text-transform:uppercase;color:var(--ink3);margin-bottom:8px">Expand Access</div>
+          <div style="font-family:var(--serif);font-size:1.15rem;letter-spacing:-0.2px;margin-bottom:16px">Apply to moderate another club</div>
+          ${renderAppealForm()}
+        </div>`;
+
+      loadAllClubsForAppeal();
+    }
+
+    function switchClub(clubId, el) {
+      selectedClubId = clubId;
+      document.querySelectorAll('.club-tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      loadClubDashboard(clubId);
+    }
+
+    /* ── LOAD CLUB DASHBOARD ── */
+    async function loadClubDashboard(clubId) {
+      const content = document.getElementById('dashboard-content');
+      if (!content) return;
+      content.innerHTML = `<div class="loading"><span class="spinner"></span>Loading…</div>`;
+      try {
+        const res = await fetch(`/mod/club/${clubId}`);
+        if (!res.ok) throw new Error();
+        clubData = await res.json();
+        renderDashboard(clubData, clubId);
+      } catch {
+        content.innerHTML = `<div class="empty">Could not load club data</div>`;
+      }
+    }
+
+    function renderDashboard(data, clubId) {
+      const { members, posts, pendingRequests } = data;
+      const content = document.getElementById('dashboard-content');
+      content.innerHTML = `
+        <div class="dashboard-grid">
+
+          <!-- JOIN REQUESTS -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title">Join Requests</span>
+              <span class="section-count" id="req-count">${pendingRequests.length}</span>
+            </div>
+            <div id="requests-list">
+              ${pendingRequests.length ? pendingRequests.map(r => renderRequestCard(r, clubId)).join('') :
+                `<div class="empty"><div class="empty-icon">○</div>No pending requests</div>`}
+            </div>
+          </div>
+
+          <!-- MEMBERS -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title">Members</span>
+              <span class="section-count">${members.length}</span>
+            </div>
+            <div id="members-list">
+              ${members.length ? members.map(m => renderMemberCard(m, clubId)).join('') :
+                `<div class="empty"><div class="empty-icon">○</div>No members yet</div>`}
+            </div>
+          </div>
+
+          <!-- POSTS -->
+          <div class="section grid-full">
+            <div class="section-header">
+              <span class="section-title">Club Posts</span>
+              <span class="section-count">${posts.length}</span>
+            </div>
+            <div id="posts-list">
+              ${posts.length ? posts.map(p => renderPostCard(p, clubId)).join('') :
+                `<div class="empty"><div class="empty-icon">○</div>No posts in this club</div>`}
+            </div>
+          </div>
+
+        </div>`;
+    }
+
+    /* ── RENDER CARDS ── */
+    function renderRequestCard(r, clubId) {
+      return `
+        <div class="card" id="req-${r.id}">
+          <div class="card-label"><strong>${escHtml(r.user?.name || 'Unknown')}</strong> wants to join</div>
+          ${r.message ? `<div class="card-content">${escHtml(r.message)}</div>` : ''}
+          <div class="card-meta">${formatTime(r.createdAt)}</div>
+          <div class="card-actions">
+            <button class="btn-approve" onclick="approveRequest(${r.id}, ${clubId})">Approve</button>
+            <button class="btn-reject" onclick="rejectRequest(${r.id}, ${clubId})">Reject</button>
+          </div>
+        </div>`;
+    }
+
+    function renderMemberCard(m, clubId) {
+      const roleClass = m.role === 'PRESIDENT' ? 'president' : m.role === 'MODERATOR' ? 'mod' : '';
+      return `
+        <div class="card" id="member-${m.id}">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+            <div class="card-label"><strong>${escHtml(m.user?.name || 'Unknown')}</strong></div>
+            <span class="role-badge ${roleClass}">${m.role}</span>
+          </div>
+          <div class="card-meta">${escHtml(m.user?.email || '')}</div>
+          ${m.role === 'MEMBER' ? `
+          <div class="card-actions">
+            <button class="btn-delete" onclick="removeMember(${m.id}, ${clubId})">Remove</button>
+          </div>` : ''}
+        </div>`;
+    }
+
+    function renderPostCard(p, clubId) {
+      const preview = (p.content || '').slice(0, 120);
+      return `
+        <div class="card" id="post-${p.id}">
+          <div class="card-label"><strong>${escHtml(p.title || 'Untitled')}</strong></div>
+          ${preview ? `<div class="card-content">${escHtml(preview)}${p.content?.length > 120 ? '…' : ''}</div>` : ''}
+          <div class="card-meta">
+            <span>${escHtml(p.authorName || 'anonymous')}</span>
+            <span class="meta-dot"></span>
+            <span>${formatTime(p.createdAt)}</span>
+          </div>
+          <div class="card-actions">
+            <button class="btn-delete" onclick="deletePost(${p.id}, ${clubId})">Delete post</button>
+          </div>
+        </div>`;
+    }
+
+    /* ── ACTIONS ── */
+    async function approveRequest(requestId, clubId) {
+      const res = await fetch(`/mod/club/${clubId}/requests/${requestId}/approve`, { method: 'POST' });
+      showToast(res.ok ? 'Request approved' : 'Failed', res.ok ? 'success' : 'error');
+      if (res.ok) loadClubDashboard(clubId);
+    }
+
+    async function rejectRequest(requestId, clubId) {
+      const res = await fetch(`/mod/club/${clubId}/requests/${requestId}/reject`, { method: 'POST' });
+      showToast(res.ok ? 'Request rejected' : 'Failed', res.ok ? 'success' : 'error');
+      if (res.ok) loadClubDashboard(clubId);
+    }
+
+    async function removeMember(memberId, clubId) {
+      if (!confirm('Remove this member from the club?')) return;
+      const res = await fetch(`/mod/club/${clubId}/members/${memberId}`, { method: 'DELETE' });
+      showToast(res.ok ? 'Member removed' : 'Failed', res.ok ? 'success' : 'error');
+      if (res.ok) loadClubDashboard(clubId);
+    }
+
+    async function deletePost(postId, clubId) {
+      if (!confirm('Delete this post?')) return;
+      const res = await fetch(`/mod/club/${clubId}/posts/${postId}`, { method: 'DELETE' });
+      showToast(res.ok ? 'Post deleted' : 'Failed', res.ok ? 'success' : 'error');
+      if (res.ok) loadClubDashboard(clubId);
+    }
+
+    /* ── APPEAL ── */
+    async function loadAllClubsForAppeal() {
+      const select = document.getElementById('appeal-club');
+      if (!select) return;
+      try {
+        const res = await fetch('/clubs');
+        if (!res.ok) return;
+        const clubs = await res.json();
+        const myClubIds = new Set(myClubs.map(c => c.id));
+        const eligible = clubs.filter(c => !myClubIds.has(c.id));
+        select.innerHTML = `<option value="">Select a club…</option>`;
+        if (!eligible.length) {
+          select.innerHTML = `<option value="" disabled>You moderate all clubs</option>`;
+          return;
+        }
+        eligible.forEach(c => { select.innerHTML += `<option value="${c.id}">${escHtml(c.name)}</option>`; });
+      } catch {}
+    }
+
+    async function submitAppeal() {
+      const clubId = document.getElementById('appeal-club')?.value;
+      const reason = document.getElementById('appeal-reason')?.value?.trim();
+      if (!clubId) { showToast('Select a club', 'error'); return; }
+      if (!reason) { showToast('Add a reason', 'error'); return; }
+      const res = await fetch('/mod/appeal', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clubId, reason })
+      });
+      if (res.ok) {
+        showToast('Appeal submitted! Admin will review it.');
+        document.getElementById('appeal-reason').value = '';
+        document.getElementById('appeal-club').value = '';
+      } else {
+        const msg = await res.text().catch(() => '');
+        showToast(msg || 'Failed to submit appeal', 'error');
+      }
+    }
+
+    /* ── UTILS ── */
+    function escHtml(str) {
+      return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function formatTime(dateStr) {
+      if (!dateStr) return '';
+      try {
+        const diff = Math.floor((new Date() - new Date(dateStr)) / 1000);
+        if (diff < 60) return 'just now';
+        if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+        if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+        return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      } catch { return ''; }
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.createElement('div');
+      t.className = `toast ${type}`; t.textContent = msg;
+      document.body.appendChild(t); setTimeout(() => t.remove(), 2800);
+    }
+</script>
+</body>
+</html>

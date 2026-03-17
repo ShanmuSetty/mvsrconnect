@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search · MVSR Connect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+          --bg: #f5f4f0; --bg2: #eeecea; --surface: #ffffff;
+          --border: #e0deda; --border2: #c8c4be;
+          --ink: #1a1916; --ink2: #6b6760; --ink3: #a09c97;
+          --red: #c0392b; --green: #2d6a4f; --radius: 10px;
+          --sans: 'Geist', sans-serif; --serif: 'Instrument Serif', serif;
+          --topbar-bg: rgba(245,244,240,0.88);
+        }
+        [data-theme="dark"] {
+          --bg: #111110; --bg2: #1a1917; --surface: #1f1e1c;
+          --border: #2a2825; --border2: #3d3a35;
+          --ink: #e8e6e1; --ink2: #9a9690; --ink3: #605c57;
+          --red: #e05c4b; --green: #4ade80;
+          --topbar-bg: rgba(17,17,16,0.88);
+        }
+        html { scroll-behavior: smooth; }
+        body {
+          background: var(--bg); color: var(--ink);
+          font-family: var(--sans); font-size: 15px;
+          line-height: 1.6; min-height: 100vh;
+          -webkit-font-smoothing: antialiased;
+        }
+        body::before {
+          content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+          opacity: 0.035;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+          background-size: 180px 180px;
+        }
+
+        /* TOPBAR */
+        .topbar {
+          position: sticky; top: 0; z-index: 200; height: 56px;
+          background: var(--topbar-bg); backdrop-filter: blur(16px);
+          border-bottom: 1px solid var(--border);
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 0 32px; gap: 16px;
+        }
+        .logo {
+          font-family: var(--serif); font-size: 1.2rem;
+          letter-spacing: -0.2px; color: var(--ink);
+          display: flex; align-items: center; gap: 7px;
+          text-decoration: none; flex-shrink: 0;
+        }
+        .logo-dot { width: 8px; height: 8px; background: var(--ink); border-radius: 50%; display: inline-block; }
+
+        /* TOPBAR SEARCH */
+        .topbar-search {
+          flex: 1; max-width: 480px;
+          position: relative; display: flex; align-items: center;
+        }
+        .topbar-search input {
+          width: 100%; background: var(--bg2);
+          border: 1px solid var(--border); border-radius: 99px;
+          color: var(--ink); padding: 7px 16px 7px 36px;
+          font-family: var(--sans); font-size: 0.85rem; outline: none;
+          transition: all 0.15s ease;
+        }
+        .topbar-search input:focus { background: var(--surface); border-color: var(--ink); }
+        .topbar-search input::placeholder { color: var(--ink3); }
+        .topbar-search .search-icon {
+          position: absolute; left: 12px; color: var(--ink3);
+          font-size: 0.85rem; pointer-events: none;
+        }
+        .topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+        .btn { font-family: var(--sans); font-size: 0.8rem; font-weight: 500; padding: 7px 18px; border-radius: 99px; cursor: pointer; border: none; transition: all 0.15s ease; white-space: nowrap; }
+        .btn-ghost { background: transparent; color: var(--ink2); border: 1px solid var(--border2); }
+        .btn-ghost:hover { background: var(--bg2); color: var(--ink); }
+        .btn-sm { padding: 5px 13px; font-size: 0.75rem; }
+        .theme-toggle { width: 34px; height: 34px; border-radius: 99px; background: transparent; border: 1px solid var(--border2); color: var(--ink2); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; transition: all 0.15s ease; }
+        .theme-toggle:hover { background: var(--bg2); color: var(--ink); }
+
+        /* PAGE */
+        .page { max-width: 860px; margin: 0 auto; padding: 36px 24px 80px; position: relative; z-index: 1; }
+
+        /* SEARCH HERO */
+        .search-hero { margin-bottom: 32px; }
+        .search-hero-query {
+          font-family: var(--serif); font-size: 1.8rem;
+          letter-spacing: -0.5px; margin-bottom: 6px;
+        }
+        .search-hero-query em { font-style: italic; color: var(--ink2); }
+        .search-meta { font-size: 0.78rem; color: var(--ink3); }
+
+        /* TAG PILLS */
+        .tag-filter-bar {
+          display: flex; gap: 6px; flex-wrap: wrap;
+          margin-bottom: 28px; padding-bottom: 20px;
+          border-bottom: 1px solid var(--border);
+        }
+        .tag-pill {
+          display: inline-flex; align-items: center; gap: 5px;
+          font-size: 0.75rem; font-weight: 500;
+          padding: 5px 13px; border-radius: 99px;
+          border: 1px solid var(--border2); background: transparent;
+          color: var(--ink2); cursor: pointer; font-family: var(--sans);
+          transition: all 0.12s ease;
+        }
+        .tag-pill:hover { border-color: var(--ink); color: var(--ink); background: var(--bg2); }
+        .tag-pill.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+        [data-theme="dark"] .tag-pill.active { background: #e8e6e1; color: #1a1916; border-color: #e8e6e1; }
+        .tag-pill-count { font-size: 0.65rem; opacity: 0.7; }
+
+        /* SECTION */
+        .section { margin-bottom: 36px; animation: fadeUp 0.3s ease both; }
+        .section-header {
+          display: flex; align-items: center; justify-content: space-between;
+          margin-bottom: 14px;
+        }
+        .section-title {
+          font-size: 0.67rem; font-weight: 600; letter-spacing: 1.3px;
+          text-transform: uppercase; color: var(--ink3);
+          display: flex; align-items: center; gap: 8px;
+        }
+        .section-count {
+          font-family: var(--sans); font-size: 0.67rem; font-weight: 500;
+          color: var(--ink3); background: var(--bg2); border: 1px solid var(--border);
+          border-radius: 99px; padding: 1px 8px;
+        }
+
+        /* RESULT CARDS */
+        .result-card {
+          background: var(--surface); border: 1px solid var(--border);
+          border-radius: var(--radius); padding: 16px 20px; margin-bottom: 8px;
+          transition: border-color 0.15s, box-shadow 0.15s; cursor: pointer;
+        }
+        .result-card:hover { border-color: var(--border2); box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+
+        .result-title { font-family: var(--serif); font-size: 1.05rem; letter-spacing: -0.1px; margin-bottom: 4px; }
+        .result-meta { display: flex; align-items: center; gap: 6px; font-size: 0.7rem; color: var(--ink3); flex-wrap: wrap; }
+        .meta-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--ink3); display: inline-block; }
+        .result-snippet { font-size: 0.85rem; color: var(--ink2); margin-top: 6px; line-height: 1.6; }
+
+        /* highlight match */
+        mark { background: transparent; color: var(--ink); font-weight: 600; }
+
+        /* USER CARD */
+        .user-card {
+          display: flex; align-items: center; gap: 14px;
+          background: var(--surface); border: 1px solid var(--border);
+          border-radius: var(--radius); padding: 14px 18px; margin-bottom: 8px;
+          transition: border-color 0.15s;
+        }
+        .user-card:hover { border-color: var(--border2); }
+        .user-avatar {
+          width: 40px; height: 40px; border-radius: 50%;
+          object-fit: cover; background: var(--bg2); flex-shrink: 0;
+        }
+        .user-name { font-size: 0.92rem; font-weight: 500; }
+        .user-email { font-size: 0.72rem; color: var(--ink3); margin-top: 1px; }
+        .user-role {
+          margin-left: auto; font-size: 0.65rem; font-weight: 600;
+          letter-spacing: 0.8px; text-transform: uppercase;
+          background: var(--bg2); border: 1px solid var(--border);
+          border-radius: 99px; padding: 2px 9px; color: var(--ink3);
+        }
+
+        /* CLUB CARD */
+        .club-card {
+          display: flex; align-items: center; justify-content: space-between;
+          background: var(--surface); border: 1px solid var(--border);
+          border-radius: var(--radius); padding: 14px 20px; margin-bottom: 8px;
+          transition: border-color 0.15s;
+        }
+        .club-card:hover { border-color: var(--border2); }
+        .club-name { font-size: 0.92rem; font-weight: 500; }
+        .club-desc { font-size: 0.78rem; color: var(--ink3); margin-top: 2px; }
+        .club-join {
+          font-size: 0.72rem; padding: 4px 12px; border-radius: 99px;
+          border: 1px solid var(--border2); background: transparent;
+          color: var(--ink2); cursor: pointer; font-family: var(--sans);
+          font-weight: 500; transition: all 0.12s; flex-shrink: 0;
+        }
+        .club-join:hover { border-color: var(--ink); color: var(--ink); }
+
+        /* TAG RESULT CARD */
+        .tag-result-card {
+          display: inline-flex; align-items: center; gap: 6px;
+          background: var(--surface); border: 1px solid var(--border);
+          border-radius: 99px; padding: 7px 16px; margin: 0 6px 6px 0;
+          cursor: pointer; font-size: 0.82rem; font-weight: 500;
+          color: var(--ink2); transition: all 0.12s;
+        }
+        .tag-result-card:hover { border-color: var(--ink); color: var(--ink); background: var(--bg2); }
+
+        /* POST TAGS */
+        .post-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+        .post-tag {
+          font-size: 0.67rem; font-weight: 500; color: var(--ink2);
+          background: var(--bg2); border: 1px solid var(--border);
+          border-radius: 99px; padding: 2px 8px;
+        }
+
+        /* EMPTY / LOADING */
+        .empty { text-align: center; padding: 28px; color: var(--ink3); font-size: 0.82rem; }
+        .loading { text-align: center; padding: 60px; color: var(--ink3); font-size: 0.82rem; }
+        .spinner { display: inline-block; width: 16px; height: 16px; border: 1.5px solid var(--border2); border-top-color: var(--ink); border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 7px; vertical-align: middle; }
+        .no-results { text-align: center; padding: 60px 20px; }
+        .no-results .icon { font-size: 2.5rem; margin-bottom: 14px; }
+        .no-results h3 { font-family: var(--serif); font-size: 1.2rem; color: var(--ink2); margin-bottom: 6px; }
+        .no-results p { font-size: 0.83rem; color: var(--ink3); }
+
+        .toast { position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: #fff; border-radius: 99px; padding: 10px 18px; font-size: 0.82rem; font-weight: 500; z-index: 999; animation: slideUp 0.22s ease; }
+        .toast.error { background: var(--red); }
+
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+        @media (max-width: 600px) {
+          .topbar { padding: 0 16px; }
+          .page { padding: 20px 16px 60px; }
+          .topbar-search { max-width: none; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="topbar">
+    <a class="logo" href="/">
+        <span class="logo-dot"></span>
+        MVSR Connect
+    </a>
+    <div class="topbar-search">
+        <span class="search-icon">⌕</span>
+        <input type="text" id="search-input" placeholder="Search posts, people, clubs, tags…"
+               onkeydown="if(event.key==='Enter') doSearch()">
+    </div>
+    <div class="topbar-right">
+        <button class="btn btn-ghost btn-sm" onclick="window.location.href='/'">← Feed</button>
+        <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">☀</button>
+    </div>
+</nav>
+
+<div class="page">
+
+    <!-- SEARCH HERO -->
+    <div class="search-hero" id="search-hero" style="display:none">
+        <div class="search-hero-query" id="hero-query"></div>
+        <div class="search-meta" id="hero-meta"></div>
+    </div>
+
+    <!-- TAG FILTER BAR -->
+    <div class="tag-filter-bar" id="tag-filter-bar" style="display:none"></div>
+
+    <!-- RESULTS -->
+    <div id="results-container">
+        <div class="loading"><span class="spinner"></span>Loading…</div>
+    </div>
+
+</div>
+
+<script>
+    // ── THEME ──
+    (function() {
+      const saved = localStorage.getItem('mvsr-theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
+    })();
+    function toggleTheme() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const next = isDark ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('mvsr-theme', next);
+      updateToggleIcon();
+    }
+    function updateToggleIcon() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const btn = document.getElementById('theme-toggle');
+      if (btn) { btn.textContent = isDark ? '☽' : '☀'; }
+    }
+    window.addEventListener('load', updateToggleIcon);
+
+    // ── INIT ──
+    let currentQuery = '';
+    let allTags = [];
+    let activeTagId = null;
+
+    window.addEventListener('load', async () => {
+      const params = new URLSearchParams(window.location.search);
+      const q = params.get('q') || '';
+      const tagId = params.get('tag') || null;
+
+      // Load all tags for the filter bar
+      await loadTagBar();
+
+      if (tagId) {
+        activeTagId = parseInt(tagId);
+        highlightActiveTag();
+        await filterByTag(activeTagId);
+      } else if (q) {
+        document.getElementById('search-input').value = q;
+        currentQuery = q;
+        await runSearch(q);
+      } else {
+        document.getElementById('results-container').innerHTML =
+          `<div class="no-results"><div class="icon">⌕</div><h3>Search MVSR Connect</h3><p>Find posts, people, clubs and tags.</p></div>`;
+      }
+    });
+
+    // ── TAG BAR ──
+    async function loadTagBar() {
+      try {
+        const res = await fetch('/tags');
+        if (!res.ok) return;
+        allTags = await res.json();
+        if (!allTags.length) return;
+        const bar = document.getElementById('tag-filter-bar');
+        bar.style.display = 'flex';
+        bar.innerHTML = `<span style="font-size:0.72rem;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:var(--ink3);padding:5px 2px;flex-shrink:0">Filter by tag</span>` +
+          allTags.map(t => `
+            <button class="tag-pill" id="tag-pill-${t.id}" onclick="toggleTagFilter(${t.id})">
+              #${escHtml(t.name)}
+            </button>`).join('');
+      } catch {}
+    }
+
+    function highlightActiveTag() {
+      document.querySelectorAll('.tag-pill').forEach(p => p.classList.remove('active'));
+      if (activeTagId) {
+        const el = document.getElementById(`tag-pill-${activeTagId}`);
+        if (el) el.classList.add('active');
+      }
+    }
+
+    async function toggleTagFilter(tagId) {
+      if (activeTagId === tagId) {
+        // deselect — go back to search or empty
+        activeTagId = null;
+        highlightActiveTag();
+        const q = document.getElementById('search-input').value.trim();
+        if (q) { await runSearch(q); }
+        else {
+          document.getElementById('search-hero').style.display = 'none';
+          document.getElementById('results-container').innerHTML =
+            `<div class="no-results"><div class="icon">⌕</div><h3>Search MVSR Connect</h3><p>Find posts, people, clubs and tags.</p></div>`;
+        }
+        window.history.replaceState({}, '', q ? `?q=${encodeURIComponent(q)}` : '/search.html');
+        return;
+      }
+      activeTagId = tagId;
+      highlightActiveTag();
+      window.history.replaceState({}, '', `?tag=${tagId}`);
+      await filterByTag(tagId);
+    }
+
+    async function filterByTag(tagId) {
+      const tag = allTags.find(t => t.id === tagId);
+      const hero = document.getElementById('search-hero');
+      hero.style.display = 'block';
+      document.getElementById('hero-query').innerHTML = `Posts tagged <em>#${escHtml(tag?.name || tagId)}</em>`;
+
+      const container = document.getElementById('results-container');
+      container.innerHTML = `<div class="loading"><span class="spinner"></span>Loading…</div>`;
+
+      try {
+        const res = await fetch(`/search/tag/${tagId}`);
+        if (!res.ok) throw new Error();
+        const posts = await res.json();
+        document.getElementById('hero-meta').textContent = `${posts.length} post${posts.length !== 1 ? 's' : ''}`;
+
+        if (!posts.length) {
+          container.innerHTML = `<div class="no-results"><div class="icon">○</div><h3>No posts with this tag</h3><p>Be the first to post with #${escHtml(tag?.name || '')}.</p></div>`;
+          return;
+        }
+        container.innerHTML = `
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title">Posts <span class="section-count">${posts.length}</span></span>
+            </div>
+            ${posts.map(p => renderPostCard(p, '')).join('')}
+          </div>`;
+      } catch {
+        container.innerHTML = `<div class="empty">Could not load posts for this tag.</div>`;
+      }
+    }
+
+    // ── SEARCH ──
+    function doSearch() {
+      const q = document.getElementById('search-input').value.trim();
+      if (!q) return;
+      activeTagId = null;
+      highlightActiveTag();
+      window.history.replaceState({}, '', `?q=${encodeURIComponent(q)}`);
+      runSearch(q);
+    }
+
+    async function runSearch(q) {
+      currentQuery = q;
+      const hero = document.getElementById('search-hero');
+      hero.style.display = 'block';
+      document.getElementById('hero-query').innerHTML = `Results for <em>"${escHtml(q)}"</em>`;
+      document.getElementById('hero-meta').textContent = 'Searching…';
+
+      const container = document.getElementById('results-container');
+      container.innerHTML = `<div class="loading"><span class="spinner"></span>Searching…</div>`;
+
+      try {
+        const res = await fetch(`/search?q=${encodeURIComponent(q)}`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+
+        const total = data.posts.length + data.users.length + data.clubs.length + data.tags.length;
+        document.getElementById('hero-meta').textContent =
+          `${total} result${total !== 1 ? 's' : ''} across posts, people, clubs and tags`;
+
+        if (!total) {
+          container.innerHTML = `
+            <div class="no-results">
+              <div class="icon">○</div>
+              <h3>No results found</h3>
+              <p>Try different keywords or check your spelling.</p>
+            </div>`;
+          return;
+        }
+
+        let html = '';
+
+        // POSTS
+        if (data.posts.length) {
+          html += `
+            <div class="section" style="animation-delay:0s">
+              <div class="section-header">
+                <span class="section-title">Posts <span class="section-count">${data.posts.length}</span></span>
+              </div>
+              ${data.posts.map(p => renderPostCard(p, q)).join('')}
+            </div>`;
+        }
+
+        // USERS
+        if (data.users.length) {
+          html += `
+            <div class="section" style="animation-delay:0.05s">
+              <div class="section-header">
+                <span class="section-title">People <span class="section-count">${data.users.length}</span></span>
+              </div>
+              ${data.users.map(u => renderUserCard(u, q)).join('')}
+            </div>`;
+        }
+
+        // CLUBS
+        if (data.clubs.length) {
+          html += `
+            <div class="section" style="animation-delay:0.1s">
+              <div class="section-header">
+                <span class="section-title">Clubs <span class="section-count">${data.clubs.length}</span></span>
+              </div>
+              ${data.clubs.map(c => renderClubCard(c, q)).join('')}
+            </div>`;
+        }
+
+        // TAGS
+        if (data.tags.length) {
+          html += `
+            <div class="section" style="animation-delay:0.15s">
+              <div class="section-header">
+                <span class="section-title">Tags <span class="section-count">${data.tags.length}</span></span>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:0">
+                ${data.tags.map(t => `
+                  <span class="tag-result-card" onclick="toggleTagFilter(${t.id})">
+                    #${escHtml(t.name)}
+                  </span>`).join('')}
+              </div>
+            </div>`;
+        }
+
+        container.innerHTML = html;
+      } catch {
+        container.innerHTML = `<div class="empty">Search failed. Please try again.</div>`;
+      }
+    }
+
+    // ── RENDER HELPERS ──
+    function renderPostCard(p, q) {
+      const content = p.content || '';
+      const preview = content.length > 180 ? content.slice(0, 180) + '…' : content;
+      return `
+        <div class="result-card" onclick="window.location.href='/?post=${p.id}'">
+          ${p.club ? `<div style="font-size:0.67rem;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:var(--ink3);margin-bottom:6px">${escHtml(p.club.name)}</div>` : ''}
+          <div class="result-title">${highlight(escHtml(p.title || 'Untitled'), q)}</div>
+          <div class="result-meta">
+            <span style="color:var(--ink2);font-weight:500">${highlight(escHtml(p.authorName || 'anonymous'), q)}</span>
+            <span class="meta-dot"></span>
+            <span>${formatTime(p.createdAt)}</span>
+          </div>
+          ${preview ? `<div class="result-snippet">${highlight(escHtml(preview), q)}</div>` : ''}
+          ${p.tags?.length ? `<div class="post-tags">${p.tags.map(t => `<span class="post-tag">#${escHtml(t.name)}</span>`).join('')}</div>` : ''}
+        </div>`;
+    }
+
+    function renderUserCard(u, q) {
+      const pic = u.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || 'U')}&background=1a1916&color=fff&size=40`;
+      return `
+        <div class="user-card">
+          <img class="user-avatar" src="${pic}" alt="">
+          <div>
+            <div class="user-name">${highlight(escHtml(u.name || 'Anonymous'), q)}</div>
+            <div class="user-email">${escHtml(u.email || '')}</div>
+          </div>
+          ${u.role && u.role !== 'USER' ? `<span class="user-role">${escHtml(u.role)}</span>` : ''}
+        </div>`;
+    }
+
+    function renderClubCard(c, q) {
+      return `
+        <div class="club-card">
+          <div>
+            <div class="club-name">${highlight(escHtml(c.name || ''), q)}</div>
+            ${c.description ? `<div class="club-desc">${highlight(escHtml(c.description), q)}</div>` : ''}
+          </div>
+          <button class="club-join" onclick="event.stopPropagation(); joinClub(${c.id})">Join</button>
+        </div>`;
+    }
+
+    async function joinClub(clubId) {
+      const res = await fetch(`/clubs/${clubId}/join-request`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({})
+      });
+      showToast(res.ok ? 'Join request sent!' : 'Already requested or member', res.ok ? 'success' : 'error');
+    }
+
+    // ── HIGHLIGHT MATCHES ──
+    function highlight(text, query) {
+      if (!query) return text;
+      const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return text.replace(new RegExp(`(${escaped})`, 'gi'), '<mark>$1</mark>');
+    }
+
+    // ── UTILS ──
+    function escHtml(str) {
+      return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function formatTime(dateStr) {
+      if (!dateStr) return '';
+      try {
+        const diff = Math.floor((new Date() - new Date(dateStr)) / 1000);
+        if (diff < 60) return 'just now';
+        if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+        if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+        return new Date(dateStr).toLocaleDateString('en-IN', { day:'numeric', month:'short' });
+      } catch { return ''; }
+    }
+    function showToast(msg, type = 'success') {
+      const t = document.createElement('div');
+      t.className = `toast ${type}`; t.textContent = msg;
+      document.body.appendChild(t); setTimeout(() => t.remove(), 2800);
+    }
+</script>
+</body>
+</html>
