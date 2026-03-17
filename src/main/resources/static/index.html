@@ -904,7 +904,7 @@
     async function checkUser() {
       topProgress(20);
       try {
-        const res = await fetch('/user', { redirect: 'manual' });
+        const res = await fetch('/user', { credentials: 'include' });
         topProgress(70);
         if (res.type === 'opaqueredirect' || res.status === 302 || res.status === 401 || res.status === 403) { topProgress(100); showLogin(); return; }
         if (!res.ok) { topProgress(100); showLogin(); return; }

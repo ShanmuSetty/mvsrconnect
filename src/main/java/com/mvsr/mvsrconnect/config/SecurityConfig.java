@@ -7,6 +7,12 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 public class SecurityConfig {
+
+    private final OAuth2LoginSuccessHandler successHandler;
+
+    public SecurityConfig(OAuth2LoginSuccessHandler successHandler) {
+        this.successHandler = successHandler;
+    }
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -15,7 +21,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth -> oauth
-                        .defaultSuccessUrl("/", true)
+                        .successHandler(successHandler)
                 )
                 .csrf(csrf -> csrf.disable())
                 .logout(logout -> logout
