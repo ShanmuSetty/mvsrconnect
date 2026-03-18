@@ -168,12 +168,6 @@ docker run -p 8080:8080 \
   mvsrconnect
 ```
 
-### Restore the Database
-
-```bash
-psql -U your_db_user -d your_db < backup.sql
-```
-
 ---
 
 ## 🔌 API Overview
