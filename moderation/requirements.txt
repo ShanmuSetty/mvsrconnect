@@ -1,6 +1,0 @@
-flask
-detoxify
-opennsfw2
-opencv-python-headless
-requests
-rapidfuzz
