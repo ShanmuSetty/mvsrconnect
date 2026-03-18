@@ -172,83 +172,92 @@ docker run -p 8080:8080 \
 
 ## 🔌 API Overview
 
+> 📘 Full interactive docs at `/swagger-ui.html` when running locally.
+
 ### Auth & Users
+
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/user` | Get the currently logged-in user |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/user` | Get the currently logged-in user |
 
 ### Posts
+
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/posts` | All posts (newest first) |
-| `POST` | `/posts` | Create a new post |
-| `GET` | `/posts/hot` | Hot-ranked posts (time-decay algorithm) |
-| `GET` | `/posts/top` | Top-voted posts |
-| `GET` | `/posts/{id}` | Get a single post |
-| `DELETE` | `/posts/{id}` | Delete a post (author / mod / admin) |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/posts` | All posts (newest first) |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/posts` | Create a new post |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/posts/hot` | Hot-ranked posts (time-decay algorithm) |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/posts/top` | Top-voted posts |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/posts/{id}` | Get a single post |
+| ![DELETE](https://img.shields.io/badge/DELETE-F93E3E?style=flat-square) | `/posts/{id}` | Delete a post (author / mod / admin) |
 
 ### Comments
+
 | Method | Endpoint | Description |
 |---|---|---|
-| `POST` | `/posts/{id}/comment` | Add a comment (supports threaded replies) |
-| `GET` | `/posts/{id}/comments` | Get all comments for a post |
-| `DELETE` | `/posts/comments/{id}` | Delete a comment |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/posts/{id}/comment` | Add a comment (supports threaded replies) |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/posts/{id}/comments` | Get all comments for a post |
+| ![DELETE](https://img.shields.io/badge/DELETE-F93E3E?style=flat-square) | `/posts/comments/{id}` | Delete a comment |
 
 ### Votes
+
 | Method | Endpoint | Description |
 |---|---|---|
-| `POST` | `/votes/{postId}?value=1` | Upvote or downvote a post |
-| `GET` | `/votes/up/{postId}` | Get upvote count |
-| `GET` | `/votes/down/{postId}` | Get downvote count |
-| `GET` | `/votes/user/{postId}` | Get the current user's vote |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/votes/{postId}?value=1` | Upvote or downvote a post |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/votes/up/{postId}` | Get upvote count |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/votes/down/{postId}` | Get downvote count |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/votes/user/{postId}` | Get the current user's vote |
 
 ### Clubs
+
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/clubs` | List all clubs |
-| `GET` | `/clubs/{id}/posts` | Posts within a club |
-| `POST` | `/clubs/{id}/join-request` | Request to join a club |
-| `GET` | `/clubs/requests` | All pending join requests (admin) |
-| `POST` | `/clubs/requests/{id}/approve` | Approve a join request |
-| `POST` | `/clubs/requests/{id}/reject` | Reject a join request |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/clubs` | List all clubs |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/clubs/{id}/posts` | Posts within a club |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/clubs/{id}/join-request` | Request to join a club |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/clubs/requests` | All pending join requests (admin) |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/clubs/requests/{id}/approve` | Approve a join request |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/clubs/requests/{id}/reject` | Reject a join request |
 
 ### Moderator Panel
+
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/mod/my-clubs` | Clubs where I'm a moderator |
-| `GET` | `/mod/club/{id}` | Club dashboard (members, posts, requests) |
-| `DELETE` | `/mod/club/{id}/posts/{postId}` | Delete a post as moderator |
-| `DELETE` | `/mod/club/{id}/comments/{commentId}` | Delete a comment as moderator |
-| `POST` | `/mod/club/{id}/requests/{reqId}/approve` | Approve join request |
-| `POST` | `/mod/club/{id}/requests/{reqId}/reject` | Reject join request |
-| `DELETE` | `/mod/club/{id}/members/{memberId}` | Remove a member |
-| `POST` | `/mod/appeal` | Submit appeal to become a moderator |
-| `GET` | `/mod/appeals` | List pending appeals (admin) |
-| `POST` | `/mod/appeals/{id}/approve` | Approve appeal → user becomes moderator |
-| `POST` | `/mod/appeals/{id}/reject` | Reject appeal |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/mod/my-clubs` | Clubs where I'm a moderator |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/mod/club/{id}` | Club dashboard (members, posts, requests) |
+| ![DELETE](https://img.shields.io/badge/DELETE-F93E3E?style=flat-square) | `/mod/club/{id}/posts/{postId}` | Delete a post as moderator |
+| ![DELETE](https://img.shields.io/badge/DELETE-F93E3E?style=flat-square) | `/mod/club/{id}/comments/{commentId}` | Delete a comment as moderator |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/mod/club/{id}/requests/{reqId}/approve` | Approve join request |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/mod/club/{id}/requests/{reqId}/reject` | Reject join request |
+| ![DELETE](https://img.shields.io/badge/DELETE-F93E3E?style=flat-square) | `/mod/club/{id}/members/{memberId}` | Remove a member |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/mod/appeal` | Submit appeal to become a moderator |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/mod/appeals` | List pending appeals (admin) |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/mod/appeals/{id}/approve` | Approve appeal → user becomes moderator |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/mod/appeals/{id}/reject` | Reject appeal |
 
 ### Reports
+
 | Method | Endpoint | Description |
 |---|---|---|
-| `POST` | `/reports` | Report a post |
-| `GET` | `/reports` | List open reports (admin) |
-| `POST` | `/reports/{id}/resolve` | Resolve a report (admin) |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/reports` | Report a post |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/reports` | List open reports (admin) |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/reports/{id}/resolve` | Resolve a report (admin) |
 
 ### Search & Tags
+
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/search?q=` | Global search (posts, users, clubs, tags) |
-| `GET` | `/search/tag/{tagId}` | Filter posts by tag |
-| `GET` | `/tags` | List all tags |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/search?q=` | Global search (posts, users, clubs, tags) |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/search/tag/{tagId}` | Filter posts by tag |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/tags` | List all tags |
 
 ### Dashboard & Media
+
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/dashboard` | Personal stats, posts, comments, clubs |
-| `PATCH` | `/dashboard/profile` | Update name, bio, avatar |
-| `POST` | `/api/media/upload` | Upload image or video to Cloudinary |
-
-> 📘 Full interactive docs available at `/swagger-ui.html` when the app is running.
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/dashboard` | Personal stats, posts, comments, clubs |
+| ![PATCH](https://img.shields.io/badge/PATCH-FCA130?style=flat-square) | `/dashboard/profile` | Update name, bio, avatar |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/api/media/upload` | Upload image or video to Cloudinary |
 
 ---
 
@@ -296,17 +305,17 @@ If the Flask service is unavailable, moderation **fails open** (content is allow
 ## 🗄️ Database Schema (Key Tables)
 
 ```
-users           → id, name, email, google_id, picture, role, bio
-posts           → id, title, content, author_id, author_name, media_url, media_type, club_id, created_at
-comments        → id, content, post_id, user_id, parent_comment_id, created_at
-votes           → id, post_id, user_id, value (+1 / -1)
-clubs           → id, name, description, created_at
-club_members    → id, club_id, user_id, role (MEMBER/MODERATOR/PRESIDENT), joined_at
+users              → id, name, email, google_id, picture, role, bio
+posts              → id, title, content, author_id, author_name, media_url, media_type, club_id, created_at
+comments           → id, content, post_id, user_id, parent_comment_id, created_at
+votes              → id, post_id, user_id, value (+1 / -1)
+clubs              → id, name, description, created_at
+club_members       → id, club_id, user_id, role (MEMBER/MODERATOR/PRESIDENT), joined_at
 club_join_requests → id, club_id, user_id, status (PENDING/APPROVED/REJECTED), created_at
 moderator_appeals  → id, club_id, user_id, reason, status, created_at
-reports         → id, post_id, user_id, reason, status (OPEN/RESOLVED), created_at
-tags            → id, name
-post_tags       → post_id, tag_id
+reports            → id, post_id, user_id, reason, status (OPEN/RESOLVED), created_at
+tags               → id, name
+post_tags          → post_id, tag_id
 ```
 
 ---
@@ -316,10 +325,17 @@ post_tags       → post_id, tag_id
 Posts in the **Hot** feed are ranked using a Reddit-inspired time-decay formula:
 
 ```sql
-score / POWER(age_in_hours + 2, 1.5)
+SELECT p.*
+FROM posts p
+LEFT JOIN votes v ON p.id = v.post_id
+GROUP BY p.id
+ORDER BY
+  COALESCE(SUM(v.value), 0) /
+  POWER(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 + 2, 1.5)
+DESC
 ```
 
-Where `score` is the net vote total and `age_in_hours` is how old the post is. Fresh posts with good engagement rise quickly; older posts decay out of the feed naturally.
+Where the numerator is the net vote score and the denominator grows over time. The `+2` prevents brand-new posts from dividing by zero, and the `1.5` exponent controls how aggressively older posts decay out of the feed.
 
 ---
 
