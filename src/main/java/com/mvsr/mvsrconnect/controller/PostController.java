@@ -89,24 +89,23 @@ public class PostController {
         User user = userRepository.findByEmail(email).orElseThrow();
 
         // moderation
-        if(
-                (post.getTitle() != null && moderationService.isTextToxic(post.getTitle(), "")) ||
-                        (post.getContent() != null && moderationService.isTextToxic(post.getContent(),""))
-        ){
+        String combinedText = (post.getTitle() != null ? post.getTitle() : "") + " " +
+                (post.getContent() != null ? post.getContent() : "");
+        if(moderationService.isTextToxic(combinedText.trim(), "")){
             return ResponseEntity
                     .badRequest()
                     .body("Toxic language detected. Please keep discussions respectful.");
         }
 
-        if(post.getMediaPublicId() != null && "image".equals(post.getMediaType())){
-            if(moderationService.isImageUnsafe(post.getMediaPublicId())){
+        if(post.getMediaUrl() != null && "image".equals(post.getMediaType())){
+            if(moderationService.isImageUnsafe(post.getMediaUrl())){
                 deleteMediaIfExists(post);
                 return ResponseEntity.badRequest().body("Unsafe image detected.");
             }
         }
 
-        if(post.getMediaPublicId() != null && "video".equals(post.getMediaType())){
-            if(moderationService.isVideoUnsafe(post.getMediaPublicId())){
+        if(post.getMediaUrl() != null && "video".equals(post.getMediaType())){
+            if(moderationService.isVideoUnsafe(post.getMediaUrl())){
                 deleteMediaIfExists(post);
                 return ResponseEntity.badRequest().body("Unsafe video detected.");
             }
