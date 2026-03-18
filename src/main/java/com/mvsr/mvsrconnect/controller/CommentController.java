@@ -56,10 +56,12 @@ public class CommentController {
             }
         }
 
-        if(comment.getContent()!=null &&
+        if(comment.getContent() != null &&
                 moderationService.isTextToxic(comment.getContent(), context)){
-
-            throw new RuntimeException("Toxic comment blocked");
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST,
+                    "Toxic language detected. Please keep discussions respectful."
+            );
         }
 
         Post post = postRepository.findById(postId).orElseThrow();

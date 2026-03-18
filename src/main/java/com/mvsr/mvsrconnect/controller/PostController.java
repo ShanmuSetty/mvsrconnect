@@ -98,15 +98,15 @@ public class PostController {
                     .body("Toxic language detected. Please keep discussions respectful.");
         }
 
-        if(post.getMediaUrl() != null && "image".equals(post.getMediaType())){
-            if(moderationService.isImageUnsafe(post.getMediaUrl())){
+        if(post.getMediaPublicId() != null && "image".equals(post.getMediaType())){
+            if(moderationService.isImageUnsafe(post.getMediaPublicId())){
                 deleteMediaIfExists(post);
                 return ResponseEntity.badRequest().body("Unsafe image detected.");
             }
         }
 
-        if(post.getMediaUrl() != null && "video".equals(post.getMediaType())){
-            if(moderationService.isVideoUnsafe(post.getMediaUrl())){
+        if(post.getMediaPublicId() != null && "video".equals(post.getMediaType())){
+            if(moderationService.isVideoUnsafe(post.getMediaPublicId())){
                 deleteMediaIfExists(post);
                 return ResponseEntity.badRequest().body("Unsafe video detected.");
             }
