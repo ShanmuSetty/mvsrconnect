@@ -9,8 +9,8 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY moderation_server.py .
+COPY moderation_api.py .
 
 EXPOSE 5001
 
-CMD ["python", "moderation_server.py"]
+CMD ["python", "moderation_api.py"]
