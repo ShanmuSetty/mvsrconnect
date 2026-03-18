@@ -2,14 +2,9 @@
 
 <br/>
 
-```
-███╗   ███╗██╗   ██╗███████╗██████╗      ██████╗ ██████╗ ███╗   ██╗███╗   ██╗███████╗ ██████╗████████╗
-████╗ ████║██║   ██║██╔════╝██╔══██╗    ██╔════╝██╔═══██╗████╗  ██║████╗  ██║██╔════╝██╔════╝╚══██╔══╝
-██╔████╔██║██║   ██║███████╗██████╔╝    ██║     ██║   ██║██╔██╗ ██║██╔██╗ ██║█████╗  ██║        ██║   
-██║╚██╔╝██║╚██╗ ██╔╝╚════██║██╔══██╗    ██║     ██║   ██║██║╚██╗██║██║╚██╗██║██╔══╝  ██║        ██║   
-██║ ╚═╝ ██║ ╚████╔╝ ███████║██║  ██║    ╚██████╗╚██████╔╝██║ ╚████║██║ ╚████║███████╗╚██████╗   ██║   
-╚═╝     ╚═╝  ╚═══╝  ╚══════╝╚═╝  ╚═╝    ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═╝   
-```
+<div align="center">
+  <img src="logo.svg" alt="MVSR Connect" width="500">
+</div>
 
 **The exclusive campus social platform for MVSR Engineering College students.**
 
@@ -17,6 +12,7 @@
 [![Java](https://img.shields.io/badge/Java-17-ED8B00?style=flat-square&logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/17/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Latest-336791?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Live](https://img.shields.io/badge/Live-mvsrconnect.onrender.com-brightgreen?style=flat-square&logo=render&logoColor=white)](https://mvsrconnect.onrender.com/)
 [![License](https://img.shields.io/badge/License-Educational-lightgrey?style=flat-square)](#license)
 
 <br/>
