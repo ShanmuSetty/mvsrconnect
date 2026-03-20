@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lost & Found — MVSR Connect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+          --bg:       #f5f4f0;
+          --bg2:      #eeecea;
+          --surface:  #ffffff;
+          --border:   #e0deda;
+          --border2:  #c8c4be;
+          --ink:      #1a1916;
+          --ink2:     #6b6760;
+          --ink3:     #a09c97;
+          --accent:   #1a1916;
+          --red:      #c0392b;
+          --green:    #2d6a4f;
+          --amber:    #b45309;
+          --amber-bg: #fffbeb;
+          --green-bg: #f0fdf4;
+          --red-bg:   #fef2f2;
+          --radius:   10px;
+          --sans:     'Geist', sans-serif;
+          --serif:    'Instrument Serif', serif;
+          --topbar-bg: rgba(245,244,240,0.88);
+        }
+
+        [data-theme="dark"] {
+          --bg:       #111110;
+          --bg2:      #1a1917;
+          --surface:  #1f1e1c;
+          --border:   #2a2825;
+          --border2:  #3d3a35;
+          --ink:      #e8e6e1;
+          --ink2:     #9a9690;
+          --ink3:     #605c57;
+          --accent:   #e8e6e1;
+          --red:      #e05c4b;
+          --green:    #4ade80;
+          --amber:    #fbbf24;
+          --amber-bg: #1c1a10;
+          --green-bg: #0a1f10;
+          --red-bg:   #1f0a0a;
+          --topbar-bg: rgba(17,17,16,0.88);
+        }
+
+        html { scroll-behavior: smooth; transition: background 0.2s ease; }
+        body {
+          background: var(--bg);
+          color: var(--ink);
+          font-family: var(--sans);
+          font-size: 15px;
+          line-height: 1.6;
+          min-height: 100vh;
+          -webkit-font-smoothing: antialiased;
+          transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        body::before {
+          content: '';
+          position: fixed; inset: 0; z-index: 0; pointer-events: none;
+          opacity: 0.035;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+          background-size: 180px 180px;
+        }
+
+        /* ── TOP PROGRESS BAR ── */
+        #top-progress {
+          position: fixed; top: 0; left: 0; z-index: 9999;
+          height: 2px; width: 0%;
+          background: var(--ink);
+          transition: width 0.2s ease, opacity 0.3s ease;
+          opacity: 0; pointer-events: none;
+        }
+        #top-progress.active { opacity: 1; }
+
+        /* ── TOPBAR ── */
+        .topbar {
+          position: sticky; top: 0; z-index: 200;
+          height: 56px;
+          background: var(--topbar-bg);
+          backdrop-filter: blur(16px);
+          border-bottom: 1px solid var(--border);
+          display: flex; align-items: center;
+          justify-content: space-between;
+          padding: 0 32px; gap: 12px;
+        }
+
+        .logo {
+          font-family: var(--serif);
+          font-size: 1.2rem;
+          letter-spacing: -0.2px;
+          color: var(--ink);
+          display: flex; align-items: center; gap: 7px;
+          text-decoration: none;
+        }
+        .logo-dot { width: 8px; height: 8px; background: var(--ink); border-radius: 50%; display: inline-block; }
+
+        .topbar-right { display: flex; align-items: center; gap: 8px; }
+
+        .theme-toggle {
+          width: 34px; height: 34px; border-radius: 99px;
+          background: transparent; border: 1px solid var(--border2);
+          color: var(--ink2); cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 0.95rem; transition: all 0.15s ease; flex-shrink: 0;
+        }
+        .theme-toggle:hover { background: var(--bg2); color: var(--ink); }
+
+        .btn {
+          font-family: var(--sans); font-size: 0.8rem; font-weight: 500;
+          padding: 7px 18px; border-radius: 99px; cursor: pointer; border: none;
+          transition: all 0.15s ease; letter-spacing: 0.1px; white-space: nowrap;
+        }
+        .btn-dark { background: #1a1916; color: #fff; }
+        .btn-dark:hover { background: #333; }
+        [data-theme="dark"] .btn-dark { background: #e8e6e1; color: #1a1916; }
+        [data-theme="dark"] .btn-dark:hover { background: #fff; }
+        .btn-ghost { background: transparent; color: var(--ink2); border: 1px solid var(--border2); }
+        .btn-ghost:hover { background: var(--bg2); color: var(--ink); }
+        .btn-sm { padding: 5px 13px; font-size: 0.75rem; }
+
+        /* ── LAYOUT ── */
+        .layout {
+          display: grid;
+          grid-template-columns: 220px 1fr;
+          max-width: 1100px;
+          margin: 0 auto;
+          padding: 0 24px;
+          min-height: calc(100vh - 56px);
+          position: relative; z-index: 1;
+        }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+          padding: 32px 20px 32px 0;
+          border-right: 1px solid var(--border);
+          position: sticky; top: 56px;
+          height: calc(100vh - 56px);
+          overflow-y: auto;
+        }
+        .sidebar::-webkit-scrollbar { width: 0; }
+        .sidebar-label {
+          font-size: 0.67rem; font-weight: 600;
+          letter-spacing: 1.3px; text-transform: uppercase;
+          color: var(--ink3); margin-bottom: 8px; padding-left: 4px;
+        }
+        .sidebar-section { margin-bottom: 28px; }
+
+        .filter-item {
+          display: flex; align-items: center; gap: 9px;
+          padding: 8px 10px; border-radius: 7px;
+          cursor: pointer; font-size: 0.85rem; font-weight: 400;
+          color: var(--ink2); margin-bottom: 1px;
+          transition: all 0.12s ease; border: 1px solid transparent;
+        }
+        .filter-item:hover { background: var(--bg2); color: var(--ink); }
+        .filter-item.active { background: #1a1916; color: #fff; }
+        [data-theme="dark"] .filter-item.active { background: #e8e6e1; color: #1a1916; }
+        .filter-dot {
+          width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+        }
+        .dot-all { background: var(--ink3); }
+        .dot-lost { background: var(--red); }
+        .dot-found { background: var(--green); }
+        .filter-item.active .filter-dot { opacity: 0.7; }
+
+        .sidebar-stat {
+          display: flex; justify-content: space-between; align-items: center;
+          padding: 6px 4px; font-size: 0.78rem; color: var(--ink3);
+          border-bottom: 1px solid var(--border);
+        }
+        .sidebar-stat:last-child { border-bottom: none; }
+        .sidebar-stat strong { color: var(--ink2); font-weight: 600; }
+
+        .sidebar-tip {
+          background: var(--amber-bg); border: 1px solid var(--border);
+          border-radius: 8px; padding: 12px; font-size: 0.76rem;
+          color: var(--ink2); line-height: 1.55;
+          border-left: 3px solid var(--amber);
+        }
+        .sidebar-tip strong { color: var(--amber); }
+
+        /* ── MAIN CONTENT ── */
+        .main-content { padding: 32px 0 60px 32px; }
+
+        .feed-header {
+          display: flex; align-items: center;
+          justify-content: space-between;
+          margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+        }
+        .feed-title {
+          font-family: var(--serif);
+          font-size: 1.6rem; letter-spacing: -0.5px;
+          display: flex; align-items: baseline; gap: 10px;
+        }
+        .count-badge {
+          font-family: var(--sans); font-size: 0.72rem; font-weight: 500;
+          color: var(--ink3); background: var(--bg2); border: 1px solid var(--border);
+          border-radius: 99px; padding: 1px 9px;
+        }
+
+        /* ── CREATE CARD ── */
+        .create-card {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          padding: 20px; margin-bottom: 16px;
+        }
+        .create-top {
+          display: flex; align-items: center;
+          justify-content: space-between; margin-bottom: 14px;
+        }
+        .create-label {
+          font-size: 0.72rem; font-weight: 600;
+          letter-spacing: 1px; text-transform: uppercase; color: var(--ink3);
+        }
+
+        /* Type selector */
+        .type-selector {
+          display: grid; grid-template-columns: 1fr 1fr;
+          gap: 8px; margin-bottom: 14px;
+        }
+        .type-btn {
+          display: flex; flex-direction: column; align-items: center; gap: 6px;
+          padding: 14px 12px; border-radius: 8px;
+          border: 2px solid var(--border); background: transparent;
+          cursor: pointer; font-family: var(--sans);
+          transition: all 0.15s ease; text-align: center;
+        }
+        .type-btn:hover { border-color: var(--border2); background: var(--bg); }
+        .type-btn.selected-lost {
+          border-color: var(--red); background: var(--red-bg);
+        }
+        .type-btn.selected-found {
+          border-color: var(--green); background: var(--green-bg);
+        }
+        .type-btn-icon { font-size: 1.4rem; }
+        .type-btn-label { font-size: 0.8rem; font-weight: 600; color: var(--ink2); }
+        .type-btn-sub { font-size: 0.68rem; color: var(--ink3); line-height: 1.3; }
+        .type-btn.selected-lost .type-btn-label { color: var(--red); }
+        .type-btn.selected-found .type-btn-label { color: var(--green); }
+
+        .field { margin-bottom: 10px; }
+        .field input, .field textarea, .field select {
+          width: 100%; background: var(--bg); border: 1px solid var(--border);
+          border-radius: 7px; color: var(--ink); padding: 9px 13px;
+          font-family: var(--sans); font-size: 0.875rem; font-weight: 400;
+          outline: none; transition: border-color 0.15s; resize: none; appearance: none;
+        }
+        .field textarea { min-height: 76px; line-height: 1.6; }
+        .field input:focus, .field textarea:focus, .field select:focus {
+          border-color: var(--ink); background: var(--surface);
+        }
+        .field input::placeholder, .field textarea::placeholder { color: var(--ink3); }
+        .field-label {
+          font-size: 0.72rem; font-weight: 600; letter-spacing: 0.5px;
+          color: var(--ink3); margin-bottom: 4px; text-transform: uppercase;
+        }
+        .field-row {
+          display: grid; grid-template-columns: 1fr 1fr;
+          gap: 8px; margin-bottom: 10px;
+        }
+
+        .thin-divider { height: 1px; background: var(--border); margin: 12px 0; }
+
+        .create-footer {
+          display: flex; align-items: center;
+          justify-content: space-between; gap: 10px;
+          margin-top: 14px; flex-wrap: wrap;
+        }
+        .create-footer-note { font-size: 0.72rem; color: var(--ink3); }
+
+        /* ── ITEM CARD ── */
+        .item-card {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          overflow: hidden; margin-bottom: 8px;
+          transition: border-color 0.15s, box-shadow 0.15s;
+          animation: fadeUp 0.3s ease both;
+        }
+        .item-card:hover { border-color: var(--border2); box-shadow: 0 2px 12px rgba(0,0,0,0.05); }
+        .item-card.type-lost { border-left: 3px solid var(--red); }
+        .item-card.type-found { border-left: 3px solid var(--green); }
+
+        .item-body { padding: 18px 20px; }
+
+        .item-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+        .item-type-badge {
+          flex-shrink: 0; display: inline-flex; align-items: center; gap: 5px;
+          font-size: 0.67rem; font-weight: 700; letter-spacing: 1px;
+          text-transform: uppercase; padding: 3px 9px; border-radius: 99px;
+        }
+        .badge-lost { background: var(--red-bg); color: var(--red); border: 1px solid rgba(192,57,43,0.2); }
+        .badge-found { background: var(--green-bg); color: var(--green); border: 1px solid rgba(45,106,79,0.2); }
+        .badge-resolved { background: var(--bg2); color: var(--ink3); border: 1px solid var(--border); }
+        [data-theme="dark"] .badge-lost { background: rgba(224,92,75,0.12); }
+        [data-theme="dark"] .badge-found { background: rgba(74,222,128,0.1); }
+
+        .item-title {
+          font-family: var(--serif);
+          font-size: 1.15rem; line-height: 1.3;
+          color: var(--ink); letter-spacing: -0.2px;
+          flex: 1;
+        }
+        .resolved-overlay { opacity: 0.55; }
+        .resolved-strike { text-decoration: line-through; }
+
+        .item-category {
+          display: inline-flex; align-items: center; gap: 4px;
+          font-size: 0.7rem; font-weight: 500;
+          color: var(--ink3); background: var(--bg2);
+          border: 1px solid var(--border);
+          border-radius: 99px; padding: 2px 9px; margin-bottom: 6px;
+        }
+
+        .item-desc { font-size: 0.87rem; color: var(--ink2); line-height: 1.65; margin-bottom: 12px; }
+
+        .item-meta-grid {
+          display: flex; gap: 16px; flex-wrap: wrap;
+          background: var(--bg); border: 1px solid var(--border);
+          border-radius: 7px; padding: 10px 14px;
+          margin-bottom: 14px;
+        }
+        .meta-item { display: flex; flex-direction: column; gap: 2px; }
+        .meta-item-label { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--ink3); }
+        .meta-item-value { font-size: 0.78rem; font-weight: 500; color: var(--ink2); }
+
+        .item-footer {
+          display: flex; align-items: center; gap: 6px;
+          font-size: 0.7rem; color: var(--ink3); margin-bottom: 12px;
+          flex-wrap: wrap;
+        }
+        .item-author { color: var(--ink2); font-weight: 500; }
+        .meta-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--ink3); display: inline-block; }
+
+        .item-actions { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+
+        .action-btn {
+          display: inline-flex; align-items: center; gap: 4px;
+          background: transparent; border: 1px solid var(--border);
+          color: var(--ink2); border-radius: 99px;
+          padding: 5px 12px; font-size: 0.75rem;
+          font-family: var(--sans); font-weight: 500;
+          cursor: pointer; transition: all 0.12s ease;
+        }
+        .action-btn:hover { border-color: var(--border2); color: var(--ink); background: var(--bg); }
+        .action-btn.found-it { border-color: rgba(45,106,79,0.3); color: var(--green); }
+        .action-btn.found-it:hover { background: var(--green-bg); border-color: var(--green); }
+        .action-btn.its-mine { border-color: rgba(192,57,43,0.3); color: var(--red); }
+        .action-btn.its-mine:hover { background: var(--red-bg); border-color: var(--red); }
+        .action-btn.danger { color: var(--red); }
+        .action-btn.danger:hover { background: var(--bg2); }
+        .action-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+        .resolve-btn {
+          margin-left: auto;
+          font-size: 0.7rem; color: var(--ink3); background: none; border: none;
+          cursor: pointer; font-family: var(--sans); font-weight: 500;
+          transition: color 0.12s; padding: 5px 0;
+        }
+        .resolve-btn:hover { color: var(--ink); }
+
+        /* ── RESPONSE PANEL ── */
+        .response-panel {
+          border-top: 1px solid var(--border);
+          background: var(--bg);
+          padding: 16px 20px;
+          display: none;
+        }
+        .response-panel.open { display: block; animation: fadeUp 0.2s ease; }
+
+        .response-panel-title {
+          font-size: 0.72rem; font-weight: 600; letter-spacing: 1px;
+          text-transform: uppercase; color: var(--ink3); margin-bottom: 12px;
+          display: flex; align-items: center; gap: 8px;
+        }
+        .panel-accent-lost { color: var(--red); }
+        .panel-accent-found { color: var(--green); }
+
+        /* Claim form */
+        .claim-form { display: flex; flex-direction: column; gap: 10px; }
+
+        .claim-hint {
+          font-size: 0.78rem; color: var(--ink2); line-height: 1.6;
+          background: var(--amber-bg); border: 1px solid var(--border);
+          border-left: 3px solid var(--amber); border-radius: 7px;
+          padding: 10px 13px; margin-bottom: 4px;
+        }
+        .claim-hint strong { color: var(--amber); }
+
+        .claim-form textarea {
+          width: 100%; background: var(--surface);
+          border: 1px solid var(--border); border-radius: 7px;
+          color: var(--ink); padding: 9px 13px;
+          font-family: var(--sans); font-size: 0.85rem; outline: none;
+          resize: none; min-height: 70px; line-height: 1.6;
+          transition: border-color 0.15s;
+        }
+        .claim-form textarea:focus { border-color: var(--ink); }
+        .claim-form textarea::placeholder { color: var(--ink3); }
+        .claim-form-footer { display: flex; justify-content: flex-end; gap: 6px; }
+
+        /* Responses list */
+        .responses-list { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+        .response-item {
+          background: var(--surface); border: 1px solid var(--border);
+          border-radius: 8px; padding: 12px 14px;
+          animation: fadeUp 0.2s ease;
+        }
+        .response-item-header { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; flex-wrap: wrap; }
+        .response-user { font-size: 0.75rem; font-weight: 600; color: var(--ink); }
+        .response-time { font-size: 0.68rem; color: var(--ink3); }
+        .response-text { font-size: 0.84rem; color: var(--ink2); line-height: 1.55; }
+        .response-proof {
+          margin-top: 6px; font-size: 0.72rem; color: var(--ink3);
+          display: flex; align-items: center; gap: 4px;
+        }
+        .no-responses { text-align: center; color: var(--ink3); font-size: 0.78rem; padding: 12px 0; }
+
+        /* ── EMPTY STATE ── */
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--ink3); }
+        .empty-state .icon { font-size: 2rem; margin-bottom: 12px; }
+        .empty-state h3 { font-family: var(--serif); font-size: 1.1rem; color: var(--ink2); margin-bottom: 5px; }
+        .empty-state p { font-size: 0.83rem; }
+
+        /* ── MODAL BACKDROP ── */
+        .modal-backdrop {
+          position: fixed; inset: 0; z-index: 500;
+          background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+          display: flex; align-items: center; justify-content: center;
+          padding: 24px;
+          animation: fadeIn 0.15s ease;
+        }
+        .modal {
+          background: var(--surface); border: 1px solid var(--border);
+          border-radius: 14px; padding: 28px; width: 100%; max-width: 460px;
+          animation: fadeUp 0.2s ease;
+          box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+        .modal-title {
+          font-family: var(--serif); font-size: 1.3rem; margin-bottom: 6px;
+          letter-spacing: -0.3px;
+        }
+        .modal-sub { font-size: 0.82rem; color: var(--ink2); margin-bottom: 18px; line-height: 1.6; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+
+        /* ── TOAST ── */
+        .toast {
+          position: fixed; bottom: 24px; right: 24px;
+          background: var(--ink); color: #fff;
+          border-radius: 99px; padding: 10px 18px;
+          font-size: 0.82rem; font-weight: 500; z-index: 999;
+          animation: slideUp 0.22s ease; max-width: 280px;
+        }
+        .toast.error { background: var(--red); }
+
+        /* ── LOADING ── */
+        .loading { text-align: center; padding: 40px; color: var(--ink3); font-size: 0.82rem; }
+        .spinner {
+          display: inline-block; width: 16px; height: 16px;
+          border: 1.5px solid var(--border2); border-top-color: var(--ink);
+          border-radius: 50%; animation: spin 0.6s linear infinite;
+          margin-right: 7px; vertical-align: middle;
+        }
+        .btn-loading { opacity: 0.65 !important; pointer-events: none !important; }
+        .btn-spinner {
+          display: inline-block; width: 10px; height: 10px;
+          border: 1.5px solid rgba(255,255,255,0.4); border-top-color: #fff;
+          border-radius: 50%; animation: spin 0.55s linear infinite;
+          margin-right: 5px; vertical-align: middle;
+        }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+        /* ── USER CHIP ── */
+        .user-chip {
+          display: flex; align-items: center; gap: 7px;
+          background: var(--surface); border: 1px solid var(--border);
+          border-radius: 99px; padding: 4px 12px 4px 5px;
+          font-size: 0.8rem; font-weight: 500;
+        }
+        .user-chip img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; }
+        .user-chip .email { color: var(--ink3); font-size: 0.7rem; }
+
+        /* -------Search-------- */
+        .feed-header { align-items: center; }
+
+.lf-search-wrap {
+    position: relative; display: flex; align-items: center;
+    flex: 1; max-width: 300px;
+}
+.lf-search-wrap input {
+    width: 100%; background: var(--bg2);
+    border: 1px solid var(--border); border-radius: 99px;
+    color: var(--ink); padding: 7px 32px 7px 32px;
+    font-family: var(--sans); font-size: 0.83rem; outline: none;
+    transition: all 0.15s ease;
+}
+.lf-search-wrap input:focus { background: var(--surface); border-color: var(--ink); }
+.lf-search-wrap input::placeholder { color: var(--ink3); }
+.lf-search-wrap .search-icon {
+    position: absolute; left: 11px; color: var(--ink3);
+    font-size: 0.85rem; pointer-events: none;
+}
+.lf-search-clear {
+    position: absolute; right: 10px;
+    background: none; border: none; color: var(--ink3);
+    cursor: pointer; font-size: 0.75rem; padding: 0;
+    display: none; transition: color 0.12s;
+}
+.lf-search-clear:hover { color: var(--ink); }
+.lf-search-clear.visible { display: block; }
+
+.search-highlight {
+    background: rgba(180, 83, 9, 0.15);
+    border-radius: 2px; padding: 0 1px;
+    color: var(--amber);
+    font-weight: 500;
+}
+[data-theme="dark"] .search-highlight {
+    background: rgba(251, 191, 36, 0.15);
+}
+
+        /* ── MOBILE ── */
+        @media (max-width: 860px) {
+          .layout { grid-template-columns: 1fr; padding: 0 16px; }
+          .sidebar { display: none; }
+          .main-content { padding: 20px 0 60px; }
+          .field-row { grid-template-columns: 1fr; }
+          .topbar { padding: 0 16px; }
+          .type-selector { grid-template-columns: 1fr 1fr; }
+          .item-meta-grid { gap: 10px; }
+        }
+        @media (max-width: 480px) {
+          .user-chip .email { display: none; }
+          .item-body { padding: 14px 16px; }
+          .type-btn { padding: 10px 8px; }
+        }
+
+        /* ---- File upload -------*/
+        .upload-box {
+    border: 1px dashed var(--border2);
+    border-radius: 7px; padding: 14px;
+    text-align: center; cursor: pointer;
+    color: var(--ink3); font-size: 0.82rem;
+    transition: all 0.15s ease; margin-top: 4px;
+}
+.upload-box:hover { border-color: var(--ink); color: var(--ink); background: var(--bg); }
+.upload-box.drag  { border-color: var(--ink); background: var(--bg2); }
+
+#lf-media-preview img,
+#lf-media-preview video {
+    max-width: 100%; border-radius: 7px; margin-top: 10px;
+}
+
+.upload-progress-wrap { margin-top: 8px; display: none; }
+.upload-progress-wrap.visible { display: block; }
+.upload-progress-bar-bg {
+    height: 3px; background: var(--border); border-radius: 99px; overflow: hidden;
+}
+.upload-progress-bar-fill {
+    height: 100%; width: 0%; background: var(--ink);
+    border-radius: 99px; transition: width 0.15s ease;
+}
+.upload-progress-bar-fill.indeterminate {
+    width: 40% !important; transition: none;
+    background: linear-gradient(90deg, var(--ink) 0%, var(--ink3) 50%, var(--ink) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+}
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+.upload-progress-label {
+    font-size: 0.7rem; color: var(--ink3); margin-top: 4px;
+    display: flex; justify-content: space-between;
+}
+    </style>
+</head>
+<body>
+
+<div id="top-progress"></div>
+
+<!-- TOPBAR -->
+<nav class="topbar">
+    <a href="/" class="logo">
+        <span class="logo-dot"></span>
+        MVSR Connect
+    </a>
+    <div style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--ink3)">
+        <span style="color:var(--border2)">/</span>
+        <span style="color:var(--ink2);font-weight:500">Lost & Found</span>
+    </div>
+    <div class="topbar-right" id="topbar-right">
+        <button class="theme-toggle" onclick="toggleTheme()" id="theme-toggle">☀</button>
+        <button class="btn btn-dark btn-sm" onclick="window.location.href='/'">← Back to Feed</button>
+    </div>
+</nav>
+
+<!-- MAIN -->
+<div class="layout">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="sidebar-section">
+            <div class="sidebar-label">Filter</div>
+            <div class="filter-item active" id="filter-all" onclick="setFilter('all',this)">
+                <span class="filter-dot dot-all"></span>
+                All items
+            </div>
+            <div class="filter-item" id="filter-lost" onclick="setFilter('lost',this)">
+                <span class="filter-dot dot-lost"></span>
+                Lost
+            </div>
+            <div class="filter-item" id="filter-found" onclick="setFilter('found',this)">
+                <span class="filter-dot dot-found"></span>
+                Found
+            </div>
+            <div class="filter-item" id="filter-open" onclick="setFilter('open',this)">
+                <span class="filter-dot" style="background:var(--amber)"></span>
+                Still open
+            </div>
+            <div class="filter-item" id="filter-resolved" onclick="setFilter('resolved',this)">
+                <span class="filter-dot" style="background:var(--ink3)"></span>
+                Resolved
+            </div>
+        </div>
+
+        <div class="sidebar-section">
+            <div class="sidebar-label">Stats</div>
+            <div class="sidebar-stat"><span>Active cases</span><strong id="stat-open">—</strong></div>
+            <div class="sidebar-stat"><span>Resolved</span><strong id="stat-resolved">—</strong></div>
+            <div class="sidebar-stat"><span>This week</span><strong id="stat-week">—</strong></div>
+        </div>
+
+        <div class="sidebar-section">
+            <div class="sidebar-tip">
+                <strong>💡 Tips</strong><br>
+                Add identifying details — color, brand, scratches. The more specific, the faster you'll find a match.
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="main-content">
+
+        <!-- Header -->
+        <div class="feed-header">
+            <div class="feed-title">
+                Lost & Found <span class="count-badge" id="item-count">0</span>
+            </div>
+            <div class="lf-search-wrap">
+                <span class="search-icon">⌕</span>
+                <input type="text" id="lf-search-input"
+                       placeholder="Search items, locations…"
+                       oninput="onSearchInput(this.value)"
+                       onkeydown="if(event.key==='Escape'){clearSearch()}">
+                <button class="lf-search-clear" id="lf-search-clear" onclick="clearSearch()">✕</button>
+            </div>
+        </div>
+
+        <!-- Create card -->
+        <div class="create-card">
+            <div class="create-top">
+                <span class="create-label">Report an item</span>
+            </div>
+
+            <!-- Type selector -->
+            <div class="type-selector">
+                <button class="type-btn" id="type-lost-btn" onclick="selectType('lost')">
+                    <span class="type-btn-icon">😟</span>
+                    <span class="type-btn-label">I Lost Something</span>
+                    <span class="type-btn-sub">Post to ask if someone found it</span>
+                </button>
+                <button class="type-btn" id="type-found-btn" onclick="selectType('found')">
+                    <span class="type-btn-icon">🎉</span>
+                    <span class="type-btn-label">I Found Something</span>
+                    <span class="type-btn-sub">Post so the owner can claim it</span>
+                </button>
+            </div>
+
+            <div class="thin-divider"></div>
+
+            <div class="field-row">
+                <div class="field">
+                    <div class="field-label">Item name *</div>
+                    <input type="text" id="lf-title" placeholder="e.g. Black OnePlus Watch">
+                </div>
+                <div class="field">
+                    <div class="field-label">Category</div>
+                    <select id="lf-category">
+                        <option value="">Select category…</option>
+                        <option>Electronics</option>
+                        <option>ID / Cards</option>
+                        <option>Bag / Backpack</option>
+                        <option>Clothing</option>
+                        <option>Books / Notes</option>
+                        <option>Keys</option>
+                        <option>Accessories</option>
+                        <option>Sports / Gear</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="field-row">
+                <div class="field">
+                    <div class="field-label">Location</div>
+                    <input type="text" id="lf-location" placeholder="e.g. CSE Block, 3rd floor">
+                </div>
+                <div class="field">
+                    <div class="field-label">Date</div>
+                    <input type="date" id="lf-date">
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="field-label">Description</div>
+                <textarea id="lf-desc" placeholder="Describe the item — colour, brand, any marks, what was inside…"></textarea>
+            </div>
+            <div class="field">
+                <div class="field-label">Photo (optional)</div>
+                <div id="lf-upload-box" class="upload-box">
+                    📷 Attach a photo of the item
+                    <input type="file" id="lf-media-file" accept="image/*" hidden>
+                </div>
+                <div id="lf-media-preview"></div>
+                <div class="upload-progress-wrap" id="lf-upload-progress-wrap">
+                    <div class="upload-progress-bar-bg">
+                        <div class="upload-progress-bar-fill" id="lf-upload-progress-fill"></div>
+                    </div>
+                    <div class="upload-progress-label">
+                        <span id="lf-upload-progress-text">Uploading…</span>
+                        <span id="lf-upload-progress-pct">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="create-footer">
+                <span class="create-footer-note" id="create-footer-note">Select "Lost" or "Found" above to continue</span>
+                <button class="btn btn-dark" id="lf-submit-btn" onclick="submitItem()" disabled>Post →</button>
+            </div>
+        </div>
+
+        <!-- Items feed -->
+        <div id="items-container">
+            <div class="loading"><span class="spinner"></span>Loading…</div>
+        </div>
+
+    </div>
+</div>
+
+<!-- CLAIM MODAL (for "Found It" or "It's Mine") -->
+<div id="claim-modal" style="display:none" class="modal-backdrop" onclick="closeModalOnBackdrop(event)">
+    <div class="modal">
+        <div class="modal-title" id="modal-title">I found this!</div>
+        <div class="modal-sub" id="modal-sub">Provide some details so the owner can verify you have the right item.</div>
+
+        <div class="claim-hint" id="modal-hint">
+            <strong>⚠ Verification required</strong> — describe a unique detail about the item that only the real owner/finder would know. This protects everyone.
+        </div>
+
+        <div class="claim-form" id="modal-form">
+            <div class="field">
+                <div class="field-label" id="modal-desc-label">Where did you find it? Any identifying details?</div>
+                <textarea id="modal-desc" placeholder="Be specific — the more detail the better…" style="min-height:80px"></textarea>
+            </div>
+            <div class="field">
+                <div class="field-label">Contact info (phone / Instagram / WhatsApp)</div>
+                <input type="text" id="modal-contact" placeholder="How should they reach you?">
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-dark btn-sm" id="modal-submit-btn" onclick="submitClaim()">Send →</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ── THEME ──
+(function() {
+    const saved = localStorage.getItem('mvsr-theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
+})();
+
+function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const next = isDark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('mvsr-theme', next);
+    updateToggleIcon();
+}
+function updateToggleIcon() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.querySelectorAll('.theme-toggle').forEach(btn => {
+        btn.textContent = isDark ? '☽' : '☀';
+        btn.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+    });
+}
+window.addEventListener('load', updateToggleIcon);
+
+// ── STATE ──
+let currentUser     = null;
+let currentFilter   = 'all';
+let selectedType    = null;
+let activeClaimItemId   = null;
+let activeClaimItemType = null;
+let activeClaimMode     = null;
+let lfMediaUrl      = null;
+let lfMediaType     = null;
+let lfMediaPublicId = null;
+let searchTimer     = null;
+
+// ── INIT ──
+window.addEventListener('load', async () => {
+    updateToggleIcon();
+    topProgress(20);
+    try {
+        const res = await fetch('/user', { credentials: 'include' });
+        if (res.ok) { const d = await res.json(); if (d?.email) currentUser = d; }
+    } catch {}
+    topProgress(70);
+    await loadItems();
+    topProgress(100);
+    initUploadBox();
+});
+
+// ── UPLOAD BOX ──
+function initUploadBox() {
+    const box   = document.getElementById('lf-upload-box');
+    const input = document.getElementById('lf-media-file');
+    if (!box || !input) return;
+    box.onclick = (e) => { if (e.target !== input) input.click(); };
+    box.addEventListener('dragover',  e => { e.preventDefault(); box.classList.add('drag'); });
+    box.addEventListener('dragleave', () => box.classList.remove('drag'));
+    box.addEventListener('drop', e => {
+        e.preventDefault(); box.classList.remove('drag');
+        if (e.dataTransfer.files[0]) handleFileSelect(e.dataTransfer.files[0]);
+    });
+    input.addEventListener('change', () => { if (input.files[0]) handleFileSelect(input.files[0]); });
+}
+
+function handleFileSelect(file) {
+    const preview = document.getElementById('lf-media-preview');
+    preview.innerHTML = '';
+    const url = URL.createObjectURL(file);
+    preview.innerHTML = `<img src="${url}" style="max-width:100%;border-radius:7px;margin-top:8px">`;
+    // Store file for upload on submit
+    document.getElementById('lf-media-file')._pendingFile = file;
+    lfMediaUrl = null; lfMediaType = null; lfMediaPublicId = null; // reset until uploaded
+}
+
+async function uploadLfMedia(file) {
+    return new Promise((resolve, reject) => {
+        const fd  = new FormData();
+        fd.append('file', file);
+        const xhr  = new XMLHttpRequest();
+        const wrap = document.getElementById('lf-upload-progress-wrap');
+        const fill = document.getElementById('lf-upload-progress-fill');
+        const pct  = document.getElementById('lf-upload-progress-pct');
+        const txt  = document.getElementById('lf-upload-progress-text');
+        wrap.classList.add('visible');
+        fill.style.width = '0%';
+        fill.classList.remove('indeterminate');
+        pct.textContent = '0%';
+        txt.textContent = 'Uploading…';
+        xhr.upload.addEventListener('progress', e => {
+            if (e.lengthComputable) {
+                const p = Math.round((e.loaded / e.total) * 100);
+                fill.style.width = p + '%';
+                pct.textContent  = p + '%';
+            }
+        });
+        xhr.addEventListener('load', () => {
+            fill.classList.add('indeterminate');
+            pct.textContent = ''; txt.textContent = 'Saving…';
+            try { resolve(JSON.parse(xhr.responseText)); }
+            catch { reject(new Error('Bad response')); }
+        });
+        xhr.addEventListener('error', () => {
+            txt.textContent = 'Upload failed';
+            fill.classList.remove('indeterminate');
+            wrap.classList.remove('visible');
+            reject(new Error('Upload failed'));
+        });
+        xhr.open('POST', '/api/media/upload');
+        xhr.send(fd);
+    });
+}
+
+function uploadProgressDone(success) {
+    const wrap = document.getElementById('lf-upload-progress-wrap');
+    const fill = document.getElementById('lf-upload-progress-fill');
+    const txt  = document.getElementById('lf-upload-progress-text');
+    const pct  = document.getElementById('lf-upload-progress-pct');
+    fill.classList.remove('indeterminate');
+    fill.style.width = success ? '100%' : '0%';
+    txt.textContent  = success ? 'Done' : 'Failed';
+    pct.textContent  = success ? '✓' : '';
+    setTimeout(() => {
+        wrap.classList.remove('visible');
+        fill.style.width = '0%';
+        pct.textContent  = '0%';
+        txt.textContent  = 'Uploading…';
+    }, 1400);
+}
+
+// ── TYPE SELECTOR ──
+function selectType(type) {
+    selectedType = type;
+    document.getElementById('type-lost-btn').className  = 'type-btn' + (type === 'lost'  ? ' selected-lost'  : '');
+    document.getElementById('type-found-btn').className = 'type-btn' + (type === 'found' ? ' selected-found' : '');
+    const btn  = document.getElementById('lf-submit-btn');
+    const note = document.getElementById('create-footer-note');
+    btn.disabled = false;
+    note.textContent = type === 'lost' ? 'Posting as: I lost this item' : 'Posting as: I found this item';
+    note.style.color = type === 'lost' ? 'var(--red)' : 'var(--green)';
+}
+
+// ── FILTER ──
+function setFilter(filter, el) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-item').forEach(f => f.classList.remove('active'));
+    el.classList.add('active');
+    const q = document.getElementById('lf-search-input')?.value.trim();
+    q ? doSearch(q) : loadItems();
+}
+
+// ── SEARCH ──
+function onSearchInput(val) {
+    document.getElementById('lf-search-clear').classList.toggle('visible', val.length > 0);
+    clearTimeout(searchTimer);
+    if (!val.trim()) { loadItems(); return; }
+    searchTimer = setTimeout(() => doSearch(val.trim()), 300);
+}
+
+async function doSearch(q) {
+    const c = document.getElementById('items-container');
+    c.innerHTML = `<div class="loading"><span class="spinner"></span>Searching…</div>`;
+    topProgress(30);
+    try {
+        const res = await fetch(`/lost-found/search?q=${encodeURIComponent(q)}`);
+        topProgress(80);
+        if (!res.ok) throw new Error();
+        let items = await res.json();
+        topProgress(100);
+        items = applyFilter(items);
+        document.getElementById('item-count').textContent = items.length;
+        c.innerHTML = items.length
+            ? items.map(item => highlightItem(item, q)).join('')
+            : emptyState(`No results for "${q}"`, 'Try a different keyword, location, or category.');
+    } catch { topProgress(100); c.innerHTML = emptyState('Search failed', 'Try again.'); }
+}
+
+function clearSearch() {
+    document.getElementById('lf-search-input').value = '';
+    document.getElementById('lf-search-clear').classList.remove('visible');
+    loadItems();
+}
+
+function highlightItem(item, q) {
+    const html = renderItem(item);
+    const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escaped})`, 'gi');
+    return html.replace(/>(.*?)</g, (match, text) => {
+        if (!text.trim()) return match;
+        return '>' + text.replace(regex, '<mark class="search-highlight">$1</mark>') + '<';
+    });
+}
+
+function applyFilter(items) {
+    if (currentFilter === 'lost')     return items.filter(i => i.type === 'LOST');
+    if (currentFilter === 'found')    return items.filter(i => i.type === 'FOUND');
+    if (currentFilter === 'open')     return items.filter(i => !i.resolved);
+    if (currentFilter === 'resolved') return items.filter(i => i.resolved);
+    return items;
+}
+
+// ── LOAD ITEMS ──
+async function loadItems() {
+    const c = document.getElementById('items-container');
+    c.innerHTML = `<div class="loading"><span class="spinner"></span>Loading…</div>`;
+    topProgress(30);
+    try {
+        const res = await fetch('/lost-found');
+        topProgress(80);
+        if (!res.ok) throw new Error();
+        let items = applyFilter(await res.json());
+        topProgress(100);
+        document.getElementById('item-count').textContent = items.length;
+        updateStats(items);
+        c.innerHTML = items.length ? items.map(renderItem).join('') : emptyState('Nothing here yet', 'Be the first to post.');
+    } catch { topProgress(100); renderDemo(); }
+}
+
+function updateStats(items) {
+    document.getElementById('stat-open').textContent     = items.filter(i => !i.resolved).length;
+    document.getElementById('stat-resolved').textContent = items.filter(i => i.resolved).length;
+    const weekAgo = Date.now() - 7 * 24 * 3600 * 1000;
+    document.getElementById('stat-week').textContent     = items.filter(i => new Date(i.createdAt).getTime() > weekAgo).length;
+}
+
+function renderDemo() {
+    const demo = [
+        { id:1, type:'LOST', title:'Black OnePlus Nord Watch', category:'Electronics', location:'CSE Block, Lab 3', date:'2026-03-18', description:'Black strap, cracked bezel on the top right. Had a sticker on the back.', authorName:'Ravi Kumar', createdAt:new Date(Date.now()-3600000).toISOString(), resolved:false, responseCount:2, mediaUrl:null },
+        { id:2, type:'FOUND', title:'Student ID Card', category:'ID / Cards', location:'Canteen area', date:'2026-03-19', description:'Found a student ID on the bench. Name starts with "Priya".', authorName:'Aarav Mehta', createdAt:new Date(Date.now()-7200000).toISOString(), resolved:false, responseCount:0, mediaUrl:null },
+    ];
+    document.getElementById('item-count').textContent = demo.length;
+    updateStats(demo);
+    document.getElementById('items-container').innerHTML = demo.map(renderItem).join('');
+}
+
+// ── RENDER ITEM ──
+function renderItem(item) {
+    const isLost     = item.type === 'LOST';
+    const typeClass  = isLost ? 'type-lost' : 'type-found';
+    const badgeClass = item.resolved ? 'badge-resolved' : (isLost ? 'badge-lost' : 'badge-found');
+    const badgeLabel = item.resolved ? '✓ Resolved' : (isLost ? '⚠ Lost' : '✦ Found');
+    const time       = item.createdAt ? formatTime(item.createdAt) : '';
+    const isOwner    = currentUser && currentUser.name === item.authorName;
+    const isAdmin    = currentUser && currentUser.role === 'ADMIN';
+    const canDelete  = isOwner || isAdmin;
+
+    let primaryBtn = '';
+    if (item.resolved) {
+        primaryBtn = '';
+    } else if (isOwner || isAdmin) {
+        primaryBtn = `<button class="action-btn" onclick="toggleResponses(${item.id})">
+                        📬 View Responses ${item.responseCount > 0 ? `(${item.responseCount})` : ''}
+                      </button>`;
+    } else if (currentUser) {
+        primaryBtn = isLost
+            ? `<button class="action-btn found-it" onclick="openClaim(${item.id},'lost','found_it')">🙋 I Found This!</button>`
+            : `<button class="action-btn its-mine" onclick="openClaim(${item.id},'found','its_mine')">🔑 That's Mine!</button>`;
+    }
+
+    // Media
+    let mediaHtml = '';
+    if (item.mediaUrl) {
+        if (item.mediaType === 'image') {
+            mediaHtml = `<div style="margin:10px 0">
+                <img src="${item.mediaUrl}" style="max-width:100%;border-radius:8px;cursor:pointer"
+                     onclick="window.open('${item.mediaUrl}','_blank')">
+            </div>`;
+        } else if (item.mediaType === 'video') {
+            mediaHtml = `<div style="margin:10px 0">
+                <video controls style="max-width:100%;border-radius:8px">
+                    <source src="${item.mediaUrl}">
+                </video>
+            </div>`;
+        }
+    }
+
+    return `
+    <div class="item-card ${typeClass}${item.resolved ? ' resolved-overlay' : ''}" id="item-${item.id}">
+        <div class="item-body">
+            <div class="item-header">
+                <span class="item-type-badge ${badgeClass}">${badgeLabel}</span>
+                <div class="item-title${item.resolved ? ' resolved-strike' : ''}">${escHtml(item.title || 'Untitled')}</div>
+            </div>
+            ${item.category ? `<span class="item-category">📂 ${escHtml(item.category)}</span>` : ''}
+            ${item.description ? `<div class="item-desc">${escHtml(item.description)}</div>` : ''}
+            ${mediaHtml}
+            <div class="item-meta-grid">
+                ${item.location ? `<div class="meta-item"><span class="meta-item-label">📍 Location</span><span class="meta-item-value">${escHtml(item.location)}</span></div>` : ''}
+                ${item.date     ? `<div class="meta-item"><span class="meta-item-label">📅 Date</span><span class="meta-item-value">${formatDate(item.date)}</span></div>` : ''}
+                ${(isOwner || isAdmin) ? `<div class="meta-item"><span class="meta-item-label">💬 Responses</span><span class="meta-item-value">${item.responseCount || 0}</span></div>` : ''}
+            </div>
+            <div class="item-footer">
+                <span class="item-author">${escHtml(item.authorName || 'anonymous')}</span>
+                <span class="meta-dot"></span><span>#${item.id}</span>
+                ${time ? `<span class="meta-dot"></span><span>${time}</span>` : ''}
+            </div>
+            <div class="item-actions">
+                ${primaryBtn}
+                ${canDelete  ? `<button class="action-btn danger" onclick="deleteItem(${item.id})">Delete</button>` : ''}
+                ${isOwner && !item.resolved ? `<button class="resolve-btn" onclick="resolveItem(${item.id})">Mark resolved ✓</button>` : ''}
+            </div>
+        </div>
+        <div class="response-panel" id="responses-${item.id}">
+            <div class="response-panel-title">
+                <span class="${isLost ? 'panel-accent-found' : 'panel-accent-lost'}">
+                    ${isLost ? '🙋 People who found it' : '🔑 Claim attempts'}
+                </span>
+            </div>
+            <div id="response-list-${item.id}"><div class="no-responses">No responses yet</div></div>
+        </div>
+    </div>`;
+}
+
+// ── TOGGLE RESPONSES ──
+async function toggleResponses(itemId) {
+    const panel = document.getElementById(`responses-${itemId}`);
+    if (panel.classList.contains('open')) { panel.classList.remove('open'); return; }
+    panel.classList.add('open');
+    await loadResponses(itemId);
+}
+
+async function loadResponses(itemId) {
+    const list = document.getElementById(`response-list-${itemId}`);
+    list.innerHTML = `<div class="loading" style="padding:8px 0"><span class="spinner"></span></div>`;
+    try {
+        const res = await fetch(`/lost-found/${itemId}/responses`);
+        if (!res.ok) throw new Error();
+        const responses = await res.json();
+        if (!responses.length) { list.innerHTML = `<div class="no-responses">No responses yet</div>`; return; }
+        list.innerHTML = `<div class="responses-list">${responses.map(r => `
+            <div class="response-item">
+                <div class="response-item-header">
+                    <span class="response-user">${escHtml(r.authorName || 'anonymous')}</span>
+                    <span class="meta-dot"></span>
+                    <span class="response-time">${formatTime(r.createdAt)}</span>
+                </div>
+                <div class="response-text">${escHtml(r.message)}</div>
+                ${r.contact ? `<div class="response-proof">📱 ${escHtml(r.contact)}</div>` : ''}
+            </div>`).join('')}
+        </div>`;
+    } catch { list.innerHTML = `<div class="no-responses">Could not load responses</div>`; }
+}
+
+// ── CLAIM MODAL ──
+function openClaim(itemId, itemType, mode) {
+    if (!currentUser) { showToast('Sign in to respond', 'error'); return; }
+    activeClaimItemId   = itemId;
+    activeClaimItemType = itemType;
+    activeClaimMode     = mode;
+
+    const title     = document.getElementById('modal-title');
+    const sub       = document.getElementById('modal-sub');
+    const hint      = document.getElementById('modal-hint');
+    const descLabel = document.getElementById('modal-desc-label');
+
+    if (mode === 'found_it') {
+        title.textContent = '🙋 I Found This!';
+        sub.textContent   = 'Provide details so the owner can verify you have their item.';
+        hint.innerHTML    = `<strong>⚠ Proof required</strong> — describe exactly where and when you found it, plus a unique detail that proves you have the right item.`;
+        descLabel.textContent = 'Where did you find it? What unique details can you share?';
+    } else {
+        title.textContent = '🔑 That\'s Mine!';
+        sub.textContent   = 'Prove it\'s yours so the finder can hand it over to the right person.';
+        hint.innerHTML    = `<strong>⚠ Verification required</strong> — mention a detail only the real owner would know (what's inside, a specific mark, lock code, etc.)`;
+        descLabel.textContent = 'Describe a unique detail that proves this belongs to you';
+    }
+
+    document.getElementById('modal-desc').value    = '';
+    document.getElementById('modal-contact').value = '';
+    document.getElementById('claim-modal').style.display = 'flex';
+}
+
+function closeModal() { document.getElementById('claim-modal').style.display = 'none'; }
+function closeModalOnBackdrop(e) { if (e.target === document.getElementById('claim-modal')) closeModal(); }
+
+async function submitClaim() {
+    const message = document.getElementById('modal-desc').value.trim();
+    const contact = document.getElementById('modal-contact').value.trim();
+    if (!message) { showToast('Please describe the details', 'error'); return; }
+
+    const btn = document.getElementById('modal-submit-btn');
+    btn.classList.add('btn-loading');
+    btn.innerHTML = `<span class="btn-spinner"></span>Sending…`;
+
+    try {
+        const res = await fetch(`/lost-found/${activeClaimItemId}/respond`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message, contact, mode: activeClaimMode })
+        });
+        if (!res.ok) throw new Error(await res.text());
+        closeModal();
+        showToast(activeClaimMode === 'found_it' ? 'Response sent to the owner!' : 'Claim sent to the finder!');
+        const panel = document.getElementById(`responses-${activeClaimItemId}`);
+        if (panel?.classList.contains('open')) await loadResponses(activeClaimItemId);
+        setTimeout(() => loadItems(), 600);
+    } catch (err) {
+        showToast(err.message || 'Could not send', 'error');
+    } finally {
+        btn.classList.remove('btn-loading');
+        btn.innerHTML = 'Send →';
+    }
+}
+
+// ── SUBMIT ITEM ──
+async function submitItem() {
+    const title    = document.getElementById('lf-title').value.trim();
+    const desc     = document.getElementById('lf-desc').value.trim();
+    const location = document.getElementById('lf-location').value.trim();
+    const date     = document.getElementById('lf-date').value;
+    const category = document.getElementById('lf-category').value;
+    const fileInput = document.getElementById('lf-media-file');
+    const file     = fileInput._pendingFile || fileInput.files[0];
+
+    if (!title) { showToast('Item name is required', 'error'); return; }
+    if (!selectedType) { showToast('Select Lost or Found', 'error'); return; }
+
+    const btn = document.getElementById('lf-submit-btn');
+    btn.classList.add('btn-loading');
+    btn.innerHTML = `<span class="btn-spinner"></span>Posting…`;
+    topProgress(20);
+
+    try {
+        // Upload image first if one was selected
+        let mediaUrl = null, mediaType = null, mediaPublicId = null;
+        if (file) {
+            topProgress(30);
+            const result = await uploadLfMedia(file);
+            mediaUrl      = result.url;
+            mediaPublicId = result.publicId;
+            mediaType     = 'image';
+            uploadProgressDone(true);
+        }
+
+        topProgress(60);
+        const res = await fetch('/lost-found', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title, description: desc, location, date, category,
+                type: selectedType.toUpperCase(),
+                mediaUrl, mediaType, mediaPublicId
+            })
+        });
+        topProgress(90);
+        if (!res.ok) {
+            const errText = await res.text();
+            if (mediaPublicId) { /* Cloudinary cleanup handled server-side on moderation fail */ }
+            throw new Error(errText);
+        }
+        topProgress(100);
+
+        // Reset form
+        document.getElementById('lf-title').value    = '';
+        document.getElementById('lf-desc').value     = '';
+        document.getElementById('lf-location').value = '';
+        document.getElementById('lf-date').value     = '';
+        document.getElementById('lf-category').value = '';
+        document.getElementById('lf-media-preview').innerHTML = '';
+        fileInput.value = ''; fileInput._pendingFile = null;
+        lfMediaUrl = null; lfMediaType = null; lfMediaPublicId = null;
+        selectedType = null;
+        document.getElementById('type-lost-btn').className  = 'type-btn';
+        document.getElementById('type-found-btn').className = 'type-btn';
+        btn.disabled = true;
+        document.getElementById('create-footer-note').textContent = 'Select "Lost" or "Found" above to continue';
+        document.getElementById('create-footer-note').style.color = '';
+
+        showToast('Posted!');
+        loadItems();
+    } catch (err) {
+        topProgress(100);
+        uploadProgressDone(false);
+        showToast(err.message || 'Failed to post', 'error');
+    } finally {
+        btn.classList.remove('btn-loading');
+        btn.innerHTML = 'Post →';
+        btn.disabled  = !selectedType;
+    }
+}
+
+// ── DELETE ──
+async function deleteItem(itemId) {
+    if (!confirm('Delete this item?')) return;
+    try {
+        const res = await fetch(`/lost-found/${itemId}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error();
+        document.getElementById(`item-${itemId}`)?.remove();
+        const c = document.getElementById('item-count');
+        c.textContent = Math.max(0, parseInt(c.textContent) - 1);
+        showToast('Deleted');
+    } catch { showToast('Could not delete', 'error'); }
+}
+
+// ── RESOLVE ──
+async function resolveItem(itemId) {
+    if (!confirm('Mark as resolved? This means the item was returned to its owner.')) return;
+    try {
+        const res = await fetch(`/lost-found/${itemId}/resolve`, { method: 'POST' });
+        if (!res.ok) throw new Error();
+        showToast('Marked as resolved 🎉');
+        loadItems();
+    } catch { showToast('Could not update', 'error'); }
+}
+
+// ── UTILS ──
+function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function formatTime(dateStr) {
+    try {
+        const diff = Math.floor((new Date() - new Date(dateStr)) / 1000);
+        if (diff < 60) return 'just now';
+        if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+        if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+        return new Date(dateStr).toLocaleDateString('en-IN', { day:'numeric', month:'short' });
+    } catch { return ''; }
+}
+function formatDate(dateStr) {
+    try { return new Date(dateStr).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }); }
+    catch { return dateStr; }
+}
+function emptyState(title, sub) {
+    return `<div class="empty-state"><div class="icon">○</div><h3>${title}</h3><p>${sub}</p></div>`;
+}
+function showToast(msg, type = 'success') {
+    const t = document.createElement('div');
+    t.className = `toast ${type}`; t.textContent = msg;
+    document.body.appendChild(t); setTimeout(() => t.remove(), 2800);
+}
+let _progressTimer = null;
+function topProgress(pct) {
+    const bar = document.getElementById('top-progress');
+    if (!bar) return;
+    bar.classList.add('active'); bar.style.width = pct + '%';
+    if (_progressTimer) clearTimeout(_progressTimer);
+    if (pct >= 100) {
+        _progressTimer = setTimeout(() => {
+            bar.style.opacity = '0';
+            setTimeout(() => { bar.style.width = '0%'; bar.classList.remove('active'); bar.style.opacity = ''; }, 300);
+        }, 300);
+    }
+}
+</script>
+
+</body>
+</html>
