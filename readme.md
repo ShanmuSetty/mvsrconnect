@@ -1,7 +1,6 @@
 <div align="center">
 
 <br/>
-
 ```
 ███╗   ███╗██╗   ██╗███████╗██████╗      ██████╗ ██████╗ ███╗   ██╗███╗   ██╗███████╗ ██████╗████████╗
 ████╗ ████║██║   ██║██╔════╝██╔══██╗    ██╔════╝██╔═══██╗████╗  ██║████╗  ██║██╔════╝██╔════╝╚══██╔══╝
@@ -22,7 +21,7 @@
 
 <br/>
 
-*Post · Comment · Vote · Join Clubs · Moderate*  
+*Post · Comment · Vote · Join Clubs · Moderate · Lost & Found*  
 *Exclusively for `@mvsrec.edu.in` accounts*
 
 </div>
@@ -31,7 +30,7 @@
 
 ## 📌 What is MVSR Connect?
 
-MVSR Connect is a **Reddit-style campus forum** built exclusively for students of MVSR Engineering College. It's a single platform where you can share posts, join clubs, vote on content, have threaded discussions, and report inappropriate material — all locked behind Google OAuth so only real `@mvsrec.edu.in` accounts can get in.
+MVSR Connect is a **Reddit-style campus forum** built exclusively for students of MVSR Engineering College. It's a single platform where you can share posts, join clubs, vote on content, have threaded discussions, report inappropriate material, and find lost items — all locked behind Google OAuth so only real `@mvsrec.edu.in` accounts can get in.
 
 Think of it as a private, AI-moderated version of Reddit, but built specifically for your campus.
 
@@ -53,6 +52,15 @@ Think of it as a private, AI-moderated version of Reddit, but built specifically
 - 📬 Submit join requests; moderators approve or reject
 - 📋 Post within clubs — only members can post inside a club
 - 🛡️ Apply to become a club moderator via the appeal system
+
+### Lost & Found
+- 🔎 **Report Lost Items** — Post what you lost with location, date, category, and a photo
+- 🎉 **Report Found Items** — Post what you found so the owner can claim it
+- 🙋 **Claim System** — Finders respond to lost posts; owners respond to found posts with proof of ownership
+- 🔒 **Private Responses** — Only the original poster can see who responded, protecting user privacy
+- ✓ **Resolve Cases** — Mark your post resolved once the item is returned
+- 🔍 **Search** — Search across item names, descriptions, locations, and categories
+- 🤖 **Moderation** — All text and images run through the same AI toxicity and safety pipeline
 
 ### Moderation & Admin
 - 🤖 **AI Toxicity Detection** — Every comment and post is checked by an external Flask microservice before going live
@@ -84,21 +92,21 @@ Think of it as a private, AI-moderated version of Reddit, but built specifically
 ---
 
 ## 🗂️ Project Structure
-
 ```
 src/
 ├── main/
 │   ├── java/com/mvsr/mvsrconnect/
 │   │   ├── config/              # SecurityConfig, OAuth2LoginSuccessHandler, CloudinaryConfig
-│   │   ├── controller/          # REST controllers (Posts, Comments, Clubs, Votes, Search…)
-│   │   ├── dto/                 # Data transfer objects
-│   │   ├── model/               # JPA entities (User, Post, Club, Comment, Vote, Report…)
+│   │   ├── controller/          # REST controllers (Posts, Comments, Clubs, Votes, Search, LostFound…)
+│   │   ├── dto/                 # Data transfer objects (LostFoundItemDTO…)
+│   │   ├── model/               # JPA entities (User, Post, Club, Comment, Vote, Report, LostFoundItem…)
 │   │   ├── repository/          # Spring Data repositories
 │   │   └── service/             # Business logic (ModerationService, ClubService, ReportService…)
 │   └── resources/
 │       ├── application.properties
 │       └── static/              # Frontend pages
 │           ├── index.html       # Main feed
+│           ├── lostandfound.html # Lost & Found board
 │           ├── dashboard.html   # Personal dashboard
 │           ├── mod.html         # Moderator panel
 │           ├── admin.html       # Admin panel
@@ -121,7 +129,6 @@ src/
 ### Environment Variables
 
 Set these before running the app:
-
 ```bash
 # Database
 DB_URL=jdbc:postgresql://localhost:5432/your_db
@@ -143,7 +150,6 @@ MODERATION_ENABLED=true                # Set to false in dev to skip checks
 ```
 
 ### Run Locally
-
 ```bash
 ./mvnw spring-boot:run
 ```
@@ -151,7 +157,6 @@ MODERATION_ENABLED=true                # Set to false in dev to skip checks
 App starts at → `http://localhost:8080`
 
 ### Run with Docker
-
 ```bash
 # Build the image
 docker build -t mvsrconnect .
@@ -220,6 +225,18 @@ docker run -p 8080:8080 \
 | ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/clubs/requests/{id}/approve` | Approve a join request |
 | ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/clubs/requests/{id}/reject` | Reject a join request |
 
+### Lost & Found
+
+| Method | Endpoint | Description |
+|---|---|---|
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/lost-found` | All items (newest first) |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/lost-found` | Report a lost or found item |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/lost-found/search?q=` | Search items by keyword |
+| ![DELETE](https://img.shields.io/badge/DELETE-F93E3E?style=flat-square) | `/lost-found/{id}` | Delete an item (author / admin) |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/lost-found/{id}/resolve` | Mark item as resolved |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/lost-found/{id}/responses` | View responses (author / admin only) |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/lost-found/{id}/respond` | Submit a finder / ownership claim |
+
 ### Moderator Panel
 
 | Method | Endpoint | Description |
@@ -267,6 +284,7 @@ docker run -p 8080:8080 \
 | Page | URL | What it does |
 |---|---|---|
 | **Feed** | `/` | Main feed with post creation, clubs sidebar, tag filters, voting |
+| **Lost & Found** | `/lostandfound.html` | Report lost/found items, search, claim, resolve |
 | **Dashboard** | `/dashboard.html` | Your posts, comments, clubs, liked posts, profile editor |
 | **Mod Panel** | `/mod.html` | Club moderation — members, posts, join requests, appeals |
 | **Admin Panel** | `/admin.html` | Platform-wide reports, club requests, moderator appeals |
@@ -278,9 +296,9 @@ docker run -p 8080:8080 \
 
 | Role | What they can do |
 |---|---|
-| `USER` | Post, comment, vote, join clubs, report posts |
+| `USER` | Post, comment, vote, join clubs, report posts, use Lost & Found |
 | `MODERATOR` | Everything above + manage club posts, comments, members, and join requests |
-| `ADMIN` | Everything above + approve/reject moderator appeals, resolve all reports, manage all clubs |
+| `ADMIN` | Everything above + approve/reject moderator appeals, resolve all reports, manage all clubs, delete any Lost & Found item |
 
 > Roles are stored in the `users` table. The first admin must be set manually in the database.
 
@@ -290,7 +308,7 @@ docker run -p 8080:8080 \
 
 All user-generated content is automatically screened before it goes live:
 
-- **Text** — Posts and comments are checked for toxicity via the Flask microservice at `/check_text`. Context-aware (checks replies in the context of their parent comment).
+- **Text** — Posts, comments, and Lost & Found descriptions are checked for toxicity via the Flask microservice at `/check_text`.
 - **Images** — Image URLs are sent to `/check_image`. If flagged, the image is deleted from Cloudinary and the post is rejected.
 - **Videos** — Same flow via `/check_video`.
 
@@ -304,19 +322,20 @@ If the Flask service is unavailable, moderation **fails open** (content is allow
 ---
 
 ## 🗄️ Database Schema (Key Tables)
-
 ```
-users              → id, name, email, google_id, picture, role, bio
-posts              → id, title, content, author_id, author_name, media_url, media_type, club_id, created_at
-comments           → id, content, post_id, user_id, parent_comment_id, created_at
-votes              → id, post_id, user_id, value (+1 / -1)
-clubs              → id, name, description, created_at
-club_members       → id, club_id, user_id, role (MEMBER/MODERATOR/PRESIDENT), joined_at
-club_join_requests → id, club_id, user_id, status (PENDING/APPROVED/REJECTED), created_at
-moderator_appeals  → id, club_id, user_id, reason, status, created_at
-reports            → id, post_id, user_id, reason, status (OPEN/RESOLVED), created_at
-tags               → id, name
-post_tags          → post_id, tag_id
+users                → id, name, email, google_id, picture, role, bio
+posts                → id, title, content, author_id, author_name, media_url, media_type, club_id, created_at
+comments             → id, content, post_id, user_id, parent_comment_id, created_at
+votes                → id, post_id, user_id, value (+1 / -1)
+clubs                → id, name, description, created_at
+club_members         → id, club_id, user_id, role (MEMBER/MODERATOR/PRESIDENT), joined_at
+club_join_requests   → id, club_id, user_id, status (PENDING/APPROVED/REJECTED), created_at
+moderator_appeals    → id, club_id, user_id, reason, status, created_at
+reports              → id, post_id, user_id, reason, status (OPEN/RESOLVED), created_at
+tags                 → id, name
+post_tags            → post_id, tag_id
+lost_found_items     → id, type (LOST/FOUND), title, description, location, category, date, author_id, author_name, media_url, media_type, media_public_id, resolved, created_at
+lost_found_responses → id, item_id, author_id, author_name, message, contact, mode (found_it/its_mine), created_at
 ```
 
 ---
@@ -324,7 +343,6 @@ post_tags          → post_id, tag_id
 ## 🧠 Hot Ranking Algorithm
 
 Posts in the **Hot** feed are ranked using a Reddit-inspired time-decay formula:
-
 ```sql
 SELECT p.*
 FROM posts p
