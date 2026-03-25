@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>Event Scanner — MVSR Connect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #f5f4f0;
+      --bg2:      #eeecea;
+      --surface:  #ffffff;
+      --border:   #e0deda;
+      --border2:  #c8c4be;
+      --ink:      #1a1916;
+      --ink2:     #6b6760;
+      --ink3:     #a09c97;
+      --accent:   #1a1916;
+      --red:      #c0392b;
+      --green:    #2d6a4f;
+      --gold:     #92680a;
+      --blue:     #1a56db;
+      --radius:   10px;
+      --sans:     'Geist', sans-serif;
+      --serif:    'Instrument Serif', serif;
+      --topbar-bg: rgba(245,244,240,0.88);
+    }
+
+    [data-theme="dark"] {
+      --bg:       #111110;
+      --bg2:      #1a1917;
+      --surface:  #1f1e1c;
+      --border:   #2a2825;
+      --border2:  #3d3a35;
+      --ink:      #e8e6e1;
+      --ink2:     #9a9690;
+      --ink3:     #605c57;
+      --accent:   #e8e6e1;
+      --red:      #e05c4b;
+      --green:    #4ade80;
+      --gold:     #e3b341;
+      --blue:     #58a6ff;
+      --topbar-bg: rgba(17,17,16,0.88);
+    }
+
+    html { scroll-behavior: smooth; transition: background 0.2s ease; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      opacity: 0.035;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-size: 180px 180px;
+    }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      position: sticky; top: 0; z-index: 200;
+      height: 56px;
+      background: var(--topbar-bg);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      gap: 12px;
+    }
+
+    .logo {
+      font-family: var(--serif);
+      font-size: 1.2rem;
+      letter-spacing: -0.2px;
+      color: var(--ink);
+      display: flex; align-items: center; gap: 7px;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+    .logo-dot {
+      width: 8px; height: 8px;
+      background: var(--ink);
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .topbar-nav {
+      display: flex; align-items: center; gap: 2px;
+    }
+    .topbar-nav a {
+      font-size: 0.82rem; font-weight: 500; color: var(--ink3);
+      padding: 5px 12px; border-radius: 99px;
+      text-decoration: none; transition: all 0.12s ease;
+    }
+    .topbar-nav a:hover { color: var(--ink); background: var(--bg2); }
+    .topbar-nav a.active { color: var(--ink); background: var(--bg2); }
+
+    .topbar-right { display: flex; align-items: center; gap: 8px; }
+
+    .theme-toggle {
+      width: 34px; height: 34px; border-radius: 99px;
+      background: transparent; border: 1px solid var(--border2);
+      color: var(--ink2); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.95rem; transition: all 0.15s ease; flex-shrink: 0;
+    }
+    .theme-toggle:hover { background: var(--bg2); color: var(--ink); }
+
+    .topbar-hamburger {
+      display: none; width: 34px; height: 34px; border-radius: 99px;
+      background: transparent; border: 1px solid var(--border2);
+      color: var(--ink2); cursor: pointer;
+      align-items: center; justify-content: center;
+      font-size: 1rem; transition: all 0.15s; flex-shrink: 0;
+    }
+    .topbar-hamburger:hover { background: var(--bg2); color: var(--ink); }
+
+    .topbar-drawer {
+      display: none; position: fixed; top: 56px; left: 0; right: 0; z-index: 190;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      padding: 12px 16px 16px; flex-direction: column; gap: 6px;
+      animation: fadeUp 0.18s ease;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    }
+    .topbar-drawer.open { display: flex; }
+    .topbar-drawer a, .topbar-drawer button {
+      padding: 10px 14px; border-radius: 8px; font-family: var(--sans);
+      font-size: 0.875rem; font-weight: 500; cursor: pointer;
+      border: none; background: transparent; color: var(--ink2);
+      transition: all 0.12s; text-decoration: none; display: block;
+    }
+    .topbar-drawer a:hover, .topbar-drawer button:hover { background: var(--bg2); color: var(--ink); }
+
+    /* ── PAGE ── */
+    .page {
+      max-width: 520px; margin: 0 auto;
+      padding: 32px 24px 80px;
+      position: relative; z-index: 1;
+    }
+
+    .page-header {
+      display: flex; align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+    }
+    .page-title {
+      font-family: var(--serif);
+      font-size: 1.8rem; letter-spacing: -0.5px;
+      line-height: 1.1; color: var(--ink);
+    }
+
+    /* ── EVENT BAR ── */
+    .event-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px; margin-bottom: 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      transition: border-color 0.15s;
+    }
+    .event-bar:hover { border-color: var(--border2); }
+    .event-bar-title { font-weight: 600; font-size: 0.95rem; color: var(--ink); }
+    .event-bar-meta { font-size: 0.76rem; color: var(--ink3); margin-top: 2px; }
+    .event-stats { text-align: right; font-size: 0.78rem; color: var(--ink3); }
+
+    /* ── SCANNER BOX ── */
+    .scanner-box {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden; position: relative; margin-bottom: 16px;
+      transition: border-color 0.2s;
+    }
+    .scanner-box.active { border-color: var(--blue); }
+    .scanner-box.success { border-color: var(--green); }
+    .scanner-box.error { border-color: var(--red); }
+
+    #video { width: 100%; display: block; }
+
+    .scan-line {
+      position: absolute; left: 0; right: 0; height: 2px;
+      background: var(--blue); opacity: 0.7;
+      animation: scandown 2s ease-in-out infinite;
+      display: none;
+    }
+    .scanner-box.active .scan-line { display: block; }
+    @keyframes scandown {
+      0%   { top: 0%; }
+      50%  { top: 100%; }
+      100% { top: 0%; }
+    }
+
+    .scan-corners {
+      position: absolute; inset: 16px; pointer-events: none;
+    }
+    .corner {
+      position: absolute; width: 22px; height: 22px;
+      border-color: var(--blue); border-style: solid; opacity: 0.65;
+    }
+    .corner.tl { top:0; left:0; border-width: 3px 0 0 3px; border-radius: 3px 0 0 0; }
+    .corner.tr { top:0; right:0; border-width: 3px 3px 0 0; border-radius: 0 3px 0 0; }
+    .corner.bl { bottom:0; left:0; border-width: 0 0 3px 3px; border-radius: 0 0 0 3px; }
+    .corner.br { bottom:0; right:0; border-width: 0 3px 3px 0; border-radius: 0 0 3px 0; }
+
+    .cam-idle {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 10px;
+      background: var(--bg2); min-height: 220px;
+    }
+    .cam-idle-icon { font-size: 2.4rem; opacity: 0.5; }
+    .cam-idle-text { font-size: 0.82rem; color: var(--ink3); text-align: center; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      font-family: var(--sans);
+      font-size: 0.8rem; font-weight: 500;
+      padding: 8px 20px; border-radius: 99px;
+      cursor: pointer; border: none;
+      transition: all 0.15s ease;
+      letter-spacing: 0.1px; white-space: nowrap;
+    }
+    .btn-primary {
+      background: var(--ink); color: var(--bg);
+    }
+    .btn-primary:hover { opacity: 0.82; }
+    [data-theme="dark"] .btn-primary { background: #e8e6e1; color: #1a1916; }
+    [data-theme="dark"] .btn-primary:hover { background: #fff; }
+
+    .btn-ghost {
+      background: transparent; color: var(--ink2);
+      border: 1px solid var(--border2);
+    }
+    .btn-ghost:hover { background: var(--bg2); color: var(--ink); border-color: var(--ink); }
+
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .controls { display: flex; gap: 8px; margin-bottom: 20px; }
+    .controls .btn { flex: 1; text-align: center; padding: 10px 16px; font-size: 0.85rem; }
+
+    /* ── RESULT CARD ── */
+    .result-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px; margin-bottom: 14px;
+      display: none;
+      animation: fadeUp 0.22s ease;
+    }
+    .result-card.show { display: block; }
+    .result-card.ok   { border-color: var(--green); }
+    .result-card.warn { border-color: var(--gold); }
+    .result-card.err  { border-color: var(--red); }
+
+    .result-header {
+      display: flex; align-items: center; gap: 14px; margin-bottom: 16px;
+    }
+    .result-avatar {
+      width: 48px; height: 48px; border-radius: 50%;
+      object-fit: cover; background: var(--bg2); flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+    .result-name { font-weight: 600; font-size: 1rem; color: var(--ink); }
+    .result-email { font-size: 0.76rem; color: var(--ink3); margin-top: 2px; }
+
+    .result-row {
+      display: flex; justify-content: space-between;
+      font-size: 0.82rem;
+      padding: 8px 0; border-bottom: 1px solid var(--border);
+    }
+    .result-row:last-of-type { border-bottom: none; }
+    .result-label { color: var(--ink3); }
+    .result-value { font-weight: 500; color: var(--ink); }
+
+    /* ── BADGES ── */
+    .status-badge {
+      display: inline-block; padding: 3px 10px; border-radius: 99px;
+      font-size: 0.7rem; font-weight: 600; letter-spacing: 0.2px;
+    }
+    .s-confirmed  { background: rgba(45,106,79,0.12); color: var(--green); border: 1px solid rgba(45,106,79,0.2); }
+    .s-checkedin  { background: rgba(26,86,219,0.08); color: var(--blue); border: 1px solid rgba(26,86,219,0.2); }
+    .s-rejected   { background: rgba(192,57,43,0.1); color: var(--red); border: 1px solid rgba(192,57,43,0.2); }
+    .s-pending    { background: rgba(146,104,10,0.1); color: var(--gold); border: 1px solid rgba(146,104,10,0.2); }
+
+    /* ── CHECKIN BUTTON ── */
+    #checkin-btn {
+      width: 100%; margin-top: 14px; padding: 11px;
+      background: var(--ink); color: var(--bg);
+      border: none; border-radius: 99px;
+      font-family: var(--sans);
+      font-size: 0.88rem; font-weight: 600;
+      cursor: pointer; display: none;
+      transition: all 0.15s ease;
+    }
+    #checkin-btn:hover { opacity: 0.82; }
+    #checkin-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    [data-theme="dark"] #checkin-btn { background: #e8e6e1; color: #1a1916; }
+
+    /* ── LOG ── */
+    .log-section { margin-top: 8px; }
+    .log-title {
+      font-size: 0.67rem; color: var(--ink3); margin-bottom: 8px;
+      font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px;
+    }
+    .log-list { display: flex; flex-direction: column; gap: 5px; }
+    .log-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 14px; font-size: 0.8rem;
+      display: flex; justify-content: space-between; align-items: center;
+      transition: border-color 0.15s;
+    }
+    .log-item.ok   { border-left: 3px solid var(--green); }
+    .log-item.warn { border-left: 3px solid var(--gold); }
+    .log-item.err  { border-left: 3px solid var(--red); }
+    .log-time { font-size: 0.7rem; color: var(--ink3); white-space: nowrap; }
+
+    /* ── AUTH ERROR ── */
+    #auth-error {
+      display: none; text-align: center;
+      padding: 80px 20px; color: var(--red);
+    }
+    #auth-error h2 { font-family: var(--serif); font-size: 1.4rem; margin-bottom: 8px; }
+    #auth-error p { font-size: 0.85rem; color: var(--ink3); margin-bottom: 16px; }
+
+    /* ── SPINNER ── */
+    .spinner {
+      display: inline-block; width: 16px; height: 16px;
+      border: 1.5px solid var(--border2); border-top-color: var(--ink);
+      border-radius: 50%; animation: spin 0.6s linear infinite;
+      vertical-align: middle; margin-right: 6px;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 680px) {
+      .topbar { padding: 0 16px; }
+      .topbar-nav { display: none; }
+      .topbar-hamburger { display: flex; }
+      .page { padding: 20px 16px 60px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<nav class="topbar">
+  <a href="/" class="logo">
+    <span class="logo-dot"></span>
+    MVSR Connect
+  </a>
+  <nav class="topbar-nav">
+    <a href="/">Feed</a>
+    <a href="/events.html" class="active">Events</a>
+    <a href="/lostandfound.html">Lost &amp; Found</a>
+    <a href="/dashboard.html">Dashboard</a>
+    <a href="/search.html">Search</a>
+  </nav>
+  <div class="topbar-right">
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle theme">☀</button>
+    <button class="topbar-hamburger" id="topbar-hamburger" onclick="toggleTopbarDrawer()">☰</button>
+  </div>
+</nav>
+
+<!-- TOPBAR DRAWER (mobile) -->
+<div class="topbar-drawer" id="topbar-drawer">
+  <a href="/">Feed</a>
+  <a href="/events.html">Events</a>
+  <a href="/lostandfound.html">Lost &amp; Found</a>
+  <a href="/dashboard.html">Dashboard</a>
+  <a href="/search.html">Search</a>
+</div>
+
+<div class="page">
+
+  <!-- Auth error state -->
+  <div id="auth-error">
+    <h2>Access Denied</h2>
+    <p>Only event managers and admins can use the scanner.</p>
+    <a href="/events.html" class="btn btn-ghost">← Back to Events</a>
+  </div>
+
+  <!-- Scanner UI -->
+  <div id="scanner-ui" style="display:none">
+
+    <div class="page-header">
+      <h1 class="page-title">QR <em style="font-style:italic;color:var(--ink2)">Scanner</em></h1>
+      <a href="/events.html" class="btn btn-ghost" style="align-self:center;">← Events</a>
+    </div>
+
+    <!-- Event info bar -->
+    <div class="event-bar">
+      <div>
+        <div class="event-bar-title" id="event-title">Loading event…</div>
+        <div class="event-bar-meta" id="event-meta"></div>
+      </div>
+      <div class="event-stats" id="event-stats"></div>
+    </div>
+
+    <!-- Camera -->
+    <div class="scanner-box" id="scanner-box">
+      <video id="video" playsinline muted></video>
+      <div class="scan-line"></div>
+      <div class="scan-corners">
+        <div class="corner tl"></div>
+        <div class="corner tr"></div>
+        <div class="corner bl"></div>
+        <div class="corner br"></div>
+      </div>
+      <div class="cam-idle" id="cam-idle">
+        <div class="cam-idle-text">Tap "Start Scanner" to open camera</div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button class="btn btn-primary" id="start-btn" onclick="startScanner()">Start Scanner</button>
+      <button class="btn btn-ghost" id="stop-btn" onclick="stopScanner()" disabled>Stop</button>
+    </div>
+
+    <!-- Result panel -->
+    <div class="result-card" id="result-card">
+      <div class="result-header">
+        <img id="r-avatar" class="result-avatar" src="" alt="avatar" onerror="this.style.display='none'"/>
+        <div>
+          <div class="result-name" id="r-name"></div>
+          <div class="result-email" id="r-email"></div>
+        </div>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Event</span>
+        <span class="result-value" id="r-event"></span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Venue</span>
+        <span class="result-value" id="r-venue"></span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Status</span>
+        <span class="result-value" id="r-status"></span>
+      </div>
+      <div class="result-row" id="r-checkin-row" style="display:none">
+        <span class="result-label">Checked in at</span>
+        <span class="result-value" id="r-checkin-time"></span>
+      </div>
+      <button id="checkin-btn" onclick="confirmCheckIn()">✓ Check In</button>
+    </div>
+
+    <!-- Scan log -->
+    <div id="log-section" class="log-section" style="display:none">
+      <div class="log-title">Recent Scans</div>
+      <div class="log-list" id="log-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+
+<script>
+  // ── THEME ──
+  (function() {
+    const saved = localStorage.getItem('mvsr-theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
+  })();
+  function toggleTheme() {
+    const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('mvsr-theme', next);
+    updateToggleIcon();
+  }
+  function updateToggleIcon() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.querySelectorAll('.theme-toggle').forEach(b => b.textContent = isDark ? '☽' : '☀');
+  }
+  window.addEventListener('load', updateToggleIcon);
+
+  // ── TOPBAR DRAWER ──
+  function toggleTopbarDrawer() { document.getElementById('topbar-drawer').classList.toggle('open'); }
+  document.addEventListener('click', e => {
+    const drawer = document.getElementById('topbar-drawer');
+    const hamburger = document.getElementById('topbar-hamburger');
+    if (drawer && !drawer.contains(e.target) && hamburger && !hamburger.contains(e.target))
+      drawer.classList.remove('open');
+  });
+
+  // ── SCANNER STATE ──
+  let currentUser = null;
+  let stream = null;
+  let rafId = null;
+  let scanning = false;
+  let lastToken = null;
+  let eventId = null;
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+  // ── INIT ──
+  async function init() {
+    const params = new URLSearchParams(location.search);
+    eventId = params.get('event');
+    try {
+      const r = await fetch('/user');
+      if (!r.ok) { window.location.href = '/'; return; }
+      currentUser = await r.json();
+      const isManager = currentUser.role === 'ADMIN' || currentUser.role === 'MODERATOR';
+      if (!isManager) {
+        document.getElementById('auth-error').style.display = 'block';
+        return;
+      }
+      document.getElementById('scanner-ui').style.display = 'block';
+      if (eventId) loadEventInfo();
+      else {
+        document.getElementById('event-title').textContent = 'No event selected';
+        document.getElementById('event-meta').textContent = 'Open scanner from the Manage tab.';
+      }
+    } catch(e) {
+      document.getElementById('auth-error').style.display = 'block';
+    }
+  }
+
+  async function loadEventInfo() {
+    try {
+      const r = await fetch(`/events/${eventId}`);
+      const ev = await r.json();
+      document.getElementById('event-title').textContent = ev.title;
+      document.getElementById('event-meta').textContent = `${ev.venue} · ${formatDate(ev.eventDate)}`;
+      document.getElementById('event-stats').textContent = `${ev.enrolledCount} enrolled`;
+    } catch(e) {}
+  }
+
+  // ── CAMERA ──
+  async function startScanner() {
+    if (scanning) return;
+    const video = document.getElementById('video');
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      video.srcObject = stream;
+      await video.play();
+      scanning = true;
+      document.getElementById('cam-idle').style.display = 'none';
+      document.getElementById('scanner-box').classList.add('active');
+      document.getElementById('start-btn').disabled = true;
+      document.getElementById('stop-btn').disabled = false;
+      lastToken = null;
+      requestAnimationFrame(tick);
+    } catch(e) {
+      alert('Camera access denied or unavailable. Please allow camera permission.');
+    }
+  }
+
+  function stopScanner() {
+    scanning = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+    const video = document.getElementById('video');
+    video.srcObject = null;
+    document.getElementById('cam-idle').style.display = 'flex';
+    document.getElementById('scanner-box').classList.remove('active', 'success', 'error');
+    document.getElementById('start-btn').disabled = false;
+    document.getElementById('stop-btn').disabled = true;
+  }
+
+  function tick() {
+    if (!scanning) return;
+    const video = document.getElementById('video');
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+      canvas.height = video.videoHeight;
+      canvas.width = video.videoWidth;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+      if (code && code.data) {
+        const token = extractToken(code.data);
+        if (token && token !== lastToken) {
+          lastToken = token;
+          handleScan(token);
+        }
+      }
+    }
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function extractToken(data) {
+    const match = data.match(/\/events\/verify\/([a-f0-9-]{36})/i);
+    if (match) return match[1];
+    if (/^[a-f0-9-]{36}$/i.test(data)) return data;
+    return null;
+  }
+
+  // ── QR DETECTED ──
+  async function handleScan(token) {
+    const box = document.getElementById('scanner-box');
+    try {
+      const r = await fetch(`/events/verify/${token}`);
+      const data = await r.json();
+      if (!r.ok) {
+        showResult(null, data.error || 'Invalid QR code.', 'err');
+        addLog('Invalid QR', 'err');
+        box.classList.remove('active', 'success');
+        box.classList.add('error');
+        setTimeout(() => { box.classList.remove('error'); box.classList.add('active'); lastToken = null; }, 2500);
+        return;
+      }
+      showResult(data, null, data.alreadyIn ? 'warn' : 'ok');
+      box.classList.remove('active', 'error');
+      box.classList.add('success');
+      if (!data.alreadyIn) {
+        document.getElementById('checkin-btn').style.display = 'block';
+        document.getElementById('checkin-btn').dataset.token = token;
+      }
+      setTimeout(() => { box.classList.remove('success'); box.classList.add('active'); }, 3000);
+    } catch(e) {
+      showResult(null, 'Failed to verify QR.', 'err');
+    }
+  }
+
+  function showResult(data, errorMsg, type) {
+    const card = document.getElementById('result-card');
+    card.className = 'result-card show ' + type;
+    if (errorMsg) {
+      document.getElementById('r-name').textContent = 'Error';
+      document.getElementById('r-email').textContent = errorMsg;
+      document.getElementById('r-event').textContent = '—';
+      document.getElementById('r-venue').textContent = '—';
+      document.getElementById('r-status').innerHTML = '<span class="status-badge s-rejected">ERROR</span>';
+      document.getElementById('r-checkin-row').style.display = 'none';
+      document.getElementById('checkin-btn').style.display = 'none';
+      return;
+    }
+    document.getElementById('r-avatar').src = data.userPicture || '';
+    document.getElementById('r-name').textContent = data.userName;
+    document.getElementById('r-email').textContent = data.userEmail;
+    document.getElementById('r-event').textContent = data.eventTitle;
+    document.getElementById('r-venue').textContent = data.eventVenue;
+
+    const statusMap = {
+      'CONFIRMED':        ['CONFIRMED — Ready to check in', 's-confirmed'],
+      'CHECKED_IN':       ['ALREADY CHECKED IN', 's-checkedin'],
+      'PENDING_PAYMENT':  ['PAYMENT PENDING', 's-pending'],
+      'PENDING_APPROVAL': ['PAYMENT UNDER REVIEW', 's-pending'],
+      'REJECTED':         ['REJECTED', 's-rejected'],
+    };
+    const [label, cls] = statusMap[data.status] || [data.status, 's-pending'];
+    document.getElementById('r-status').innerHTML = `<span class="status-badge ${cls}">${label}</span>`;
+
+    if (data.alreadyIn && data.checkedInAt) {
+      document.getElementById('r-checkin-row').style.display = 'flex';
+      document.getElementById('r-checkin-time').textContent = formatDate(data.checkedInAt);
+    } else {
+      document.getElementById('r-checkin-row').style.display = 'none';
+    }
+    addLog(data.userName, type);
+  }
+
+  // ── CONFIRM CHECK-IN ──
+  async function confirmCheckIn() {
+    const btn = document.getElementById('checkin-btn');
+    const token = btn.dataset.token;
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner"></span>Checking in…`;
+    try {
+      const r = await fetch(`/events/checkin/${token}`, { method: 'POST' });
+      const data = await r.json();
+      if (r.ok) {
+        btn.textContent = '✓ Checked In!';
+        document.getElementById('r-status').innerHTML = '<span class="status-badge s-checkedin">CHECKED IN</span>';
+        document.getElementById('r-checkin-row').style.display = 'flex';
+        document.getElementById('r-checkin-time').textContent = formatDate(data.checkedInAt);
+        const logs = document.getElementById('log-list').children;
+        if (logs[0]) logs[0].className = 'log-item ok';
+        setTimeout(() => {
+          btn.style.display = 'none';
+          btn.disabled = false;
+          btn.textContent = '✓ Check In';
+          lastToken = null;
+        }, 2000);
+        loadEventInfo();
+      } else {
+        btn.disabled = false;
+        btn.textContent = '✓ Check In';
+        document.getElementById('r-status').innerHTML =
+          `<span class="status-badge s-rejected">${data.error || 'Failed'}</span>`;
+      }
+    } catch(e) {
+      btn.disabled = false;
+      btn.textContent = '✓ Check In';
+    }
+  }
+
+  // ── SCAN LOG ──
+  function addLog(name, type) {
+    const list = document.getElementById('log-list');
+    document.getElementById('log-section').style.display = 'block';
+    const item = document.createElement('div');
+    item.className = 'log-item ' + type;
+    item.innerHTML = `
+      <span>${escHtml(name)}</span>
+      <span class="log-time">${new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>`;
+    list.insertBefore(item, list.firstChild);
+    while (list.children.length > 20) list.removeChild(list.lastChild);
+  }
+
+  // ── HELPERS ──
+  function formatDate(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleString('en-IN', {
+      day: 'numeric', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+  }
+  function escHtml(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  init();
+</script>
+</body>
+</html>

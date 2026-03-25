@@ -970,6 +970,14 @@
       const dashboardBtn = `<button class="btn btn-ghost btn-sm" onclick="window.location.href='/dashboard.html'">Dashboard</button>`;
       document.getElementById('topbar-right').innerHTML = `
         <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleSidebar()">☰ Clubs</button>
+
+        ${adminBtn}
+        ${dashboardBtn}
+        <button class="btn btn-ghost btn-sm" onclick="window.location.href='/lostandfound.html'">Lost & Found</button>
+        <button class="btn btn-ghost btn-sm" onclick="window.location.href='/events.html'">Events</button>
+        ${modBtn}
+        <button class="btn btn-ghost btn-sm" onclick="logout()">Sign out</button>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" id="theme-toggle">☀</button>
         <div class="user-chip">
           ${pic ? `<img src="${pic}" alt="">` : ''}
           <div>
@@ -977,12 +985,6 @@
             <div class="email">${email}</div>
           </div>
         </div>
-        ${adminBtn}
-        ${dashboardBtn}
-        <button class="btn btn-ghost btn-sm" onclick="window.location.href='/lostandfound.html'">🔍 Lost & Found</button>
-        ${modBtn}
-        <button class="btn btn-ghost btn-sm" onclick="logout()">Sign out</button>
-        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" id="theme-toggle">☀</button>
         <button class="topbar-hamburger" id="topbar-hamburger" onclick="toggleTopbarDrawer()">☰</button>`;
 
       document.getElementById('topbar-drawer').innerHTML = `
@@ -997,6 +999,7 @@
         ${isAdmin ? `<button class="drawer-btn" onclick="openAdmin()">Admin Panel</button>` : ''}
         <button class="drawer-btn" onclick="window.location.href='/dashboard.html'">Dashboard</button>
         <button class="btn btn-ghost btn-sm" onclick="window.location.href='/lostandfound.html'">🔍 Lost & Found</button>
+        <button class="btn btn-ghost btn-sm" onclick="window.location.href='/events.html'">Events</button>
         <button class="drawer-btn" onclick="openMod()">⬡ &nbsp;${modLabel}</button>
         <button class="drawer-btn danger" onclick="logout()">Sign out</button>`;
       updateToggleIcon();

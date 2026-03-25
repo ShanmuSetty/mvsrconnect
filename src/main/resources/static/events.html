@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Events — MVSR Connect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* ── RESET & BASE ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #f5f4f0;
+      --bg2:      #eeecea;
+      --surface:  #ffffff;
+      --border:   #e0deda;
+      --border2:  #c8c4be;
+      --ink:      #1a1916;
+      --ink2:     #6b6760;
+      --ink3:     #a09c97;
+      --accent:   #1a1916;
+      --red:      #c0392b;
+      --green:    #2d6a4f;
+      --gold:     #92680a;
+      --radius:   10px;
+      --sans:     'Geist', sans-serif;
+      --serif:    'Instrument Serif', serif;
+      --topbar-bg: rgba(245,244,240,0.88);
+    }
+
+    [data-theme="dark"] {
+      --bg:       #111110;
+      --bg2:      #1a1917;
+      --surface:  #1f1e1c;
+      --border:   #2a2825;
+      --border2:  #3d3a35;
+      --ink:      #e8e6e1;
+      --ink2:     #9a9690;
+      --ink3:     #605c57;
+      --accent:   #e8e6e1;
+      --red:      #e05c4b;
+      --green:    #4ade80;
+      --gold:     #e3b341;
+      --topbar-bg: rgba(17,17,16,0.88);
+    }
+
+    html { scroll-behavior: smooth; transition: background 0.2s ease; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    /* grain overlay */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      opacity: 0.035;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-size: 180px 180px;
+    }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      position: sticky; top: 0; z-index: 200;
+      height: 56px;
+      background: var(--topbar-bg);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      gap: 12px;
+    }
+
+    .logo {
+      font-family: var(--serif);
+      font-size: 1.2rem;
+      letter-spacing: -0.2px;
+      color: var(--ink);
+      display: flex; align-items: center; gap: 7px;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+    .logo-dot {
+      width: 8px; height: 8px;
+      background: var(--ink);
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .topbar-nav {
+      display: flex; align-items: center; gap: 2px;
+    }
+    .topbar-nav a {
+      font-size: 0.82rem; font-weight: 500; color: var(--ink3);
+      padding: 5px 12px; border-radius: 99px;
+      text-decoration: none; transition: all 0.12s ease;
+    }
+    .topbar-nav a:hover { color: var(--ink); background: var(--bg2); }
+    .topbar-nav a.active { color: var(--ink); background: var(--bg2); }
+
+    .topbar-right { display: flex; align-items: center; gap: 8px; }
+
+    .theme-toggle {
+      width: 34px; height: 34px; border-radius: 99px;
+      background: transparent; border: 1px solid var(--border2);
+      color: var(--ink2); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.95rem; transition: all 0.15s ease; flex-shrink: 0;
+    }
+    .theme-toggle:hover { background: var(--bg2); color: var(--ink); }
+
+    .user-chip {
+      display: flex; align-items: center; gap: 7px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 99px; padding: 4px 12px 4px 5px;
+      font-size: 0.8rem; font-weight: 500;
+    }
+    .user-chip img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; }
+
+    /* hamburger */
+    .topbar-hamburger {
+      display: none; width: 34px; height: 34px; border-radius: 99px;
+      background: transparent; border: 1px solid var(--border2);
+      color: var(--ink2); cursor: pointer;
+      align-items: center; justify-content: center;
+      font-size: 1rem; transition: all 0.15s; flex-shrink: 0;
+    }
+    .topbar-hamburger:hover { background: var(--bg2); color: var(--ink); }
+
+    .topbar-drawer {
+      display: none; position: fixed; top: 56px; left: 0; right: 0; z-index: 190;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      padding: 12px 16px 16px; flex-direction: column; gap: 6px;
+      animation: fadeUp 0.18s ease;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    }
+    .topbar-drawer.open { display: flex; }
+    .topbar-drawer a, .topbar-drawer button {
+      padding: 10px 14px; border-radius: 8px; font-family: var(--sans);
+      font-size: 0.875rem; font-weight: 500; cursor: pointer;
+      border: none; background: transparent; color: var(--ink2);
+      transition: all 0.12s; text-decoration: none; display: block;
+    }
+    .topbar-drawer a:hover, .topbar-drawer button:hover { background: var(--bg2); color: var(--ink); }
+
+    /* ── PAGE LAYOUT ── */
+    .page {
+      max-width: 960px; margin: 0 auto;
+      padding: 32px 24px 80px;
+      position: relative; z-index: 1;
+    }
+
+    .page-header {
+      display: flex; align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 28px; flex-wrap: wrap; gap: 12px;
+    }
+
+    .page-title {
+      font-family: var(--serif);
+      font-size: 2rem; letter-spacing: -0.5px;
+      line-height: 1.1; color: var(--ink);
+    }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex; gap: 3px;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 99px; padding: 3px;
+    }
+    .tab {
+      padding: 6px 18px; border-radius: 99px;
+      font-size: 0.8rem; font-weight: 500;
+      cursor: pointer; color: var(--ink3);
+      transition: all 0.15s; border: none; background: none;
+      font-family: var(--sans);
+    }
+    .tab.active { background: var(--surface); color: var(--ink); box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+
+    /* ── BUTTONS ── */
+    .btn {
+      font-family: var(--sans);
+      font-size: 0.8rem; font-weight: 500;
+      padding: 7px 18px; border-radius: 99px;
+      cursor: pointer; border: none;
+      transition: all 0.15s ease;
+      letter-spacing: 0.1px; white-space: nowrap;
+      text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
+    }
+    .btn-primary {
+      background: var(--ink); color: var(--bg);
+    }
+    .btn-primary:hover { opacity: 0.85; }
+    [data-theme="dark"] .btn-primary { background: #e8e6e1; color: #1a1916; }
+
+    .btn-ghost {
+      background: transparent; color: var(--ink2);
+      border: 1px solid var(--border2);
+    }
+    .btn-ghost:hover { background: var(--bg2); color: var(--ink); border-color: var(--ink); }
+
+    .btn-danger { background: var(--red); color: #fff; }
+    .btn-danger:hover { opacity: 0.85; }
+
+    .btn-sm { padding: 5px 13px; font-size: 0.75rem; }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* ── EVENT CARDS ── */
+    .events-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(286px, 1fr));
+      gap: 14px;
+    }
+
+    .event-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+      cursor: pointer;
+      animation: fadeUp 0.3s ease both;
+    }
+    .event-card:hover {
+      border-color: var(--border2);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+      transform: translateY(-2px);
+    }
+
+    .event-card-banner {
+      width: 100%; height: 148px;
+      background: var(--bg2);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--ink3); font-size: 2.5rem;
+      overflow: hidden;
+    }
+    .event-card-banner img { width: 100%; height: 100%; object-fit: cover; }
+
+    .event-card-body { padding: 14px 16px 16px; }
+
+    .event-club-tag {
+      font-size: 0.67rem; font-weight: 600;
+      letter-spacing: 0.8px; text-transform: uppercase;
+      color: var(--ink3); margin-bottom: 6px; display: block;
+    }
+
+    .event-title {
+      font-family: var(--serif);
+      font-size: 1.05rem; line-height: 1.3;
+      color: var(--ink); margin-bottom: 8px;
+      letter-spacing: -0.1px;
+    }
+
+    .event-meta {
+      font-size: 0.78rem; color: var(--ink3);
+      display: flex; flex-direction: column; gap: 3px;
+      margin-bottom: 12px;
+    }
+    .event-meta span { display: flex; align-items: center; gap: 6px; }
+
+    .event-footer { display: flex; align-items: center; justify-content: space-between; }
+
+    /* ── BADGES ── */
+    .badge {
+      font-size: 0.7rem; font-weight: 600;
+      padding: 3px 10px; border-radius: 99px;
+      display: inline-block; letter-spacing: 0.2px;
+    }
+    .badge-free { background: rgba(45,106,79,0.12); color: var(--green); border: 1px solid rgba(45,106,79,0.2); }
+    .badge-paid { background: rgba(146,104,10,0.1); color: var(--gold); border: 1px solid rgba(146,104,10,0.2); }
+    .badge-full { background: rgba(192,57,43,0.1); color: var(--red); border: 1px solid rgba(192,57,43,0.2); }
+    .badge-status-pending { background: rgba(146,104,10,0.1); color: var(--gold); border: 1px solid rgba(146,104,10,0.2); }
+    .badge-status-confirmed { background: rgba(45,106,79,0.12); color: var(--green); border: 1px solid rgba(45,106,79,0.2); }
+    .badge-status-checkedin { background: rgba(26,25,22,0.08); color: var(--ink2); border: 1px solid var(--border2); }
+    [data-theme="dark"] .badge-status-checkedin { background: rgba(232,230,225,0.08); color: var(--ink2); }
+    .badge-status-rejected { background: rgba(192,57,43,0.1); color: var(--red); border: 1px solid rgba(192,57,43,0.2); }
+
+    .enroll-count { font-size: 0.76rem; color: var(--ink3); }
+
+    /* ── TICKET ROW ── */
+    .ticket-row {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px 20px;
+      margin-bottom: 8px; display: flex; gap: 16px; align-items: flex-start;
+      animation: fadeUp 0.3s ease both;
+      transition: border-color 0.15s;
+    }
+    .ticket-row:hover { border-color: var(--border2); }
+
+    /* ── MANAGE CARD ── */
+    .manage-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 20px;
+      margin-bottom: 10px; animation: fadeUp 0.3s ease both;
+      transition: border-color 0.15s;
+    }
+    .manage-card:hover { border-color: var(--border2); }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45);
+      backdrop-filter: blur(4px);
+      z-index: 400; align-items: center; justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      width: 100%; max-width: 520px; max-height: 90vh;
+      overflow-y: auto; padding: 26px;
+      animation: fadeUp 0.2s ease;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+
+    .modal-header {
+      display: flex; justify-content: space-between;
+      align-items: flex-start; margin-bottom: 22px;
+    }
+    .modal-title {
+      font-family: var(--serif);
+      font-size: 1.25rem; letter-spacing: -0.3px; color: var(--ink);
+    }
+    .modal-close {
+      background: none; border: none; color: var(--ink3);
+      font-size: 1.3rem; cursor: pointer; line-height: 1;
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.12s;
+    }
+    .modal-close:hover { background: var(--bg2); color: var(--ink); }
+
+    /* ── FORM ── */
+    .form-group { margin-bottom: 16px; }
+    label {
+      display: block; font-size: 0.76rem; font-weight: 600;
+      color: var(--ink3); margin-bottom: 6px;
+      letter-spacing: 0.3px; text-transform: uppercase;
+    }
+    input, textarea, select {
+      width: 100%; background: var(--bg);
+      border: 1px solid var(--border); color: var(--ink);
+      border-radius: 8px; padding: 9px 13px;
+      font-size: 0.875rem; font-family: var(--sans);
+      transition: border-color 0.15s, background 0.15s; outline: none;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--ink); background: var(--surface);
+    }
+    input::placeholder, textarea::placeholder { color: var(--ink3); }
+    textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-hint { font-size: 0.72rem; color: var(--ink3); margin-top: 4px; }
+
+    .thin-divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+    /* ── PAYMENT ── */
+    .payment-box {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 10px; padding: 20px; text-align: center;
+    }
+    .payment-amount {
+      font-family: var(--serif); font-size: 2rem;
+      color: var(--gold); margin-bottom: 4px; letter-spacing: -0.5px;
+    }
+    .payment-label { font-size: 0.8rem; color: var(--ink3); margin-bottom: 18px; }
+    .qr-placeholder {
+      width: 160px; height: 160px; margin: 0 auto 18px;
+      background: #fff; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+
+    /* ── TICKET VIEW ── */
+    .ticket {
+      background: var(--bg2);
+      border: 1px solid var(--border); border-radius: 12px;
+      padding: 24px; position: relative; text-align: center;
+      overflow: hidden;
+    }
+    .ticket::before, .ticket::after {
+      content: ''; position: absolute; top: 50%; transform: translateY(-50%);
+      width: 22px; height: 22px; background: var(--bg);
+      border-radius: 50%; border: 1px solid var(--border);
+    }
+    .ticket::before { left: -11px; }
+    .ticket::after { right: -11px; }
+
+    .ticket-dashed {
+      border-top: 1px dashed var(--border2);
+      margin: 16px 0;
+    }
+    .ticket-qr {
+      width: 140px; height: 140px; margin: 0 auto 14px;
+      background: #fff; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    }
+    .ticket-name { font-size: 1rem; font-weight: 600; color: var(--ink); }
+    .ticket-event { font-size: 0.8rem; color: var(--ink3); margin-top: 4px; }
+    .ticket-token { font-size: 0.68rem; color: var(--ink3); margin-top: 10px; font-family: monospace; }
+
+    /* ── INFO GRID ── */
+    .info-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 10px; margin-bottom: 20px;
+    }
+    .info-cell {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px;
+    }
+    .info-cell-label { font-size: 0.7rem; color: var(--ink3); margin-bottom: 3px; }
+    .info-cell-value { font-size: 0.88rem; font-weight: 500; color: var(--ink); }
+
+    /* ── ENROLLMENT MANAGER ── */
+    .enrollment-row {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px 14px; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty {
+      text-align: center; padding: 70px 20px; color: var(--ink3);
+    }
+    .empty-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.6; }
+    .empty h3 {
+      font-family: var(--serif);
+      font-size: 1.1rem; color: var(--ink2); margin-bottom: 6px;
+    }
+    .empty p { font-size: 0.83rem; }
+
+    /* ── SPINNER ── */
+    .spinner {
+      display: inline-block; width: 16px; height: 16px;
+      border: 1.5px solid var(--border2); border-top-color: var(--ink);
+      border-radius: 50%; animation: spin 0.6s linear infinite;
+      vertical-align: middle; margin-right: 6px;
+    }
+    .loading { text-align: center; padding: 48px 20px; color: var(--ink3); font-size: 0.83rem; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 999;
+      background: var(--ink); color: var(--bg);
+      border-radius: 99px; padding: 10px 20px;
+      font-size: 0.82rem; font-weight: 500;
+      animation: slideUp 0.22s ease; max-width: 300px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+    }
+    .toast.error { background: var(--red); color: #fff; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 680px) {
+      .topbar { padding: 0 16px; }
+      .topbar-nav { display: none; }
+      .topbar-hamburger { display: flex; }
+      .topbar-right > *:not(.theme-toggle):not(.topbar-hamburger):not(.user-chip) { display: none !important; }
+      .page { padding: 20px 16px 60px; }
+      .form-row { grid-template-columns: 1fr; }
+      .info-grid { grid-template-columns: 1fr; }
+      .page-header { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<nav class="topbar">
+  <a href="/" class="logo">
+    <span class="logo-dot"></span>
+    MVSR Connect
+  </a>
+  <nav class="topbar-nav">
+    <a href="/">Feed</a>
+    <a href="/events.html" class="active">Events</a>
+    <a href="/lostandfound.html">Lost &amp; Found</a>
+    <a href="/dashboard.html">Dashboard</a>
+    <a href="/search.html">Search</a>
+  </nav>
+  <div class="topbar-right">
+    <div class="user-chip" id="nav-chip" style="display:none">
+      <img id="nav-avatar" src="" alt="avatar" style="display:none"/>
+      <span id="nav-name" style="font-size:.8rem;"></span>
+    </div>
+    <button class="btn btn-primary btn-sm" id="create-btn" style="display:none" onclick="openCreateModal()">+ Create Event</button>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle theme">☀</button>
+    <button class="topbar-hamburger" id="topbar-hamburger" onclick="toggleTopbarDrawer()">☰</button>
+  </div>
+</nav>
+
+<!-- TOPBAR DRAWER (mobile) -->
+<div class="topbar-drawer" id="topbar-drawer">
+  <a href="/">Feed</a>
+  <a href="/events.html">Events</a>
+  <a href="/lostandfound.html">Lost &amp; Found</a>
+  <a href="/dashboard.html">Dashboard</a>
+  <a href="/search.html">Search</a>
+</div>
+
+<div class="page">
+  <div class="page-header">
+    <h1 class="page-title">Campus <em style="font-style:italic;color:var(--ink2)">Events</em></h1>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('all', this)">All Events</button>
+        <button class="tab" onclick="switchTab('mine', this)">My Tickets</button>
+        <button class="tab" id="manager-tab" style="display:none" onclick="switchTab('manage', this)">Manage</button>
+      </div>
+      <!-- Scanner button: shown only to managers/admins via JS -->
+      <a href="/scanner.html" class="btn btn-ghost btn-sm" id="scanner-header-btn" style="display:none">📷 Scanner</a>
+    </div>
+  </div>
+
+  <div id="events-container"></div>
+</div>
+
+<!-- ── Event Detail / Enroll Modal ── -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="detail-title"></h2>
+      <button class="modal-close" onclick="closeModal('detail-modal')">×</button>
+    </div>
+    <div id="detail-body"></div>
+  </div>
+</div>
+
+<!-- ── Create Event Modal ── -->
+<div class="modal-overlay" id="create-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Create Event</h2>
+      <button class="modal-close" onclick="closeModal('create-modal')">×</button>
+    </div>
+    <div class="form-group">
+      <label>Event Title *</label>
+      <input id="c-title" type="text" placeholder="Annual Tech Fest 2026"/>
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="c-desc" placeholder="What's this event about?"></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Venue *</label>
+        <input id="c-venue" type="text" placeholder="Seminar Hall A"/>
+      </div>
+      <div class="form-group">
+        <label>Date &amp; Time *</label>
+        <input id="c-date" type="datetime-local"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Capacity (blank = unlimited)</label>
+        <input id="c-capacity" type="number" min="1" placeholder="100"/>
+      </div>
+      <div class="form-group">
+        <label>Fee (₹, 0 = free)</label>
+        <input id="c-fee" type="number" min="0" value="0" placeholder="0"/>
+      </div>
+    </div>
+    <div id="upi-section" style="display:none">
+      <div class="thin-divider"></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>UPI ID *</label>
+          <input id="c-upi-id" type="text" placeholder="yourname@upi"/>
+          <p class="form-hint">Never shown to students — used to generate payment links only.</p>
+        </div>
+        <div class="form-group">
+          <label>UPI Name *</label>
+          <input id="c-upi-name" type="text" placeholder="Your Name"/>
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Banner Image URL (optional)</label>
+      <input id="c-banner" type="url" placeholder="https://…"/>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:8px;">
+      <button class="btn btn-ghost" onclick="closeModal('create-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitCreateEvent()">Create Event</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── UTR Submission Modal ── -->
+<div class="modal-overlay" id="utr-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Submit Payment Reference</h2>
+      <button class="modal-close" onclick="closeModal('utr-modal')">×</button>
+    </div>
+    <p style="font-size:.85rem;color:var(--ink3);margin-bottom:18px;line-height:1.6;">
+      After paying via UPI, enter the transaction ID (UTR) shown in your UPI app.
+      The event manager will verify and confirm your enrollment.
+    </p>
+    <div class="form-group">
+      <label>UTR / Transaction ID *</label>
+      <input id="utr-input" type="text" placeholder="324512345678"/>
+    </div>
+    <input type="hidden" id="utr-event-id"/>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:8px;">
+      <button class="btn btn-ghost" onclick="closeModal('utr-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitUtr()">Submit</button>
+    </div>
+  </div>
+</div>
+
+<!-- qrcode.js from CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script>
+  // ── THEME (apply immediately) ──
+  (function() {
+    const saved = localStorage.getItem('mvsr-theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const theme = saved || (prefersDark ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+  })();
+
+  function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const next = isDark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('mvsr-theme', next);
+    updateToggleIcon();
+  }
+  function updateToggleIcon() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.querySelectorAll('.theme-toggle').forEach(btn => {
+      btn.textContent = isDark ? '☽' : '☀';
+    });
+  }
+  window.addEventListener('load', updateToggleIcon);
+
+  // ── TOPBAR DRAWER ──
+  function toggleTopbarDrawer() { document.getElementById('topbar-drawer').classList.toggle('open'); }
+  document.addEventListener('click', e => {
+    const drawer = document.getElementById('topbar-drawer');
+    const hamburger = document.getElementById('topbar-hamburger');
+    if (drawer && !drawer.contains(e.target) && hamburger && !hamburger.contains(e.target)) {
+      drawer.classList.remove('open');
+    }
+  });
+
+  // ── MAIN STATE ──
+  let currentUser = null;
+  let currentTab = 'all';
+  let allEvents = [];
+
+  // ── INIT ──
+  async function init() {
+    try {
+      const r = await fetch('/user');
+      if (!r.ok) { window.location.href = '/'; return; }
+      currentUser = await r.json();
+
+      const avatar = document.getElementById('nav-avatar');
+      const chip = document.getElementById('nav-chip');
+      if (currentUser.picture) { avatar.src = currentUser.picture; avatar.style.display = 'block'; }
+      document.getElementById('nav-name').textContent = currentUser.name || '';
+      chip.style.display = 'flex';
+
+      const isManager = currentUser.role === 'ADMIN' || currentUser.role === 'MODERATOR';
+      if (isManager) {
+        document.getElementById('create-btn').style.display = 'inline-block';
+        document.getElementById('manager-tab').style.display = 'inline-block';
+        document.getElementById('scanner-header-btn').style.display = 'inline-flex';
+      }
+
+      document.getElementById('c-fee').addEventListener('input', e => {
+        document.getElementById('upi-section').style.display =
+          parseInt(e.target.value) > 0 ? 'block' : 'none';
+      });
+
+      loadTab('all');
+    } catch(e) { showToast('Failed to load user.', 'error'); }
+  }
+
+  // ── TAB SWITCHING ──
+  function switchTab(tab, btn) {
+    currentTab = tab;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    loadTab(tab);
+  }
+
+  async function loadTab(tab) {
+    const c = document.getElementById('events-container');
+    c.innerHTML = '<div class="loading"><span class="spinner"></span>Loading…</div>';
+    try {
+      if (tab === 'all') {
+        const r = await fetch('/events');
+        allEvents = await r.json();
+        renderEventGrid(allEvents, c);
+      } else if (tab === 'mine') {
+        const r = await fetch('/events/my-tickets');
+        renderTickets(await r.json(), c);
+      } else if (tab === 'manage') {
+        const r = await fetch('/events/my-events');
+        renderManagePanel(await r.json(), c);
+      }
+    } catch(e) {
+      c.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><h3>Something went wrong</h3><p>Failed to load events.</p></div>';
+    }
+  }
+
+  // ── RENDER: ALL EVENTS GRID ──
+  function renderEventGrid(events, container) {
+    if (!events.length) {
+      container.innerHTML = '<div class="empty"><div class="empty-icon">📅</div><h3>No upcoming events</h3><p>Check back soon for new events.</p></div>';
+      return;
+    }
+    const grid = document.createElement('div');
+    grid.className = 'events-grid';
+    events.forEach((ev, i) => {
+      const isFull = ev.capacity && ev.enrolledCount >= ev.capacity;
+      const card = document.createElement('div');
+      card.className = 'event-card';
+      card.style.animationDelay = (i * 0.05) + 's';
+      card.onclick = () => openEventDetail(ev.id);
+      card.innerHTML = `
+        <div class="event-card-banner">
+          ${ev.bannerUrl ? `<img src="${escHtml(ev.bannerUrl)}" alt="${escHtml(ev.title)}"/>` : '📅'}
+        </div>
+        <div class="event-card-body">
+          <div class="event-title">${escHtml(ev.title)}</div>
+          <div class="event-meta">
+            <span>📍 ${escHtml(ev.venue)}</span>
+            <span>🗓 ${formatDate(ev.eventDate)}</span>
+            <span>👥 ${ev.enrolledCount}${ev.capacity ? ' / ' + ev.capacity : ''} enrolled</span>
+          </div>
+          <div class="event-footer">
+            <span class="badge ${ev.isFree ? 'badge-free' : 'badge-paid'}">
+              ${ev.isFree ? 'Free' : '₹' + (ev.feeInPaise / 100)}
+            </span>
+            ${isFull ? '<span class="badge badge-full">Full</span>' : ''}
+          </div>
+        </div>`;
+      grid.appendChild(card);
+    });
+    container.innerHTML = '';
+    container.appendChild(grid);
+  }
+
+  // ── RENDER: MY TICKETS ──
+  function renderTickets(tickets, container) {
+    if (!tickets.length) {
+      container.innerHTML = '<div class="empty"><div class="empty-icon">🎟️</div><h3>No tickets yet</h3><p>Enroll in an event to get started.</p></div>';
+      return;
+    }
+    container.innerHTML = '';
+    tickets.forEach((t, i) => {
+      const statusClass = {
+        'PENDING_PAYMENT': 'badge-status-pending',
+        'PENDING_APPROVAL': 'badge-status-pending',
+        'CONFIRMED': 'badge-status-confirmed',
+        'CHECKED_IN': 'badge-status-checkedin',
+        'REJECTED': 'badge-status-rejected',
+      }[t.status] || '';
+      const div = document.createElement('div');
+      div.className = 'ticket-row';
+      div.style.animationDelay = (i * 0.05) + 's';
+      div.innerHTML = `
+        <div style="flex:1;">
+          <div style="font-family:var(--serif);font-size:1rem;margin-bottom:4px;" id="ev-name-${t.id}">Event #${t.eventId}</div>
+          <div style="font-size:.76rem;color:var(--ink3);margin-bottom:10px;">Enrolled ${formatDate(t.enrolledAt)}</div>
+          <span class="badge ${statusClass}">${t.status.replace('_', ' ')}</span>
+          ${t.status === 'PENDING_PAYMENT' ? `<button class="btn btn-primary btn-sm" style="margin-left:10px" onclick="openPayFlow(${t.eventId})">Pay Now</button>` : ''}
+          ${t.status === 'CONFIRMED' ? `<button class="btn btn-ghost btn-sm" style="margin-left:10px" onclick="showTicket('${t.qrToken}', this)">Show QR</button>` : ''}
+          ${t.status === 'CHECKED_IN' ? `<span style="font-size:.76rem;color:var(--ink3);margin-left:10px;">Checked in ${formatDate(t.checkedInAt)}</span>` : ''}
+        </div>`;
+      container.appendChild(div);
+      fetch(`/events/${t.eventId}`).then(r => r.json()).then(ev => {
+        const el = document.getElementById(`ev-name-${t.id}`);
+        if (el) el.textContent = ev.title || 'Event #' + t.eventId;
+      }).catch(() => {});
+    });
+  }
+
+  // ── RENDER: MANAGE PANEL ──
+  function renderManagePanel(myEvents, container) {
+    if (!myEvents.length) {
+      container.innerHTML = '<div class="empty"><div class="empty-icon">🗂️</div><h3>No events yet</h3><p>Create your first event to get started.</p></div>';
+      return;
+    }
+    container.innerHTML = '';
+    myEvents.forEach((ev, i) => {
+      const card = document.createElement('div');
+      card.className = 'manage-card';
+      card.style.animationDelay = (i * 0.05) + 's';
+      card.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+          <div>
+            <div style="font-family:var(--serif);font-size:1.05rem;margin-bottom:4px;">${escHtml(ev.title)}</div>
+            <div style="font-size:.76rem;color:var(--ink3);">
+              ${formatDate(ev.eventDate)} · ${escHtml(ev.venue)} · ${ev.enrolledCount} enrolled
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-ghost btn-sm" onclick="openEnrollmentManager(${ev.id}, '${escHtml(ev.title)}')">Enrollments</button>
+            <a href="/scanner.html?event=${ev.id}" class="btn btn-primary btn-sm">📷 Scanner</a>
+          </div>
+        </div>`;
+      container.appendChild(card);
+    });
+  }
+
+  // ── OPEN EVENT DETAIL MODAL ──
+  async function openEventDetail(eventId) {
+    const modal = document.getElementById('detail-modal');
+    const body = document.getElementById('detail-body');
+    const titleEl = document.getElementById('detail-title');
+    body.innerHTML = '<div class="loading"><span class="spinner"></span></div>';
+    modal.classList.add('open');
+    try {
+      const [evRes, ticketRes] = await Promise.all([
+        fetch(`/events/${eventId}`),
+        fetch(`/events/${eventId}/my-enrollment`),
+      ]);
+      const ev = await evRes.json();
+      const myEnrollment = ticketRes.ok ? await ticketRes.json() : null;
+      titleEl.textContent = ev.title;
+      const isFull = ev.capacity && ev.enrolledCount >= ev.capacity;
+
+      let actionHtml = '';
+      if (!myEnrollment) {
+        if (isFull) {
+          actionHtml = '<span class="badge badge-full" style="font-size:.82rem">Event Full</span>';
+        } else {
+          actionHtml = `<button class="btn btn-primary" onclick="enroll(${eventId})">Enroll ${ev.isFree ? '(Free)' : '— ₹' + (ev.feeInPaise/100)}</button>`;
+        }
+      } else {
+        const statusClass = {
+          'PENDING_PAYMENT': 'badge-status-pending',
+          'PENDING_APPROVAL': 'badge-status-pending',
+          'CONFIRMED': 'badge-status-confirmed',
+          'CHECKED_IN': 'badge-status-checkedin',
+          'REJECTED': 'badge-status-rejected',
+        }[myEnrollment.status] || '';
+        actionHtml = `<span class="badge ${statusClass}" style="font-size:.82rem">${myEnrollment.status.replace('_',' ')}</span>`;
+        if (myEnrollment.status === 'PENDING_PAYMENT') {
+          actionHtml += ` <button class="btn btn-primary btn-sm" style="margin-left:8px" onclick="openPayFlow(${eventId})">Pay Now</button>`;
+        }
+        if (myEnrollment.status === 'CONFIRMED') {
+          actionHtml += ` <button class="btn btn-ghost btn-sm" style="margin-left:8px" onclick="showTicket('${myEnrollment.qrToken}', this)">Show QR</button>`;
+        }
+      }
+
+      body.innerHTML = `
+        ${ev.bannerUrl ? `<img src="${escHtml(ev.bannerUrl)}" style="width:100%;border-radius:8px;margin-bottom:18px;max-height:200px;object-fit:cover;" alt="banner"/>` : ''}
+        ${ev.description ? `<p style="font-size:.87rem;color:var(--ink2);margin-bottom:18px;line-height:1.7;">${escHtml(ev.description)}</p>` : ''}
+        <div class="info-grid">
+          <div class="info-cell">
+            <div class="info-cell-label">📍 Venue</div>
+            <div class="info-cell-value">${escHtml(ev.venue)}</div>
+          </div>
+          <div class="info-cell">
+            <div class="info-cell-label">🗓 Date &amp; Time</div>
+            <div class="info-cell-value">${formatDate(ev.eventDate)}</div>
+          </div>
+          <div class="info-cell">
+            <div class="info-cell-label">💰 Fee</div>
+            <div class="info-cell-value">${ev.isFree ? 'Free' : '₹' + (ev.feeInPaise/100)}</div>
+          </div>
+          <div class="info-cell">
+            <div class="info-cell-label">👥 Enrolled</div>
+            <div class="info-cell-value">${ev.enrolledCount}${ev.capacity ? ' / ' + ev.capacity : ''}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          ${actionHtml}
+        </div>`;
+    } catch(e) {
+      body.innerHTML = '<p style="color:var(--red)">Failed to load event details.</p>';
+    }
+  }
+
+  // ── ENROLL ──
+  async function enroll(eventId) {
+    try {
+      const r = await fetch(`/events/${eventId}/enroll`, { method: 'POST' });
+      const data = await r.json();
+      if (!r.ok) { showToast(data || 'Enrollment failed.', 'error'); return; }
+      if (data.upiDeeplink) {
+        closeModal('detail-modal');
+        openPayFlowWithData(eventId, data);
+      } else {
+        closeModal('detail-modal');
+        showToast('Enrolled! Your QR ticket is ready.');
+        loadTab('mine');
+      }
+    } catch(e) { showToast('Enrollment failed.', 'error'); }
+  }
+
+  // ── PAYMENT FLOW ──
+  async function openPayFlow(eventId) {
+    closeModal('detail-modal');
+    const r = await fetch(`/events/${eventId}/enroll`, { method: 'POST' });
+    if (r.status === 400) {
+      const er = await fetch(`/events/${eventId}/my-enrollment`);
+      const enrollment = await er.json();
+      const evr = await fetch(`/events/${eventId}`);
+      const ev = await evr.json();
+      const fakeData = {
+        upiDeeplink: `upi://pay?pa=placeholder&pn=${ev.title}&am=${ev.feeInPaise/100}&cu=INR&tn=MVSRCONNECT-${enrollment.id}`,
+        amountInPaise: ev.feeInPaise
+      };
+      openPayFlowWithData(eventId, fakeData);
+      return;
+    }
+    openPayFlowWithData(eventId, await r.json());
+  }
+
+  function openPayFlowWithData(eventId, data) {
+    const modal = document.getElementById('detail-modal');
+    const body = document.getElementById('detail-body');
+    document.getElementById('detail-title').textContent = 'Complete Payment';
+    modal.classList.add('open');
+    const amount = (data.amountInPaise / 100).toFixed(2);
+    body.innerHTML = `
+      <div class="payment-box">
+        <div class="payment-amount">₹${amount}</div>
+        <div class="payment-label">Scan the QR or tap the button to pay via any UPI app</div>
+        <div class="qr-placeholder" id="pay-qr"></div>
+        <a href="${data.upiDeeplink}" class="btn btn-primary" style="display:inline-block;margin-bottom:16px;">
+          Open UPI App
+        </a>
+      </div>
+      <div class="thin-divider"></div>
+      <p style="font-size:.82rem;color:var(--ink3);margin-bottom:12px;">
+        After paying, enter the UTR / transaction ID from your UPI app to notify the organiser.
+      </p>
+      <div class="form-group">
+        <label>UTR / Transaction ID *</label>
+        <input id="inline-utr" type="text" placeholder="324512345678"/>
+      </div>
+      <button class="btn btn-primary" onclick="submitInlineUtr(${eventId})" style="width:100%;border-radius:8px;justify-content:center;">Submit Payment Reference</button>`;
+    setTimeout(() => {
+      const qrDiv = document.getElementById('pay-qr');
+      if (qrDiv) new QRCode(qrDiv, { text: data.upiDeeplink, width: 150, height: 150, colorDark: '#000', colorLight: '#fff', correctLevel: QRCode.CorrectLevel.M });
+    }, 100);
+  }
+
+  async function submitInlineUtr(eventId) {
+    const utr = document.getElementById('inline-utr').value.trim();
+    if (!utr) { showToast('Please enter your UTR number.', 'error'); return; }
+    const r = await fetch(`/events/${eventId}/pay`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ utrNumber: utr })
+    });
+    if (r.ok) { closeModal('detail-modal'); showToast('Payment submitted! Waiting for organiser to verify.'); loadTab('mine'); }
+    else { showToast(await r.text() || 'Submission failed.', 'error'); }
+  }
+
+  // ── SHOW QR TICKET ──
+  function showTicket(token, btn) {
+    const modal = document.getElementById('detail-modal');
+    const body = document.getElementById('detail-body');
+    document.getElementById('detail-title').textContent = 'Your Ticket';
+    modal.classList.add('open');
+    const verifyUrl = `${location.origin}/events/verify/${token}`;
+    body.innerHTML = `
+      <div class="ticket">
+        <div class="ticket-qr" id="ticket-qr"></div>
+        <div class="ticket-dashed"></div>
+        <div class="ticket-name">${escHtml(currentUser.name)}</div>
+        <div class="ticket-event">Show this QR at the entrance</div>
+        <div class="ticket-token">${token}</div>
+      </div>
+      <p style="font-size:.76rem;color:var(--ink3);text-align:center;margin-top:12px;">
+        Screenshot this or keep the app open at the venue.
+      </p>`;
+    setTimeout(() => {
+      new QRCode(document.getElementById('ticket-qr'), {
+        text: verifyUrl, width: 130, height: 130,
+        colorDark: '#000000', colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    }, 100);
+  }
+
+  // ── ENROLLMENT MANAGER ──
+  async function openEnrollmentManager(eventId, title) {
+    const modal = document.getElementById('detail-modal');
+    const body = document.getElementById('detail-body');
+    document.getElementById('detail-title').textContent = title;
+    modal.classList.add('open');
+    body.innerHTML = '<div class="loading"><span class="spinner"></span></div>';
+    const r = await fetch(`/events/${eventId}/enrollments`);
+    const enrollments = await r.json();
+    if (!enrollments.length) {
+      body.innerHTML = '<div class="empty"><p>No enrollments yet.</p></div>';
+      return;
+    }
+    const statusColor = {
+      'PENDING_PAYMENT': 'var(--gold)',
+      'PENDING_APPROVAL': 'var(--gold)',
+      'CONFIRMED': 'var(--green)',
+      'CHECKED_IN': 'var(--ink2)',
+      'REJECTED': 'var(--red)',
+    };
+    body.innerHTML = `
+      <p style="font-size:.76rem;color:var(--ink3);margin-bottom:14px;">${enrollments.length} enrollment(s)</p>
+      ${enrollments.map(e => `
+        <div class="enrollment-row">
+          <img src="${escHtml(e.userPicture || '')}" style="width:34px;height:34px;border-radius:50%;background:var(--bg2);flex-shrink:0;" onerror="this.style.display='none'"/>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:600;font-size:.88rem;">${escHtml(e.userName)}</div>
+            <div style="font-size:.74rem;color:var(--ink3);">${escHtml(e.userEmail)}</div>
+            ${e.utrNumber ? `<div style="font-size:.72rem;color:var(--ink3);margin-top:2px;">UTR: ${escHtml(e.utrNumber)}</div>` : ''}
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+            <span style="font-size:.73rem;font-weight:600;color:${statusColor[e.status] || 'var(--ink3)'};">${e.status.replace('_',' ')}</span>
+            ${e.status === 'PENDING_APPROVAL' ? `
+              <button class="btn btn-primary btn-sm" onclick="approveEnrollment(${e.id}, this)">Approve</button>
+              <button class="btn btn-danger btn-sm" onclick="rejectEnrollment(${e.id}, this)">Reject</button>
+            ` : ''}
+          </div>
+        </div>`).join('')}`;
+  }
+
+  async function approveEnrollment(enrollmentId, btn) {
+    btn.disabled = true;
+    const r = await fetch(`/events/enrollments/${enrollmentId}/approve`, { method: 'POST' });
+    if (r.ok) {
+      showToast('Approved! QR ticket issued.');
+      btn.parentElement.innerHTML = `<span style="font-size:.73rem;font-weight:600;color:var(--green)">CONFIRMED</span>`;
+    } else { showToast('Failed to approve.', 'error'); btn.disabled = false; }
+  }
+
+  async function rejectEnrollment(enrollmentId, btn) {
+    btn.disabled = true;
+    const r = await fetch(`/events/enrollments/${enrollmentId}/reject`, { method: 'POST' });
+    if (r.ok) {
+      showToast('Enrollment rejected.');
+      btn.parentElement.innerHTML = `<span style="font-size:.73rem;font-weight:600;color:var(--red)">REJECTED</span>`;
+    } else { showToast('Failed to reject.', 'error'); btn.disabled = false; }
+  }
+
+  // ── CREATE EVENT ──
+  function openCreateModal() {
+    document.getElementById('create-modal').classList.add('open');
+  }
+
+  async function submitCreateEvent() {
+    const title    = document.getElementById('c-title').value.trim();
+    const desc     = document.getElementById('c-desc').value.trim();
+    const venue    = document.getElementById('c-venue').value.trim();
+    const date     = document.getElementById('c-date').value;
+    const capacity = document.getElementById('c-capacity').value;
+    const fee      = parseInt(document.getElementById('c-fee').value) || 0;
+    const upiId    = document.getElementById('c-upi-id').value.trim();
+    const upiName  = document.getElementById('c-upi-name').value.trim();
+    const banner   = document.getElementById('c-banner').value.trim();
+    if (!title || !venue || !date) { showToast('Title, venue, and date are required.', 'error'); return; }
+    if (fee > 0 && (!upiId || !upiName)) { showToast('UPI details required for paid events.', 'error'); return; }
+    const payload = {
+      title, description: desc, venue,
+      eventDate: new Date(date).toISOString(),
+      feeInPaise: fee * 100,
+      capacity: capacity ? parseInt(capacity) : null,
+      upiId: upiId || null, upiName: upiName || null,
+      bannerUrl: banner || null,
+    };
+    const r = await fetch('/events', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (r.ok) { closeModal('create-modal'); showToast('Event created!'); loadTab('all'); }
+    else { showToast(await r.text() || 'Failed to create event.', 'error'); }
+  }
+
+  // ── HELPERS ──
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  function formatDate(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleString('en-IN', {
+      day: 'numeric', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+  }
+
+  function escHtml(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function showToast(msg, type = 'success') {
+    const t = document.createElement('div');
+    t.className = `toast ${type}`; t.textContent = msg;
+    document.body.appendChild(t); setTimeout(() => t.remove(), 2800);
+  }
+
+  // close modals on overlay click
+  document.querySelectorAll('.modal-overlay').forEach(o => {
+    o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+  });
+
+  init();
+</script>
+</body>
+</html>
