@@ -38,7 +38,8 @@ public class EventEnrollment {
     @Column(nullable = false)
     private EnrollmentStatus status;
 
-    // student fills this after paying — e.g. "324512345678"
+
+    @Column(unique = true)
     private String utrNumber;
 
     // generated UUID on CONFIRMED, this is what the QR encodes
