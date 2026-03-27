@@ -63,6 +63,15 @@ Think of it as a private, AI-moderated version of Reddit, but built specifically
 - 🔍 **Search** — Search across item names, descriptions, locations, and categories
 - 🤖 **Moderation** — All text and images run through the same AI toxicity and safety pipeline
 
+### Events
+- 📅 **Create Events** — Moderators/admins create events with title, venue, date, capacity, and optional banner
+- 💰 **Free & Paid Events** — Free events issue QR tickets instantly; paid events use a UPI payment + UTR verification flow
+- 🎟️ **QR Tickets** — Confirmed enrollments get a unique QR code ticket generated server-side
+- 📷 **Live QR Scanner** — Camera-based scanner page for moderators to scan and check in attendees at the venue
+- 🔒 **UPI Privacy** — UPI IDs are stored server-side only and never exposed in any API response
+- 📊 **Enrollment Manager** — Organizers can view all enrollments, approve/reject payment submissions, and track check-ins
+- 🏷️ **Club-linked Events** — Events can optionally be tied to a specific club
+
 ### Moderation & Admin
 - 🤖 **AI Toxicity Detection** — Every comment and post is checked by an external Flask microservice before going live
 - 🖼️ **Image & Video Safety** — Unsafe media is rejected and automatically deleted from Cloudinary
@@ -87,7 +96,7 @@ Think of it as a private, AI-moderated version of Reddit, but built specifically
 | **Media** | Cloudinary (images + videos) |
 | **Moderation** | External Flask microservice |
 | **API Docs** | SpringDoc OpenAPI (Swagger UI) |
-| **Frontend** | Vanilla HTML / CSS / JavaScript |
+| **Frontend** | Vanilla HTML / CSS / JavaScript (+ jsQR for scanning, qrcode.js for ticket generation)|
 | **Container** | Docker |
 
 ---
@@ -98,15 +107,17 @@ src/
 ├── main/
 │   ├── java/com/mvsr/mvsrconnect/
 │   │   ├── config/              # SecurityConfig, OAuth2LoginSuccessHandler, CloudinaryConfig
-│   │   ├── controller/          # REST controllers (Posts, Comments, Clubs, Votes, Search, LostFound…)
+│   │   ├── controller/          # REST controllers (Posts, Comments, Clubs, Votes, Search, LostFound, Events…)
 │   │   ├── dto/                 # Data transfer objects (LostFoundItemDTO…)
-│   │   ├── model/               # JPA entities (User, Post, Club, Comment, Vote, Report, LostFoundItem…)
+│   │   ├── model/               # JPA entities (User, Post, Club, Comment, Vote, Report, LostFoundItem, Event, EventEnrollment…)
 │   │   ├── repository/          # Spring Data repositories
-│   │   └── service/             # Business logic (ModerationService, ClubService, ReportService…)
+│   │   └── service/             # Business logic (ModerationService, ClubService, ReportService, EventService…)
 │   └── resources/
 │       ├── application.properties
 │       └── static/              # Frontend pages
 │           ├── index.html       # Main feed
+│           ├── events.html      # Events board — browse, enroll, pay, manage
+│           ├── scanner.html     # QR check-in scanner (mod/admin only)
 │           ├── lostandfound.html # Lost & Found board
 │           ├── dashboard.html   # Personal dashboard
 │           ├── mod.html         # Moderator panel
@@ -226,6 +237,24 @@ docker run -p 8080:8080 \
 | ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/clubs/requests/{id}/approve` | Approve a join request |
 | ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/clubs/requests/{id}/reject` | Reject a join request |
 
+### Events
+
+| Method | Endpoint | Description |
+|---|---|---|
+| ![GET](…) | `/events` | All active events (sorted by date) |
+| ![POST](…) | `/events` | Create an event (mod/admin) |
+| ![GET](…) | `/events/{id}` | Get a single event (public view, UPI stripped) |
+| ![POST](…) | `/events/{id}/enroll` | Enroll in an event |
+| ![POST](…) | `/events/{id}/pay` | Submit UTR after UPI payment |
+| ![GET](…) | `/events/{id}/my-enrollment` | Get current user's enrollment for an event |
+| ![GET](…) | `/events/{id}/enrollments` | List all enrollments (organizer/admin) |
+| ![POST](…) | `/events/enrollments/{id}/approve` | Approve payment → issue QR |
+| ![POST](…) | `/events/enrollments/{id}/reject` | Reject payment |
+| ![GET](…) | `/events/verify/{token}` | Verify a QR token (scanner) |
+| ![POST](…) | `/events/checkin/{token}` | Mark attendee as checked in |
+| ![GET](…) | `/events/my-tickets` | Current user's enrolled tickets |
+| ![GET](…) | `/events/my-events` | Events created by current user |
+
 ### Lost & Found
 
 | Method | Endpoint | Description |
@@ -290,6 +319,8 @@ docker run -p 8080:8080 \
 | **Mod Panel** | `/mod.html` | Club moderation — members, posts, join requests, appeals |
 | **Admin Panel** | `/admin.html` | Platform-wide reports, club requests, moderator appeals |
 | **Search** | `/search.html` | Global search with tag filter bar |
+| **Events** | `/events.html` | Browse events, enroll, pay, view QR tickets, manage enrollments |
+| **QR Scanner** | `/scanner.html` | Camera scanner for check-in at event entry (mod/admin only) |
 
 ---
 
@@ -337,6 +368,8 @@ tags                 → id, name
 post_tags            → post_id, tag_id
 lost_found_items     → id, type (LOST/FOUND), title, description, location, category, date, author_id, author_name, media_url, media_type, media_public_id, resolved, created_at
 lost_found_responses → id, item_id, author_id, author_name, message, contact, mode (found_it/its_mine), created_at
+events               → id, title, description, venue, event_date, fee_in_paise, capacity, upi_id, upi_name, organizer_id, organizer_name, club_id, banner_url, banner_public_id, active, created_at
+event_enrollments    → id, event_id, user_id, user_name, user_email, user_picture, status (PENDING_PAYMENT/PENDING_APPROVAL/CONFIRMED/REJECTED/CHECKED_IN), utr_number, qr_token, enrolled_at, checked_in_at
 ```
 
 ---
