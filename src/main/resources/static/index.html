@@ -998,7 +998,7 @@
         <button class="drawer-btn" onclick="toggleSidebar();closeTopbarDrawer()">☰ &nbsp;Clubs</button>
         ${isAdmin ? `<button class="drawer-btn" onclick="openAdmin()">Admin Panel</button>` : ''}
         <button class="drawer-btn" onclick="window.location.href='/dashboard.html'">Dashboard</button>
-        <button class="drawer-btn" onclick="window.location.href='/lostandfound.html'">🔍 Lost & Found</button>
+        <button class="drawer-btn" onclick="window.location.href='/lostandfound.html'">Lost & Found</button>
         <button class="drawer-btn" onclick="window.location.href='/events.html'">Events</button>
         <button class="drawer-btn" onclick="openMod()">⬡ &nbsp;${modLabel}</button>
         <button class="drawer-btn danger" onclick="logout()">Sign out</button>`;
@@ -1106,15 +1106,30 @@
     }
 
     async function loadClubsSidebar() {
-      const res = await fetch('/clubs'); if (!res.ok) return;
-      const clubs = await res.json();
+      const [clubsRes, statusRes] = await Promise.all([
+        fetch('/clubs'),
+        fetch('/clubs/my-status')
+      ]);
+      if (!clubsRes.ok) return;
+      const clubs = await clubsRes.json();
+      const status = statusRes.ok ? await statusRes.json() : { member: [], pending: [] };
+      const memberSet = new Set(status.member || []);
+      const pendingSet = new Set(status.pending || []);
       const container = document.getElementById('clubs-list');
       container.innerHTML = '';
       clubs.forEach(c => {
+        let btnHtml;
+        if (memberSet.has(c.id)) {
+          btnHtml = `<button class="club-join-btn" disabled style="opacity:0.4;cursor:not-allowed;">Member</button>`;
+        } else if (pendingSet.has(c.id)) {
+          btnHtml = `<button class="club-join-btn" disabled style="opacity:0.4;cursor:not-allowed;">Pending</button>`;
+        } else {
+          btnHtml = `<button class="club-join-btn" onclick="event.stopPropagation(); joinClub(${c.id}, this)">Join</button>`;
+        }
         container.innerHTML += `
           <div class="club-item" onclick="selectClub(${c.id}, this)">
             <span>${escHtml(c.name)}</span>
-            <button class="club-join-btn" onclick="event.stopPropagation(); joinClub(${c.id})">Join</button>
+            ${btnHtml}
           </div>`;
       });
     }
@@ -1126,10 +1141,11 @@
       showToast(res.ok ? 'Join request sent' : 'Request already pending', res.ok ? 'success' : 'error');
     }
 
-    async function joinClub(clubId) {
+    async function joinClub(clubId, btn) {
       const res = await fetch(`/clubs/${clubId}/join-request`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
       if (!res.ok) { const e = await res.json().catch(() => ({})); showToast(e.message || 'Cannot join', 'error'); return; }
       showToast('Join request sent', 'success');
+      if (btn) { btn.textContent = 'Pending'; btn.disabled = true; btn.style.opacity = '0.4'; btn.style.cursor = 'not-allowed'; btn.onclick = null; }
     }
 
     async function filterClub() {
