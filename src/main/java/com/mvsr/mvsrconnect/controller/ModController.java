@@ -3,6 +3,7 @@ package com.mvsr.mvsrconnect.controller;
 import com.mvsr.mvsrconnect.model.*;
 import com.mvsr.mvsrconnect.repository.*;
 import com.mvsr.mvsrconnect.service.ClubService;
+import com.mvsr.mvsrconnect.service.EmailService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -27,6 +28,7 @@ public class ModController {
     private final ClubJoinRequestRepository joinRequestRepository;
     private final ModeratorAppealRepository appealRepository;
     private final ClubService clubService;
+    private final EmailService emailService;
 
     public ModController(
             ModQueueRepository modQueueRepository,
@@ -37,7 +39,8 @@ public class ModController {
             CommentRepository commentRepository,
             ClubJoinRequestRepository joinRequestRepository,
             ModeratorAppealRepository appealRepository,
-            ClubService clubService) {
+            ClubService clubService,
+            EmailService emailService) {
         this.modQueueRepository = modQueueRepository;
         this.clubMemberRepository = clubMemberRepository;
         this.clubRepository = clubRepository;
@@ -47,6 +50,9 @@ public class ModController {
         this.joinRequestRepository = joinRequestRepository;
         this.appealRepository = appealRepository;
         this.clubService = clubService;
+        this.emailService = emailService;
+
+
     }
 
     // ── GET MOD QUEUE FOR A CLUB ──
@@ -147,6 +153,17 @@ public class ModController {
         member.setRole(ClubRole.MEMBER);
         member.setJoinedAt(LocalDateTime.now());
         clubMemberRepository.save(member);
+
+        try {
+            emailService.sendJoinApproval(
+                    req.getUser().getEmail(),
+                    req.getUser().getName(),
+                    req.getClub().getName()
+            );
+        } catch (Exception e) {
+            System.out.println("Email sending failed: " + e.getMessage());
+        }
+
         return ResponseEntity.ok(joinRequestRepository.save(req));
     }
 
@@ -164,6 +181,15 @@ public class ModController {
         ClubJoinRequest req = joinRequestRepository.findById(requestId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         req.setStatus(RequestStatus.REJECTED);
+        try {
+            emailService.sendJoinRejection(
+                    req.getUser().getEmail(),
+                    req.getUser().getName(),
+                    req.getClub().getName()
+            );
+        } catch (Exception e) {
+            System.out.println("Email sending failed: " + e.getMessage());
+        }
         return ResponseEntity.ok(joinRequestRepository.save(req));
     }
 
@@ -234,6 +260,15 @@ public class ModController {
         member.setRole(ClubRole.MODERATOR);
         if (member.getJoinedAt() == null) member.setJoinedAt(LocalDateTime.now());
         clubMemberRepository.save(member);
+        try {
+            emailService.sendModeratorApproval(
+                    appeal.getUser().getEmail(),
+                    appeal.getUser().getName(),
+                    appeal.getClub().getName()
+            );
+        } catch (Exception e) {
+            System.out.println("Email sending failed: " + e.getMessage());
+        }
         return ResponseEntity.ok(appeal);
     }
 
@@ -243,6 +278,15 @@ public class ModController {
         ModeratorAppeal appeal = appealRepository.findById(appealId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         appeal.setStatus("REJECTED");
+        try {
+            emailService.sendModeratorRejection(
+                    appeal.getUser().getEmail(),
+                    appeal.getUser().getName(),
+                    appeal.getClub().getName()
+            );
+        } catch (Exception e) {
+            System.out.println("Email sending failed: " + e.getMessage());
+        }
         return ResponseEntity.ok(appealRepository.save(appeal));
     }
 

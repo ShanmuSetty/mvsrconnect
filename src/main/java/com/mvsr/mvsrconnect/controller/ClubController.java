@@ -2,9 +2,8 @@ package com.mvsr.mvsrconnect.controller;
 
 import com.mvsr.mvsrconnect.model.*;
 import com.mvsr.mvsrconnect.repository.*;
+import com.mvsr.mvsrconnect.service.EmailService;
 import org.springframework.http.HttpStatus;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +21,7 @@ public class ClubController {
     private final UserRepository userRepository;
     private final ClubMemberRepository clubMemberRepository;
     private final PostRepository postRepository;
-    private final JavaMailSender mailSender;
+    private final EmailService emailService;
 
     public ClubController(
             ClubRepository clubRepository,
@@ -30,14 +29,14 @@ public class ClubController {
             UserRepository userRepository,
             ClubMemberRepository clubMemberRepository,
             PostRepository postRepository,
-            JavaMailSender mailSender){
+            EmailService emailService){
 
         this.clubRepository = clubRepository;
         this.joinRepository = joinRepository;
         this.userRepository = userRepository;
         this.clubMemberRepository = clubMemberRepository;
         this.postRepository = postRepository;
-        this.mailSender = mailSender;
+        this.emailService = emailService;
     }
 
     @GetMapping
@@ -92,6 +91,7 @@ public class ClubController {
     @PostMapping("/requests/{requestId}/approve")
     public ClubJoinRequest approve(@PathVariable Long requestId){
 
+
         ClubJoinRequest req = joinRepository.findById(requestId).orElseThrow();
 
         req.setStatus(RequestStatus.APPROVED);
@@ -106,14 +106,11 @@ public class ClubController {
 
         // Send approval email
         try {
-            SimpleMailMessage mail = new SimpleMailMessage();
-            mail.setTo(req.getUser().getEmail());
-            mail.setSubject("You've been approved to join " + req.getClub().getName() + " on MvsrConnect!");
-            mail.setText("Hi " + req.getUser().getName() + ",\n\n" +
-                    "Your request to join the club \"" + req.getClub().getName() + "\" has been approved.\n\n" +
-                    "You can now post in the club and access club content on MvsrConnect.\n\n" +
-                    "— MvsrConnect Team");
-            mailSender.send(mail);
+            emailService.sendJoinApproval(
+                    req.getUser().getEmail(),
+                    req.getUser().getName(),
+                    req.getClub().getName()
+            );
         } catch (Exception e) {
             System.out.println("Email sending failed: " + e.getMessage());
         }
@@ -127,6 +124,15 @@ public class ClubController {
         ClubJoinRequest req = joinRepository.findById(requestId).orElseThrow();
 
         req.setStatus(RequestStatus.REJECTED);
+        try {
+            emailService.sendJoinRejection(
+                    req.getUser().getEmail(),
+                    req.getUser().getName(),
+                    req.getClub().getName()
+            );
+        } catch (Exception e) {
+            System.out.println("Email sending failed: " + e.getMessage());
+        }
 
         return joinRepository.save(req);
     }
