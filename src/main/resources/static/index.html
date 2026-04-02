@@ -748,24 +748,26 @@
       _pollInterval = setInterval(pollUnreadCount, 30000);
 
       // Auto-resubscribe if permission already granted
-      if ('Notification' in window && Notification.permission === 'granted' && _swRegistration) {
-        try {
-          const existing = await _swRegistration.pushManager.getSubscription();
-          if (!existing) {
-            const keyRes = await fetch('/push/vapid-key');
-            const { publicKey } = await keyRes.json();
-            const sub = await _swRegistration.pushManager.subscribe({
-              userVisibleOnly: true,
-              applicationServerKey: urlBase64ToUint8Array(publicKey)
-            });
-            await fetch('/push/subscribe', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(sub.toJSON())
-            });
-          }
-        } catch {}
-      }
+if ('Notification' in window && Notification.permission === 'granted' && _swRegistration) {
+  try {
+    let sub = await _swRegistration.pushManager.getSubscription();
+    if (!sub) {
+      // No subscription yet — create one
+      const keyRes = await fetch('/push/vapid-key');
+      const { publicKey } = await keyRes.json();
+      sub = await _swRegistration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey)
+      });
+    }
+    // Always re-register with the server so this device is linked to the current user
+    await fetch('/push/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(sub.toJSON())
+    });
+  } catch {}
+}
     }
 
     async function pollUnreadCount() {
