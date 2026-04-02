@@ -7,6 +7,7 @@ import com.mvsr.mvsrconnect.repository.CommentRepository;
 import com.mvsr.mvsrconnect.repository.PostRepository;
 import com.mvsr.mvsrconnect.repository.UserRepository;
 import com.mvsr.mvsrconnect.service.ModerationService;
+import com.mvsr.mvsrconnect.service.PushNotificationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -23,16 +24,19 @@ public class CommentController {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final ModerationService moderationService;
+    private final PushNotificationService pushNotificationService;
 
     public CommentController(CommentRepository commentRepository,
                              PostRepository postRepository,
                              UserRepository userRepository,
-                             ModerationService moderationService){
+                             ModerationService moderationService,
+                             PushNotificationService pushNotificationService){
 
         this.commentRepository = commentRepository;
         this.postRepository = postRepository;
         this.userRepository = userRepository;
         this.moderationService = moderationService;
+        this.pushNotificationService = pushNotificationService;
     }
 
     @PostMapping("/{postId}/comment")
@@ -74,7 +78,22 @@ public class CommentController {
         newComment.setParentCommentId(comment.getParentCommentId());
         newComment.setCreatedAt(LocalDateTime.now());
 
-        return commentRepository.save(newComment);
+        Comment saved = commentRepository.save(newComment);
+
+        if (!post.getAuthorId().equals(user.getId())) {
+            pushNotificationService.notifyCommentOnPost(
+                    post.getAuthorId(), user.getName(), post.getId());
+        }
+
+        if (comment.getParentCommentId() != null) {
+            Comment parent = commentRepository.findById(comment.getParentCommentId()).orElse(null);
+            if (parent != null && !parent.getUser().getId().equals(user.getId())) {
+                pushNotificationService.notifyReplyToComment(
+                        parent.getUser().getId(), user.getName(), post.getId());
+            }
+        }
+
+        return saved;
     }
     @GetMapping("/{postId}/comments")
     public List<Comment> getComments(@PathVariable Long postId){

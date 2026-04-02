@@ -43,7 +43,7 @@
           --topbar-bg: rgba(17,17,16,0.88);
         }
 
-        html { scroll-behavior: smooth; }
+        html { scroll-behavior: smooth; transition: background 0.2s ease; }
 
         body {
           background: var(--bg);
@@ -53,9 +53,9 @@
           line-height: 1.6;
           min-height: 100vh;
           -webkit-font-smoothing: antialiased;
+          transition: background 0.2s ease, color 0.2s ease;
         }
 
-        /* grain overlay */
         body::before {
           content: '';
           position: fixed; inset: 0; z-index: 0; pointer-events: none;
@@ -79,18 +79,11 @@
         /* ── UPLOAD PROGRESS ── */
         .upload-progress-wrap { margin-top: 10px; display: none; }
         .upload-progress-wrap.visible { display: block; }
-        .upload-progress-bar-bg {
-          height: 3px; background: var(--border); border-radius: 99px; overflow: hidden;
-        }
-        .upload-progress-bar-fill {
-          height: 100%; width: 0%; background: var(--ink);
-          border-radius: 99px; transition: width 0.15s ease;
-        }
+        .upload-progress-bar-bg { height: 3px; background: var(--border); border-radius: 99px; overflow: hidden; }
+        .upload-progress-bar-fill { height: 100%; width: 0%; background: var(--ink); border-radius: 99px; transition: width 0.15s ease; }
         [data-theme="dark"] .upload-progress-bar-fill { background: #e8e6e1; }
-        /* indeterminate shimmer — shown while waiting on Cloudinary */
         .upload-progress-bar-fill.indeterminate {
-          width: 40% !important;
-          transition: none;
+          width: 40% !important; transition: none;
           background: linear-gradient(90deg, var(--ink) 0%, var(--ink3) 50%, var(--ink) 100%);
           background-size: 200% 100%;
           animation: shimmer 1.4s ease-in-out infinite;
@@ -100,10 +93,7 @@
           background-size: 200% 100%;
         }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-        .upload-progress-label {
-          font-size: 0.7rem; color: var(--ink3); margin-top: 4px;
-          display: flex; justify-content: space-between;
-        }
+        .upload-progress-label { font-size: 0.7rem; color: var(--ink3); margin-top: 4px; display: flex; justify-content: space-between; }
 
         /* ── BUTTON LOADING ── */
         .btn-loading { opacity: 0.65 !important; pointer-events: none !important; cursor: not-allowed !important; }
@@ -113,10 +103,7 @@
           border-radius: 50%; animation: spin 0.55s linear infinite;
           margin-right: 5px; vertical-align: middle;
         }
-        [data-theme="dark"] .btn-dark .btn-spinner,
-        [data-theme="dark"] .google-btn .btn-spinner {
-          border-color: rgba(26,25,22,0.3); border-top-color: #1a1916;
-        }
+        [data-theme="dark"] .btn-dark .btn-spinner { border-color: rgba(26,25,22,0.3); border-top-color: #1a1916; }
 
         /* ── TOPBAR ── */
         .topbar {
@@ -128,63 +115,42 @@
           display: flex; align-items: center;
           justify-content: space-between;
           padding: 0 32px;
+          gap: 12px;
         }
-        /*------Search------*/
+
         .topbar-search {
-  flex: 1; max-width: 340px;
-  position: relative; display: flex; align-items: center;
-}
-.topbar-search input {
-  width: 100%; background: var(--bg2);
-  border: 1px solid var(--border); border-radius: 99px;
-  color: var(--ink); padding: 7px 16px 7px 34px;
-  font-family: var(--sans); font-size: 0.83rem; outline: none;
-  transition: all 0.15s ease;
-}
-.topbar-search input:focus { background: var(--surface); border-color: var(--ink); }
-.topbar-search input::placeholder { color: var(--ink3); }
-.topbar-search .search-icon {
-  position: absolute; left: 11px; color: var(--ink3);
-  font-size: 0.85rem; pointer-events: none;
-}
-/* TAG FILTER PILLS */
-.tag-filter-row {
-  display: flex; gap: 6px; flex-wrap: wrap;
-  margin-bottom: 16px; align-items: center;
-}
-.tag-filter-label {
-  font-size: 0.67rem; font-weight: 600; letter-spacing: 1px;
-  text-transform: uppercase; color: var(--ink3); flex-shrink: 0;
-}
-.tag-pill {
-  font-size: 0.73rem; font-weight: 500;
-  padding: 4px 12px; border-radius: 99px;
-  border: 1px solid var(--border2); background: transparent;
-  color: var(--ink2); cursor: pointer; font-family: var(--sans);
-  transition: all 0.12s ease;
-}
-.tag-pill:hover { border-color: var(--ink); color: var(--ink); background: var(--bg2); }
-.tag-pill.active { background: var(--ink); color: #fff; border-color: var(--ink); }
-[data-theme="dark"] .tag-pill.active { background: #e8e6e1; color: #1a1916; border-color: #e8e6e1; }
+          flex: 1; max-width: 340px;
+          position: relative; display: flex; align-items: center;
+        }
+        .topbar-search input {
+          width: 100%; background: var(--bg2);
+          border: 1px solid var(--border); border-radius: 99px;
+          color: var(--ink); padding: 7px 16px 7px 34px;
+          font-family: var(--sans); font-size: 0.83rem; outline: none;
+          transition: all 0.15s ease;
+        }
+        .topbar-search input:focus { background: var(--surface); border-color: var(--ink); }
+        .topbar-search input::placeholder { color: var(--ink3); }
+        .topbar-search .search-icon { position: absolute; left: 11px; color: var(--ink3); font-size: 0.85rem; pointer-events: none; }
+
+        .tag-filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+        .tag-filter-label { font-size: 0.67rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--ink3); flex-shrink: 0; }
+        .tag-pill { font-size: 0.73rem; font-weight: 500; padding: 4px 12px; border-radius: 99px; border: 1px solid var(--border2); background: transparent; color: var(--ink2); cursor: pointer; font-family: var(--sans); transition: all 0.12s ease; }
+        .tag-pill:hover { border-color: var(--ink); color: var(--ink); background: var(--bg2); }
+        .tag-pill.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+        [data-theme="dark"] .tag-pill.active { background: #e8e6e1; color: #1a1916; border-color: #e8e6e1; }
 
         .logo {
-          font-family: var(--serif);
-          font-size: 1.2rem;
-          letter-spacing: -0.2px;
-          color: var(--ink);
+          font-family: var(--serif); font-size: 1.2rem;
+          letter-spacing: -0.2px; color: var(--ink);
           display: flex; align-items: center; gap: 7px;
+          flex-shrink: 0;
         }
+        .logo-dot { width: 8px; height: 8px; background: var(--ink); border-radius: 50%; display: inline-block; }
 
-        .logo-dot {
-          width: 8px; height: 8px;
-          background: var(--ink);
-          border-radius: 50%;
-          display: inline-block;
-        }
+        .topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
-        .topbar-right { display: flex; align-items: center; gap: 8px; }
-
-        /* ── TOPBAR HAMBURGER ── */
+        /* ── HAMBURGER ── */
         .topbar-hamburger {
           display: none;
           width: 34px; height: 34px; border-radius: 99px;
@@ -195,6 +161,7 @@
         }
         .topbar-hamburger:hover { background: var(--bg2); color: var(--ink); }
 
+        /* ── DRAWER ── */
         .topbar-drawer {
           display: none;
           position: fixed; top: 56px; left: 0; right: 0; z-index: 190;
@@ -207,12 +174,9 @@
 
         .topbar-drawer .drawer-user {
           display: flex; align-items: center; gap: 10px;
-          padding: 4px 4px 12px; border-bottom: 1px solid var(--border);
-          margin-bottom: 4px;
+          padding: 4px 4px 12px; border-bottom: 1px solid var(--border); margin-bottom: 4px;
         }
-        .topbar-drawer .drawer-user img {
-          width: 32px; height: 32px; border-radius: 50%; object-fit: cover;
-        }
+        .topbar-drawer .drawer-user img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
         .topbar-drawer .drawer-user-name { font-size: 0.875rem; font-weight: 500; color: var(--ink); }
         .topbar-drawer .drawer-user-email { font-size: 0.7rem; color: var(--ink3); }
 
@@ -220,71 +184,165 @@
           width: 100%; text-align: left; border-radius: 8px;
           padding: 10px 14px; font-family: var(--sans);
           font-size: 0.875rem; font-weight: 500; cursor: pointer;
-          border: none; background: transparent; color: var(--ink2);
-          transition: all 0.12s;
+          border: none; background: transparent; color: var(--ink2); transition: all 0.12s;
         }
         .topbar-drawer .drawer-btn:hover { background: var(--bg2); color: var(--ink); }
         .topbar-drawer .drawer-btn.danger { color: var(--red); }
         .topbar-drawer .drawer-btn.danger:hover { background: rgba(192,57,43,0.07); }
 
-        /* ── THEME TOGGLE ── */
-        html { transition: background 0.2s ease; }
-        body { transition: background 0.2s ease, color 0.2s ease; }
+        /* drawer notification row */
+        .drawer-notif-row {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 10px 14px; border-radius: 8px;
+          border: none; background: transparent;
+          cursor: pointer; transition: background 0.12s;
+        }
+        .drawer-notif-row:hover { background: var(--bg2); }
+        .drawer-notif-label { font-size: 0.875rem; font-weight: 500; color: var(--ink2); font-family: var(--sans); display: flex; align-items: center; gap: 8px; }
+        .drawer-notif-badge {
+          background: var(--red); color: #fff;
+          font-size: 0.6rem; font-weight: 700;
+          padding: 1px 6px; border-radius: 99px;
+          min-width: 18px; text-align: center;
+        }
 
+        /* ── THEME TOGGLE ── */
         .theme-toggle {
-          width: 34px; height: 34px;
-          border-radius: 99px;
-          background: transparent;
-          border: 1px solid var(--border2);
-          color: var(--ink2);
-          cursor: pointer;
+          width: 34px; height: 34px; border-radius: 99px;
+          background: transparent; border: 1px solid var(--border2);
+          color: var(--ink2); cursor: pointer;
           display: flex; align-items: center; justify-content: center;
-          font-size: 0.95rem;
-          transition: all 0.15s ease;
-          flex-shrink: 0;
+          font-size: 0.95rem; transition: all 0.15s ease; flex-shrink: 0;
         }
         .theme-toggle:hover { background: var(--bg2); color: var(--ink); }
 
         /* ── BUTTONS ── */
         .btn {
-          font-family: var(--sans);
-          font-size: 0.8rem; font-weight: 500;
-          padding: 7px 18px;
-          border-radius: 99px;
-          cursor: pointer;
-          border: none;
-          transition: all 0.15s ease;
-          letter-spacing: 0.1px;
-          white-space: nowrap;
+          font-family: var(--sans); font-size: 0.8rem; font-weight: 500;
+          padding: 7px 18px; border-radius: 99px; cursor: pointer;
+          border: none; transition: all 0.15s ease; letter-spacing: 0.1px; white-space: nowrap;
         }
-
-        .btn-dark {
-          background: #1a1916;
-          color: #fff;
-        }
+        .btn-dark { background: #1a1916; color: #fff; }
         .btn-dark:hover { background: #333; }
-        [data-theme="dark"] .btn-dark {
-          background: #e8e6e1;
-          color: #1a1916;
-        }
+        [data-theme="dark"] .btn-dark { background: #e8e6e1; color: #1a1916; }
         [data-theme="dark"] .btn-dark:hover { background: #fff; }
-
-        .btn-ghost {
-          background: transparent;
-          color: var(--ink2);
-          border: 1px solid var(--border2);
-        }
+        .btn-ghost { background: transparent; color: var(--ink2); border: 1px solid var(--border2); }
         .btn-ghost:hover { background: var(--bg2); color: var(--ink); }
-
         .btn-sm { padding: 5px 13px; font-size: 0.75rem; }
+
+        /* ── NOTIFICATION BELL ── */
+        .notif-bell-wrap { position: relative; }
+
+        .notif-bell {
+          width: 34px; height: 34px; border-radius: 99px;
+          background: transparent; border: 1px solid var(--border2);
+          color: var(--ink2); cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 1rem; transition: all 0.15s; position: relative;
+        }
+        .notif-bell:hover { background: var(--bg2); color: var(--ink); }
+
+        .notif-badge {
+          position: absolute; top: -4px; right: -4px;
+          background: var(--red); color: #fff;
+          font-size: 0.6rem; font-weight: 700;
+          width: 16px; height: 16px; border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          border: 2px solid var(--bg); pointer-events: none;
+          animation: popIn 0.2s ease;
+        }
+
+        .notif-dropdown {
+          position: absolute; top: calc(100% + 10px); right: 0;
+          width: 320px; background: var(--surface);
+          border: 1px solid var(--border); border-radius: var(--radius);
+          box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+          z-index: 300; overflow: hidden;
+          animation: dropDown 0.18s ease;
+        }
+
+        /* on mobile the bell is inside the drawer, dropdown opens differently */
+        @media (max-width: 860px) {
+          .notif-dropdown {
+            position: fixed;
+            top: auto; bottom: 0; left: 0; right: 0;
+            width: 100%; border-radius: var(--radius) var(--radius) 0 0;
+            max-height: 80vh; overflow-y: auto;
+            animation: slideUpSheet 0.22s ease;
+            box-shadow: 0 -8px 32px rgba(0,0,0,0.15);
+          }
+        }
+        @keyframes slideUpSheet { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .notif-header {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 12px 16px 10px; border-bottom: 1px solid var(--border);
+          position: sticky; top: 0; background: var(--surface); z-index: 1;
+        }
+        .notif-header-title { font-family: var(--serif); font-size: 0.95rem; color: var(--ink); }
+        .notif-header-actions { display: flex; gap: 10px; align-items: center; }
+        .notif-mark-read {
+          font-size: 0.7rem; color: var(--ink3);
+          background: none; border: none; cursor: pointer;
+          font-family: var(--sans); padding: 0; transition: color 0.15s;
+        }
+        .notif-mark-read:hover { color: var(--ink); }
+        .notif-close-btn {
+          font-size: 0.8rem; color: var(--ink3);
+          background: none; border: none; cursor: pointer;
+          font-family: var(--sans); padding: 2px 6px;
+          border-radius: 99px; transition: all 0.15s;
+          display: none;
+        }
+        @media (max-width: 860px) { .notif-close-btn { display: block; } }
+        .notif-close-btn:hover { background: var(--bg2); color: var(--ink); }
+
+        .notif-list { max-height: 360px; overflow-y: auto; }
+        @media (max-width: 860px) { .notif-list { max-height: none; } }
+
+        .notif-item {
+          display: block; padding: 12px 16px;
+          border-bottom: 1px solid var(--border);
+          text-decoration: none; transition: background 0.12s; cursor: pointer;
+        }
+        .notif-item:last-child { border-bottom: none; }
+        .notif-item:hover { background: var(--bg2); }
+        .notif-item.unread { background: rgba(26,25,22,0.03); }
+        [data-theme="dark"] .notif-item.unread { background: rgba(232,230,225,0.04); }
+
+        .notif-item-title { font-size: 0.82rem; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+        .notif-item-body { font-size: 0.78rem; color: var(--ink2); line-height: 1.4; }
+        .notif-item-time { font-size: 0.68rem; color: var(--ink3); margin-top: 4px; }
+
+        .notif-empty { padding: 32px 16px; text-align: center; color: var(--ink3); font-size: 0.82rem; }
+
+        .notif-push-banner {
+          padding: 10px 16px; background: var(--bg2); border-bottom: 1px solid var(--border);
+          font-size: 0.75rem; color: var(--ink2);
+          display: flex; align-items: center; justify-content: space-between; gap: 8px;
+        }
+        .notif-push-enable {
+          font-size: 0.72rem; font-weight: 600; padding: 4px 10px;
+          border-radius: 99px; border: 1px solid var(--border2);
+          background: var(--surface); color: var(--ink); cursor: pointer;
+          font-family: var(--sans); white-space: nowrap; transition: all 0.15s;
+        }
+        .notif-push-enable:hover { background: var(--ink); color: var(--bg); }
+
+        /* mobile overlay behind bottom sheet */
+        .notif-overlay {
+          display: none; position: fixed; inset: 0; z-index: 299;
+          background: rgba(0,0,0,0.4);
+          animation: fadeIn 0.18s ease;
+        }
+        .notif-overlay.visible { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         /* ── USER CHIP ── */
         .user-chip {
           display: flex; align-items: center; gap: 7px;
-          background: var(--surface);
-          border: 1px solid var(--border);
-          border-radius: 99px;
-          padding: 4px 12px 4px 5px;
+          background: var(--surface); border: 1px solid var(--border);
+          border-radius: 99px; padding: 4px 12px 4px 5px;
           font-size: 0.8rem; font-weight: 500;
         }
         .user-chip img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; }
@@ -292,315 +350,139 @@
 
         /* ── LOGIN SCREEN ── */
         #login-screen {
-          display: flex; flex-direction: column;
-          align-items: center;
-          padding: 100px 24px 60px;
-          text-align: center;
-          gap: 22px;
+          display: flex; flex-direction: column; align-items: center;
+          padding: 100px 24px 60px; text-align: center; gap: 22px;
           position: relative;
         }
-
-        .login-eyebrow {
-          font-size: 0.72rem; font-weight: 500;
-          letter-spacing: 1.2px; text-transform: uppercase;
-          color: var(--ink3);
-          animation: fadeUp 0.5s ease both;
-        }
-
-        .login-title {
-          font-family: var(--serif);
-          font-size: clamp(3rem, 7vw, 5.2rem);
-          line-height: 1.05;
-          letter-spacing: -1px;
-          color: var(--ink);
-          animation: fadeUp 0.5s 0.08s ease both;
-        }
-
+        .login-eyebrow { font-size: 0.72rem; font-weight: 500; letter-spacing: 1.2px; text-transform: uppercase; color: var(--ink3); animation: fadeUp 0.5s ease both; }
+        .login-title { font-family: var(--serif); font-size: clamp(3rem, 7vw, 5.2rem); line-height: 1.05; letter-spacing: -1px; color: var(--ink); animation: fadeUp 0.5s 0.08s ease both; }
         .login-title em { font-style: italic; color: var(--ink2); }
-
-        .login-sub {
-          font-size: 0.95rem; color: var(--ink2); font-weight: 400;
-          max-width: 380px; line-height: 1.7;
-          animation: fadeUp 0.5s 0.15s ease both;
-        }
-
-        .login-divider {
-          width: 40px; height: 1px;
-          background: var(--border2);
-          animation: fadeUp 0.5s 0.2s ease both;
-        }
-
+        .login-sub { font-size: 0.95rem; color: var(--ink2); font-weight: 400; max-width: 380px; line-height: 1.7; animation: fadeUp 0.5s 0.15s ease both; }
+        .login-divider { width: 40px; height: 1px; background: var(--border2); animation: fadeUp 0.5s 0.2s ease both; }
         .google-btn {
           display: inline-flex; align-items: center; gap: 10px;
-          background: #1a1916; color: #fff;
-          padding: 12px 28px; border-radius: 99px;
+          background: #1a1916; color: #fff; padding: 12px 28px; border-radius: 99px;
           font-family: var(--sans); font-size: 0.88rem; font-weight: 500;
-          cursor: pointer; border: none;
-          transition: all 0.18s ease;
+          cursor: pointer; border: none; transition: all 0.18s ease;
           animation: fadeUp 0.5s 0.22s ease both;
         }
         .google-btn:hover { background: #333; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
         .google-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
         [data-theme="dark"] .google-btn { background: #e8e6e1; color: #1a1916; }
         [data-theme="dark"] .google-btn:hover { background: #fff; }
-
-        .login-note {
-          font-size: 0.72rem; color: var(--ink3);
-          animation: fadeUp 0.5s 0.28s ease both;
-        }
+        .login-note { font-size: 0.72rem; color: var(--ink3); animation: fadeUp 0.5s 0.28s ease both; }
 
         /* ── MAIN SCREEN ── */
         #main-screen { display: none; }
 
         .layout {
-          display: grid;
-          grid-template-columns: 220px 1fr;
-          max-width: 1100px;
-          margin: 0 auto;
-          padding: 0 24px;
-          min-height: calc(100vh - 56px);
-          position: relative; z-index: 1;
+          display: grid; grid-template-columns: 220px 1fr;
+          max-width: 1100px; margin: 0 auto; padding: 0 24px;
+          min-height: calc(100vh - 56px); position: relative; z-index: 1;
         }
 
         /* ── SIDEBAR ── */
         .sidebar {
-          padding: 32px 20px 32px 0;
-          border-right: 1px solid var(--border);
-          position: sticky; top: 56px;
-          height: calc(100vh - 56px);
-          overflow-y: auto;
+          padding: 32px 20px 32px 0; border-right: 1px solid var(--border);
+          position: sticky; top: 56px; height: calc(100vh - 56px); overflow-y: auto;
         }
         .sidebar::-webkit-scrollbar { width: 0; }
-
-        .sidebar-label {
-          font-size: 0.67rem; font-weight: 600;
-          letter-spacing: 1.3px; text-transform: uppercase;
-          color: var(--ink3); margin-bottom: 8px; padding-left: 4px;
-        }
-
+        .sidebar-label { font-size: 0.67rem; font-weight: 600; letter-spacing: 1.3px; text-transform: uppercase; color: var(--ink3); margin-bottom: 8px; padding-left: 4px; }
         .sidebar-section { margin-bottom: 28px; }
-
         .club-item {
           display: flex; justify-content: space-between; align-items: center;
-          padding: 8px 10px; border-radius: 7px;
-          cursor: pointer; font-size: 0.85rem; font-weight: 400;
-          color: var(--ink2); margin-bottom: 1px;
-          transition: all 0.12s ease;
-          border: 1px solid transparent;
+          padding: 8px 10px; border-radius: 7px; cursor: pointer;
+          font-size: 0.85rem; font-weight: 400; color: var(--ink2); margin-bottom: 1px;
+          transition: all 0.12s ease; border: 1px solid transparent;
         }
         .club-item:hover { background: var(--bg2); color: var(--ink); }
         .club-item.active { background: #1a1916; color: #fff; }
         [data-theme="dark"] .club-item.active { background: #e8e6e1; color: #1a1916; }
         [data-theme="dark"] .club-item.active .club-join-btn { border-color: rgba(0,0,0,0.2); color: rgba(0,0,0,0.6); }
-
         .club-join-btn {
-          font-size: 0.67rem; padding: 2px 8px;
-          border-radius: 99px; border: 1px solid var(--border2);
-          color: var(--ink3); background: transparent;
-          cursor: pointer; font-family: var(--sans);
-          transition: all 0.12s;
+          font-size: 0.67rem; padding: 2px 8px; border-radius: 99px;
+          border: 1px solid var(--border2); color: var(--ink3); background: transparent;
+          cursor: pointer; font-family: var(--sans); transition: all 0.12s;
         }
         .club-join-btn:hover { border-color: var(--ink); color: var(--ink); }
 
         /* ── MAIN CONTENT ── */
         .main-content { padding: 32px 0 60px 32px; }
 
-        .feed-header {
-          display: flex; align-items: center;
-          justify-content: space-between;
-          margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
-        }
-
-        .feed-title {
-          font-family: var(--serif);
-          font-size: 1.6rem; letter-spacing: -0.5px;
-          display: flex; align-items: baseline; gap: 10px;
-        }
-
-        .count-badge {
-          font-family: var(--sans);
-          font-size: 0.72rem; font-weight: 500;
-          color: var(--ink3);
-          background: var(--bg2); border: 1px solid var(--border);
-          border-radius: 99px; padding: 1px 9px;
-        }
-
+        .feed-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+        .feed-title { font-family: var(--serif); font-size: 1.6rem; letter-spacing: -0.5px; display: flex; align-items: baseline; gap: 10px; }
+        .count-badge { font-family: var(--sans); font-size: 0.72rem; font-weight: 500; color: var(--ink3); background: var(--bg2); border: 1px solid var(--border); border-radius: 99px; padding: 1px 9px; }
         .feed-filters { display: flex; gap: 5px; flex-wrap: wrap; }
 
         /* ── CREATE CARD ── */
-        .create-card {
-          background: var(--surface);
-          border: 1px solid var(--border);
-          border-radius: var(--radius);
-          padding: 20px;
-          margin-bottom: 16px;
-        }
-
-        .create-top {
-          display: flex; align-items: center;
-          justify-content: space-between; margin-bottom: 14px;
-        }
-
-        .create-label {
-          font-size: 0.72rem; font-weight: 600;
-          letter-spacing: 1px; text-transform: uppercase; color: var(--ink3);
-        }
-
+        .create-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+        .create-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+        .create-label { font-size: 0.72rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--ink3); }
         .field { margin-bottom: 10px; }
-
         .field input, .field textarea, .field select {
-          width: 100%;
-          background: var(--bg);
-          border: 1px solid var(--border);
-          border-radius: 7px;
-          color: var(--ink);
-          padding: 9px 13px;
-          font-family: var(--sans);
-          font-size: 0.875rem;
-          font-weight: 400;
-          outline: none;
-          transition: border-color 0.15s;
-          resize: none;
-          appearance: none;
+          width: 100%; background: var(--bg); border: 1px solid var(--border);
+          border-radius: 7px; color: var(--ink); padding: 9px 13px;
+          font-family: var(--sans); font-size: 0.875rem; font-weight: 400;
+          outline: none; transition: border-color 0.15s; resize: none; appearance: none;
         }
         .field textarea { min-height: 80px; line-height: 1.6; }
-        .field input:focus, .field textarea:focus, .field select:focus {
-          border-color: var(--ink);
-          background: var(--surface);
-        }
+        .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--ink); background: var(--surface); }
         .field input::placeholder, .field textarea::placeholder { color: var(--ink3); }
-
-        .field-row {
-          display: grid; grid-template-columns: 1fr 1fr;
-          gap: 8px; margin-bottom: 10px;
-        }
-
-        .create-footer {
-          display: flex; align-items: center;
-          justify-content: space-between; gap: 10px;
-          margin-top: 14px; flex-wrap: wrap;
-        }
-
+        .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+        .create-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
         .create-footer-note { font-size: 0.72rem; color: var(--ink3); }
 
         /* ── UPLOAD ── */
-        .upload-box {
-          border: 1px dashed var(--border2);
-          border-radius: 7px; padding: 16px;
-          text-align: center; cursor: pointer;
-          color: var(--ink3); font-size: 0.82rem;
-          transition: all 0.15s ease;
-        }
+        .upload-box { border: 1px dashed var(--border2); border-radius: 7px; padding: 16px; text-align: center; cursor: pointer; color: var(--ink3); font-size: 0.82rem; transition: all 0.15s ease; }
         .upload-box:hover { border-color: var(--ink); color: var(--ink); background: var(--bg); }
         .upload-box.drag { border-color: var(--ink); background: var(--bg2); }
-
-        #media-preview img, #media-preview video {
-          max-width: 100%; border-radius: 7px; margin-top: 10px;
-        }
-
-        /* ── DIVIDER ── */
+        #media-preview img, #media-preview video { max-width: 100%; border-radius: 7px; margin-top: 10px; }
         .thin-divider { height: 1px; background: var(--border); margin: 12px 0; }
 
         /* ── POST CARD ── */
         .post-card {
-          background: var(--surface);
-          border: 1px solid var(--border);
-          border-radius: var(--radius);
-          overflow: hidden; margin-bottom: 8px;
+          background: var(--surface); border: 1px solid var(--border);
+          border-radius: var(--radius); overflow: hidden; margin-bottom: 8px;
           transition: border-color 0.15s, box-shadow 0.15s;
           animation: fadeUp 0.3s ease both;
         }
         .post-card:hover { border-color: var(--border2); box-shadow: 0 2px 12px rgba(0,0,0,0.05); }
-
         .post-body { padding: 18px 20px; }
-
-        .post-club-tag {
-          display: inline-block;
-          font-size: 0.67rem; font-weight: 600;
-          letter-spacing: 0.8px; text-transform: uppercase;
-          color: var(--ink3); margin-bottom: 8px;
-        }
-
-        .post-title {
-          font-family: var(--serif);
-          font-size: 1.15rem; line-height: 1.3;
-          color: var(--ink); margin-bottom: 7px;
-          letter-spacing: -0.2px;
-        }
-
+        .post-club-tag { display: inline-block; font-size: 0.67rem; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--ink3); margin-bottom: 8px; }
+        .post-title { font-family: var(--serif); font-size: 1.15rem; line-height: 1.3; color: var(--ink); margin-bottom: 7px; letter-spacing: -0.2px; }
         .post-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
-        .post-tag {
-          font-size: 0.67rem; font-weight: 500;
-          color: var(--ink2); background: var(--bg2);
-          border: 1px solid var(--border);
-          border-radius: 99px; padding: 2px 8px;
-        }
-
+        .post-tag { font-size: 0.67rem; font-weight: 500; color: var(--ink2); background: var(--bg2); border: 1px solid var(--border); border-radius: 99px; padding: 2px 8px; }
         .post-content { font-size: 0.87rem; color: var(--ink2); line-height: 1.65; margin-bottom: 14px; }
-
-        .post-meta {
-          display: flex; align-items: center; gap: 6px;
-          font-size: 0.7rem; color: var(--ink3); margin-bottom: 12px;
-          flex-wrap: wrap;
-        }
+        .post-meta { display: flex; align-items: center; gap: 6px; font-size: 0.7rem; color: var(--ink3); margin-bottom: 12px; flex-wrap: wrap; }
         .post-author { color: var(--ink2); font-weight: 500; }
         .meta-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--ink3); display: inline-block; }
-
         .post-actions { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
-
-        .action-btn {
-          display: inline-flex; align-items: center; gap: 4px;
-          background: transparent; border: 1px solid var(--border);
-          color: var(--ink2); border-radius: 99px;
-          padding: 5px 12px; font-size: 0.75rem;
-          font-family: var(--sans); font-weight: 500;
-          cursor: pointer; transition: all 0.12s ease;
-        }
+        .action-btn { display: inline-flex; align-items: center; gap: 4px; background: transparent; border: 1px solid var(--border); color: var(--ink2); border-radius: 99px; padding: 5px 12px; font-size: 0.75rem; font-family: var(--sans); font-weight: 500; cursor: pointer; transition: all 0.12s ease; }
         .action-btn:hover { border-color: var(--border2); color: var(--ink); background: var(--bg); }
         .action-btn.active { background: #1a1916; color: #fff; border-color: #1a1916; }
         [data-theme="dark"] .action-btn.active { background: #e8e6e1; color: #1a1916; border-color: #e8e6e1; }
         .action-btn.danger { color: var(--red); border-color: var(--border2); }
         .action-btn.danger:hover { background: var(--bg2); }
-
         .vote-column { display: flex; gap: 3px; }
         .vote-column button { background: none; border: none; cursor: pointer; }
 
         /* ── COMMENTS ── */
-        .comments-section {
-          border-top: 1px solid var(--border);
-          background: var(--bg);
-          padding: 16px 20px;
-          display: none;
-        }
+        .comments-section { border-top: 1px solid var(--border); background: var(--bg); padding: 16px 20px; display: none; }
         .comments-section.open { display: block; animation: fadeUp 0.2s ease; }
-
         .comment-input-row { display: flex; gap: 7px; margin-bottom: 16px; }
-        .comment-input-row input {
-          flex: 1; background: var(--surface);
-          border: 1px solid var(--border); border-radius: 99px;
-          color: var(--ink); padding: 8px 14px;
-          font-family: var(--sans); font-size: 0.83rem; outline: none;
-          transition: border-color 0.15s;
-        }
+        .comment-input-row input { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 99px; color: var(--ink); padding: 8px 14px; font-family: var(--sans); font-size: 0.83rem; outline: none; transition: border-color 0.15s; }
         .comment-input-row input:focus { border-color: var(--ink); }
         .comment-input-row input::placeholder { color: var(--ink3); }
-
         .comment { padding: 10px 0; border-bottom: 1px solid var(--border); animation: fadeUp 0.2s ease; }
         .comment:last-child { border-bottom: none; }
-
         .comment-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
         .comment-user { font-size: 0.75rem; font-weight: 600; color: var(--ink); }
         .comment-time { font-size: 0.68rem; color: var(--ink3); }
         .comment-text { font-size: 0.85rem; color: var(--ink2); line-height: 1.55; }
         .comment-actions { display: flex; gap: 10px; margin-top: 5px; }
-        .c-btn {
-          background: none; border: none; color: var(--ink3);
-          cursor: pointer; font-size: 0.7rem; font-family: var(--sans);
-          font-weight: 500; padding: 0; transition: color 0.12s;
-        }
+        .c-btn { background: none; border: none; color: var(--ink3); cursor: pointer; font-size: 0.7rem; font-family: var(--sans); font-weight: 500; padding: 0; transition: color 0.12s; }
         .c-btn:hover { color: var(--ink); }
         .c-btn.del:hover { color: var(--red); }
-
         .no-comments { text-align: center; color: var(--ink3); font-size: 0.8rem; padding: 14px 0; }
 
         /* ── EMPTY STATE ── */
@@ -610,37 +492,22 @@
         .empty-state p { font-size: 0.83rem; }
 
         /* ── TOAST ── */
-        .toast {
-          position: fixed; bottom: 24px; right: 24px;
-          background: var(--ink); color: #fff;
-          border-radius: 99px; padding: 10px 18px;
-          font-size: 0.82rem; font-weight: 500; z-index: 999;
-          animation: slideUp 0.22s ease; max-width: 280px;
-        }
+        .toast { position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: #fff; border-radius: 99px; padding: 10px 18px; font-size: 0.82rem; font-weight: 500; z-index: 999; animation: slideUp 0.22s ease; max-width: 280px; }
         .toast.error { background: var(--red); }
         .toast.success { background: var(--ink); }
 
         /* ── LOADER ── */
         .loading { text-align: center; padding: 40px; color: var(--ink3); font-size: 0.82rem; }
-        .spinner {
-          display: inline-block; width: 16px; height: 16px;
-          border: 1.5px solid var(--border2); border-top-color: var(--ink);
-          border-radius: 50%; animation: spin 0.6s linear infinite;
-          margin-right: 7px; vertical-align: middle;
-        }
+        .spinner { display: inline-block; width: 16px; height: 16px; border: 1.5px solid var(--border2); border-top-color: var(--ink); border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 7px; vertical-align: middle; }
 
-        /* ── MOBILE ── */
-        .mobile-menu-btn {
-          display: none;
-          background: var(--surface); border: 1px solid var(--border);
-          color: var(--ink2); border-radius: 99px;
-          padding: 6px 14px; cursor: pointer;
-          font-family: var(--sans); font-size: 0.78rem; font-weight: 500;
-        }
+        /* ── MOBILE MENU BTN ── */
+        .mobile-menu-btn { display: none; background: var(--surface); border: 1px solid var(--border); color: var(--ink2); border-radius: 99px; padding: 6px 14px; cursor: pointer; font-family: var(--sans); font-size: 0.78rem; font-weight: 500; }
 
         /* ── ANIMATIONS ── */
         @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes dropDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         ::-webkit-scrollbar { width: 4px; }
@@ -654,8 +521,7 @@
             display: none; position: fixed;
             top: 56px; left: 0; right: 0; z-index: 100;
             height: auto; max-height: 70vh;
-            background: var(--bg); border-right: none;
-            border-bottom: 1px solid var(--border);
+            background: var(--bg); border-right: none; border-bottom: 1px solid var(--border);
             padding: 20px;
           }
           .sidebar.open { display: block; animation: fadeUp 0.18s ease; }
@@ -666,10 +532,11 @@
           .topbar { padding: 0 16px; }
           .create-footer { flex-direction: column; align-items: stretch; }
           .create-footer .btn-dark { text-align: center; }
-
-          /* hide all topbar-right children except theme toggle, show hamburger */
+          /* hide desktop topbar-right items, show hamburger */
           .topbar-right > *:not(.theme-toggle):not(.topbar-hamburger) { display: none !important; }
           .topbar-hamburger { display: flex; }
+          /* hide desktop topbar search */
+          .topbar-search { display: none; }
         }
 
         @media (max-width: 480px) {
@@ -686,8 +553,11 @@
 <!-- TOP PROGRESS BAR -->
 <div id="top-progress"></div>
 
+<!-- NOTIFICATION OVERLAY (mobile bottom sheet backdrop) -->
+<div class="notif-overlay" id="notif-overlay" onclick="closeNotifDropdown()"></div>
+
 <!-- TOPBAR -->
-<nav class="topbar" style="gap:12px">
+<nav class="topbar">
     <div class="logo">
         <span class="logo-dot"></span>
         MVSR Connect
@@ -699,6 +569,12 @@
                onkeydown="if(event.key==='Enter') goSearch(this.value)">
     </div>
     <div class="topbar-right" id="topbar-right">
+        <!-- bell only shown on desktop; mobile gets it in drawer -->
+        <div class="notif-bell-wrap" id="notif-bell-wrap">
+            <button class="notif-bell" id="notif-bell" onclick="toggleNotifDropdown()" title="Notifications">
+                🔔
+            </button>
+        </div>
         <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle theme">☀</button>
         <button class="topbar-hamburger" id="topbar-hamburger" onclick="toggleTopbarDrawer()" aria-label="Menu">☰</button>
         <button class="btn btn-dark" onclick="goLogin()">Sign in</button>
@@ -711,17 +587,9 @@
 <!-- LOGIN SCREEN -->
 <div id="login-screen">
     <p class="login-eyebrow">mvsrec.edu.in · Student Forum</p>
-
-    <h1 class="login-title">
-        Your campus,<br><em>connected.</em>
-    </h1>
-
-    <p class="login-sub">
-        The exclusive space for MVSR Engineering College students to share ideas, join clubs, and stay in the loop.
-    </p>
-
+    <h1 class="login-title">Your campus,<br><em>connected.</em></h1>
+    <p class="login-sub">The exclusive space for MVSR Engineering College students to share ideas, join clubs, and stay in the loop.</p>
     <div class="login-divider"></div>
-
     <button class="google-btn" id="google-login-btn" onclick="handleGoogleLogin(this)">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -731,20 +599,16 @@
         </svg>
         Continue with Google
     </button>
-
     <p class="login-note">Only @mvsrec.edu.in accounts are permitted</p>
 </div>
 
 <!-- MAIN SCREEN -->
 <div id="main-screen">
     <div class="layout">
-
         <!-- SIDEBAR -->
         <div class="sidebar" id="sidebar">
             <div class="sidebar-section">
-                <div class="club-item active" onclick="selectClub(null, this)">
-                    All posts
-                </div>
+                <div class="club-item active" onclick="selectClub(null, this)">All posts</div>
             </div>
             <div class="sidebar-section">
                 <div class="sidebar-label">Clubs</div>
@@ -756,8 +620,6 @@
 
         <!-- CONTENT -->
         <div class="main-content">
-
-            <!-- Feed header -->
             <div class="feed-header">
                 <div class="feed-title">
                     Feed <span class="count-badge" id="post-count">0</span>
@@ -771,13 +633,11 @@
                 </div>
             </div>
 
-            <!-- Create post -->
             <div class="create-card">
                 <div class="create-top">
                     <span class="create-label">New post</span>
                     <button class="btn btn-ghost btn-sm" onclick="joinClubRequest()">+ Join club</button>
                 </div>
-
                 <div class="field-row">
                     <div class="field" style="margin:0">
                         <select id="club-select"><option value="">Club (optional)</option></select>
@@ -786,22 +646,15 @@
                         <select id="tag-select"><option value="">Tag (optional)</option></select>
                     </div>
                 </div>
-
                 <div class="thin-divider"></div>
-
-                <div class="field">
-                    <input type="text" id="post-title" placeholder="Title">
-                </div>
-                <div class="field">
-                    <textarea id="post-content" placeholder="What's on your mind?"></textarea>
-                </div>
+                <div class="field"><input type="text" id="post-title" placeholder="Title"></div>
+                <div class="field"><textarea id="post-content" placeholder="What's on your mind?"></textarea></div>
                 <div class="field">
                     <div id="upload-box" class="upload-box">
                         Attach image or video
                         <input type="file" id="media-file" accept="image/*,video/*" hidden>
                     </div>
                     <div id="media-preview"></div>
-                    <!-- Upload progress bar -->
                     <div class="upload-progress-wrap" id="upload-progress-wrap">
                         <div class="upload-progress-bar-bg">
                             <div class="upload-progress-bar-fill" id="upload-progress-fill"></div>
@@ -812,32 +665,54 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="create-footer">
                     <span class="create-footer-note">Images compressed automatically</span>
                     <button class="btn btn-dark" id="publish-btn" onclick="createPost()">Publish →</button>
                 </div>
             </div>
 
-            <!-- Tag filter -->
             <div class="tag-filter-row" id="tag-filter-row" style="display:none">
                 <span class="tag-filter-label">Tags</span>
                 <div id="tag-pills"></div>
                 <button class="tag-pill" id="clear-tag-btn" style="display:none" onclick="clearTagFilter()">✕ Clear</button>
             </div>
 
-            <!-- Posts -->
             <div id="posts-container">
                 <div class="loading"><span class="spinner"></span>Loading…</div>
             </div>
-
         </div>
     </div>
 </div>
 
-</body>
 <script>
-    /* ── ERROR REDIRECT ── */
+    /* ══════════════════════════════════════════
+       THEME (runs immediately before anything)
+    ══════════════════════════════════════════ */
+    (function() {
+      const saved = localStorage.getItem('mvsr-theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
+    })();
+
+    function toggleTheme() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const next = isDark ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('mvsr-theme', next);
+      updateToggleIcon();
+    }
+
+    function updateToggleIcon() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      document.querySelectorAll('.theme-toggle').forEach(btn => {
+        btn.textContent = isDark ? '☽' : '☀';
+        btn.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+      });
+    }
+
+    /* ══════════════════════════════════════════
+       ERROR REDIRECT
+    ══════════════════════════════════════════ */
     const params = new URLSearchParams(window.location.search);
     if (params.get('error') === 'unauthorized') {
       window.history.replaceState({}, '', '/');
@@ -845,17 +720,233 @@
         const note = document.createElement('p');
         note.style.cssText = 'color:#c0392b;font-size:0.8rem;margin-top:-8px;';
         note.textContent = '⚠ Only @mvsrec.edu.in accounts are allowed.';
-        document.querySelector('.google-btn').insertAdjacentElement('afterend', note);
+        document.querySelector('.google-btn')?.insertAdjacentElement('afterend', note);
       });
     }
 
-    // ── SEARCH ──
+    /* ══════════════════════════════════════════
+       NOTIFICATION SYSTEM
+    ══════════════════════════════════════════ */
+    let _notifOpen = false;
+    let _pollInterval = null;
+    let _swRegistration = null;
+    let _unreadCount = 0;
+
+    async function initNotifications() {
+      // Register service worker
+      if ('serviceWorker' in navigator) {
+        try {
+          _swRegistration = await navigator.serviceWorker.register('/sw.js');
+        } catch (e) {
+          console.warn('SW registration failed:', e);
+        }
+      }
+
+      // Poll unread count every 30s
+      pollUnreadCount();
+      if (_pollInterval) clearInterval(_pollInterval);
+      _pollInterval = setInterval(pollUnreadCount, 30000);
+
+      // Auto-resubscribe if permission already granted
+      if ('Notification' in window && Notification.permission === 'granted' && _swRegistration) {
+        try {
+          const existing = await _swRegistration.pushManager.getSubscription();
+          if (!existing) {
+            const keyRes = await fetch('/push/vapid-key');
+            const { publicKey } = await keyRes.json();
+            const sub = await _swRegistration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: urlBase64ToUint8Array(publicKey)
+            });
+            await fetch('/push/subscribe', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(sub.toJSON())
+            });
+          }
+        } catch {}
+      }
+    }
+
+    async function pollUnreadCount() {
+      if (!currentUser) return;
+      try {
+        const res = await fetch('/notifications/unread-count');
+        if (!res.ok) return;
+        const { count } = await res.json();
+        _unreadCount = count;
+        updateBellBadge(count);
+        updateDrawerBellBadge(count);
+      } catch {}
+    }
+
+    function updateBellBadge(count) {
+      const bell = document.getElementById('notif-bell');
+      if (!bell) return;
+      let badge = bell.querySelector('.notif-badge');
+      if (count > 0) {
+        if (!badge) {
+          badge = document.createElement('span');
+          badge.className = 'notif-badge';
+          bell.appendChild(badge);
+        }
+        badge.textContent = count > 99 ? '99+' : count;
+      } else {
+        badge?.remove();
+      }
+    }
+
+    function updateDrawerBellBadge(count) {
+      const badge = document.getElementById('drawer-notif-badge');
+      if (!badge) return;
+      badge.textContent = count > 99 ? '99+' : count;
+      badge.style.display = count > 0 ? 'inline-block' : 'none';
+    }
+
+    async function toggleNotifDropdown() {
+      if (_notifOpen) { closeNotifDropdown(); return; }
+      openNotifDropdown();
+    }
+
+    async function openNotifDropdown() {
+      _notifOpen = true;
+
+      const isMobile = window.innerWidth <= 860;
+
+      // Show overlay on mobile
+      if (isMobile) {
+        document.getElementById('notif-overlay').classList.add('visible');
+        closeTopbarDrawer();
+      }
+
+      // Find or create anchor — desktop: bell wrap, mobile: body
+      let anchor = isMobile ? document.body : document.getElementById('notif-bell-wrap');
+
+      let dropdown = document.getElementById('notif-dropdown');
+      if (!dropdown) {
+        dropdown = document.createElement('div');
+        dropdown.className = 'notif-dropdown';
+        dropdown.id = 'notif-dropdown';
+        anchor.appendChild(dropdown);
+      }
+
+      dropdown.innerHTML = `
+        <div class="notif-header">
+          <span class="notif-header-title">Notifications</span>
+          <div class="notif-header-actions">
+            <button class="notif-mark-read" onclick="markAllRead()">Mark all read</button>
+            <button class="notif-close-btn" onclick="closeNotifDropdown()">✕</button>
+          </div>
+        </div>
+        ${pushBannerHTML()}
+        <div class="notif-list" id="notif-list">
+          <div class="notif-empty">Loading…</div>
+        </div>`;
+
+      fetch('/notifications/read-all', { method: 'POST' }).catch(() => {});
+      _unreadCount = 0;
+      updateBellBadge(0);
+      updateDrawerBellBadge(0);
+
+      try {
+        const res = await fetch('/notifications');
+        if (!res.ok) throw new Error();
+        const notifs = await res.json();
+        renderNotifList(notifs);
+      } catch {
+        const list = document.getElementById('notif-list');
+        if (list) list.innerHTML = `<div class="notif-empty">Could not load notifications</div>`;
+      }
+    }
+
+    function closeNotifDropdown() {
+      _notifOpen = false;
+      document.getElementById('notif-dropdown')?.remove();
+      document.getElementById('notif-overlay')?.classList.remove('visible');
+    }
+
+    function renderNotifList(notifs) {
+      const list = document.getElementById('notif-list');
+      if (!list) return;
+      if (!notifs.length) {
+        list.innerHTML = `<div class="notif-empty">You're all caught up ✓</div>`;
+        return;
+      }
+      list.innerHTML = notifs.map(n => `
+        <div class="notif-item ${n.read ? '' : 'unread'}"
+             onclick="handleNotifClick('${escHtml(n.url || '/')}')">
+          <div class="notif-item-title">${escHtml(n.title)}</div>
+          <div class="notif-item-body">${escHtml(n.body)}</div>
+          <div class="notif-item-time">${formatTime(n.createdAt)}</div>
+        </div>`).join('');
+    }
+
+    function handleNotifClick(url) {
+      closeNotifDropdown();
+      window.location.href = url;
+    }
+
+    async function markAllRead() {
+      await fetch('/notifications/read-all', { method: 'POST' }).catch(() => {});
+      updateBellBadge(0);
+      updateDrawerBellBadge(0);
+      document.querySelectorAll('.notif-item').forEach(el => el.classList.remove('unread'));
+    }
+
+    // ── PUSH PERMISSION ──
+    function pushBannerHTML() {
+      if (!('Notification' in window)) return '';
+      if (Notification.permission === 'granted') return '';
+      if (Notification.permission === 'denied') return '';
+      return `
+        <div class="notif-push-banner">
+          <span>Enable push notifications?</span>
+          <button class="notif-push-enable" onclick="requestPushPermission()">Enable</button>
+        </div>`;
+    }
+
+    async function requestPushPermission() {
+      if (!('Notification' in window) || !_swRegistration) return;
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') return;
+      try {
+        const keyRes = await fetch('/push/vapid-key');
+        const { publicKey } = await keyRes.json();
+        const sub = await _swRegistration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey)
+        });
+        await fetch('/push/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(sub.toJSON())
+        });
+        document.querySelector('.notif-push-banner')?.remove();
+        showToast('Push notifications enabled 🔔');
+      } catch (e) {
+        console.error('Push subscription failed:', e);
+        showToast('Could not enable notifications', 'error');
+      }
+    }
+
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const rawData = atob(base64);
+      return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+    }
+
+    /* ══════════════════════════════════════════
+       SEARCH
+    ══════════════════════════════════════════ */
     function goSearch(q) {
       if (!q || !q.trim()) return;
       window.location.href = `/search.html?q=${encodeURIComponent(q.trim())}`;
     }
 
-    // ── TAG FILTER ──
+    /* ══════════════════════════════════════════
+       TAG FILTER
+    ══════════════════════════════════════════ */
     let activeTagId = null;
 
     async function loadTagPills() {
@@ -898,6 +989,9 @@
       loadPosts();
     }
 
+    /* ══════════════════════════════════════════
+       USER / AUTH
+    ══════════════════════════════════════════ */
     let currentUser = null;
 
     window.addEventListener('load', () => { checkUser(); updateToggleIcon(); });
@@ -916,10 +1010,131 @@
       } catch { topProgress(100); showLogin(); }
     }
 
-    /* ── UPLOAD BOX ── */
+    function goLogin() { window.location.href = '/oauth2/authorization/google'; }
+    function handleGoogleLogin(btn) {
+      btn.classList.add('btn-loading');
+      btn.innerHTML = `<span class="btn-spinner"></span> Signing in…`;
+      goLogin();
+    }
+    async function logout() { await fetch('/logout', { method: 'POST' }); window.location.href = '/'; }
+
+    /* ══════════════════════════════════════════
+       SCREENS
+    ══════════════════════════════════════════ */
+    function showLogin() {
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('main-screen').style.display = 'none';
+      document.getElementById('topbar-right').innerHTML = `
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" id="theme-toggle">☀</button>
+        <button class="btn btn-dark" onclick="goLogin()">Sign in</button>`;
+      updateToggleIcon();
+    }
+
+    async function showMain() {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('main-screen').style.display = 'block';
+
+      const pic = currentUser.picture || '';
+      const email = currentUser.email || '';
+      const name = currentUser.name || email;
+      const isAdmin = currentUser.role === 'ADMIN';
+
+      let modLabel = 'Moderate';
+      try {
+        const modRes = await fetch('/mod/my-clubs');
+        if (modRes.ok) {
+          const modClubs = await modRes.json();
+          if (modClubs.length > 0) modLabel = 'Mod Panel';
+        }
+      } catch {}
+
+      const adminBtn = isAdmin ? `<button class="btn btn-ghost btn-sm" onclick="openAdmin()">Admin</button>` : '';
+
+      // Desktop topbar
+      document.getElementById('topbar-right').innerHTML = `
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰ Clubs</button>
+        ${adminBtn}
+        <button class="btn btn-ghost btn-sm" onclick="window.location.href='/dashboard.html'">Dashboard</button>
+        <button class="btn btn-ghost btn-sm" onclick="window.location.href='/lostandfound.html'">Lost & Found</button>
+        <button class="btn btn-ghost btn-sm" onclick="window.location.href='/events.html'">Events</button>
+        <button class="btn btn-ghost btn-sm" onclick="openMod()">⬡ ${modLabel}</button>
+        <button class="btn btn-ghost btn-sm" onclick="logout()">Sign out</button>
+        <div class="notif-bell-wrap" id="notif-bell-wrap">
+          <button class="notif-bell" id="notif-bell" onclick="toggleNotifDropdown()" title="Notifications">🔔</button>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" id="theme-toggle">☀</button>
+        <div class="user-chip">
+          ${pic ? `<img src="${pic}" alt="">` : ''}
+          <div>
+            <div>${escHtml(name.split(' ').slice(-2).join(' '))}</div>
+            <div class="email">${escHtml(email)}</div>
+          </div>
+        </div>
+        <button class="topbar-hamburger" id="topbar-hamburger" onclick="toggleTopbarDrawer()">☰</button>`;
+
+      // Mobile drawer
+      document.getElementById('topbar-drawer').innerHTML = `
+        <div class="drawer-user">
+          ${pic ? `<img src="${pic}" alt="">` : ''}
+          <div>
+            <div class="drawer-user-name">${escHtml(name)}</div>
+            <div class="drawer-user-email">${escHtml(email)}</div>
+          </div>
+        </div>
+        <button class="drawer-btn" onclick="toggleSidebar();closeTopbarDrawer()">☰ &nbsp;Clubs</button>
+        <div class="drawer-notif-row" onclick="openNotifDropdown()">
+          <span class="drawer-notif-label">
+            🔔 Notifications
+            <span class="drawer-notif-badge" id="drawer-notif-badge" style="display:none">0</span>
+          </span>
+        </div>
+        ${isAdmin ? `<button class="drawer-btn" onclick="openAdmin()">Admin Panel</button>` : ''}
+        <button class="drawer-btn" onclick="window.location.href='/dashboard.html'">Dashboard</button>
+        <button class="drawer-btn" onclick="window.location.href='/lostandfound.html'">Lost & Found</button>
+        <button class="drawer-btn" onclick="window.location.href='/events.html'">Events</button>
+        <button class="drawer-btn" onclick="openMod()">⬡ &nbsp;${modLabel}</button>
+        <button class="drawer-btn danger" onclick="logout()">Sign out</button>`;
+
+      updateToggleIcon();
+      loadClubsSidebar();
+      loadPosts();
+      loadTagPills();
+
+      // Init notifications AFTER login confirmed
+      initNotifications();
+    }
+
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+    function toggleTopbarDrawer() { document.getElementById('topbar-drawer').classList.toggle('open'); }
+    function closeTopbarDrawer() { document.getElementById('topbar-drawer').classList.remove('open'); }
+
+    // Close drawer on outside click
+    document.addEventListener('click', (e) => {
+      const drawer = document.getElementById('topbar-drawer');
+      const hamburger = document.getElementById('topbar-hamburger');
+      if (drawer && !drawer.contains(e.target) && hamburger && !hamburger.contains(e.target)) {
+        drawer.classList.remove('open');
+      }
+      // Close desktop notif dropdown on outside click
+      if (_notifOpen && window.innerWidth > 860) {
+        const wrap = document.getElementById('notif-bell-wrap');
+        const dropdown = document.getElementById('notif-dropdown');
+        if (wrap && !wrap.contains(e.target) && dropdown && !dropdown.contains(e.target)) {
+          closeNotifDropdown();
+        }
+      }
+    });
+
+    function openAdmin() { window.location.href = '/admin.html'; }
+    function openMod() { window.location.href = '/mod.html'; }
+
+    /* ══════════════════════════════════════════
+       UPLOAD BOX
+    ══════════════════════════════════════════ */
     window.addEventListener('load', () => {
       const box = document.getElementById('upload-box');
       const input = document.getElementById('media-file');
+      if (!box || !input) return;
       box.onclick = () => input.click();
       box.addEventListener('dragover', e => { e.preventDefault(); box.classList.add('drag'); });
       box.addEventListener('dragleave', () => box.classList.remove('drag'));
@@ -939,97 +1154,9 @@
       else if (file.type.startsWith('video')) p.innerHTML = `<video controls src="${url}"></video>`;
     }
 
-    /* ── SCREENS ── */
-    function showLogin() {
-      document.getElementById('login-screen').style.display = 'flex';
-      document.getElementById('main-screen').style.display = 'none';
-      document.getElementById('topbar-right').innerHTML = `<button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" id="theme-toggle">☀</button><button class="btn btn-dark" onclick="goLogin()">Sign in</button>`;
-      updateToggleIcon();
-    }
-
-    async function showMain() {
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('main-screen').style.display = 'block';
-      const pic = currentUser.picture || '';
-      const email = currentUser.email || '';
-      const name = currentUser.name || email;
-      let isAdmin = currentUser.role === 'ADMIN';
-      let adminBtn = isAdmin ? `<button class="btn btn-ghost btn-sm" onclick="openAdmin()">Admin</button>` : '';
-
-      let modLabel = 'Moderate';
-      let isMod = false;
-      try {
-        const modRes = await fetch('/mod/my-clubs');
-        if (modRes.ok) {
-          const modClubs = await modRes.json();
-          if (modClubs.length > 0) { modLabel = 'Mod Panel'; isMod = true; }
-        }
-      } catch {}
-
-      const modBtn = `<button class="btn btn-ghost btn-sm" onclick="openMod()" title="Moderator panel / apply to moderate">⬡ ${modLabel}</button>`;
-      const dashboardBtn = `<button class="btn btn-ghost btn-sm" onclick="window.location.href='/dashboard.html'">Dashboard</button>`;
-      document.getElementById('topbar-right').innerHTML = `
-        <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleSidebar()">☰ Clubs</button>
-
-        ${adminBtn}
-        ${dashboardBtn}
-        <button class="btn btn-ghost btn-sm" onclick="window.location.href='/lostandfound.html'">Lost & Found</button>
-        <button class="btn btn-ghost btn-sm" onclick="window.location.href='/events.html'">Events</button>
-        ${modBtn}
-        <button class="btn btn-ghost btn-sm" onclick="logout()">Sign out</button>
-        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" id="theme-toggle">☀</button>
-        <div class="user-chip">
-          ${pic ? `<img src="${pic}" alt="">` : ''}
-          <div>
-            <div>${name.split(' ').slice(-2).join(' ')}</div>
-            <div class="email">${email}</div>
-          </div>
-        </div>
-        <button class="topbar-hamburger" id="topbar-hamburger" onclick="toggleTopbarDrawer()">☰</button>`;
-
-      document.getElementById('topbar-drawer').innerHTML = `
-        <div class="drawer-user">
-          ${pic ? `<img src="${pic}" alt="">` : ''}
-          <div>
-            <div class="drawer-user-name">${escHtml(name)}</div>
-            <div class="drawer-user-email">${escHtml(email)}</div>
-          </div>
-        </div>
-        <button class="drawer-btn" onclick="toggleSidebar();closeTopbarDrawer()">☰ &nbsp;Clubs</button>
-        ${isAdmin ? `<button class="drawer-btn" onclick="openAdmin()">Admin Panel</button>` : ''}
-        <button class="drawer-btn" onclick="window.location.href='/dashboard.html'">Dashboard</button>
-        <button class="drawer-btn" onclick="window.location.href='/lostandfound.html'">Lost & Found</button>
-        <button class="drawer-btn" onclick="window.location.href='/events.html'">Events</button>
-        <button class="drawer-btn" onclick="openMod()">⬡ &nbsp;${modLabel}</button>
-        <button class="drawer-btn danger" onclick="logout()">Sign out</button>`;
-      updateToggleIcon();
-      loadClubsSidebar();
-      loadPosts();
-      loadTagPills();
-    }
-
-    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-    function toggleTopbarDrawer() { document.getElementById('topbar-drawer').classList.toggle('open'); }
-    function closeTopbarDrawer() { document.getElementById('topbar-drawer').classList.remove('open'); }
-
-    document.addEventListener('click', (e) => {
-      const drawer = document.getElementById('topbar-drawer');
-      const hamburger = document.getElementById('topbar-hamburger');
-      if (drawer && !drawer.contains(e.target) && hamburger && !hamburger.contains(e.target)) {
-        drawer.classList.remove('open');
-      }
-    });
-
-    /* ── AUTH ── */
-    function goLogin() { window.location.href = '/oauth2/authorization/google'; }
-    function handleGoogleLogin(btn) {
-      btn.classList.add('btn-loading');
-      btn.innerHTML = `<span class="btn-spinner"></span> Signing in…`;
-      goLogin();
-    }
-    async function logout() { await fetch('/logout', { method: 'POST' }); window.location.href = '/'; }
-
-    /* ── POSTS ── */
+    /* ══════════════════════════════════════════
+       POSTS
+    ══════════════════════════════════════════ */
     async function loadPosts() {
       const c = document.getElementById('posts-container');
       c.innerHTML = `<div class="loading"><span class="spinner"></span>Loading…</div>`;
@@ -1052,9 +1179,7 @@
       topProgress(30);
       try {
         const res = await fetch('/posts/hot'); if (!res.ok) throw new Error();
-        topProgress(80);
-        const posts = await res.json();
-        topProgress(100);
+        const posts = await res.json(); topProgress(100);
         document.getElementById('post-count').textContent = posts.length;
         c.innerHTML = posts.length ? posts.map(renderPost).join('') : emptyState('Nothing here', '');
       } catch { topProgress(100); c.innerHTML = emptyState('Could not load', ''); }
@@ -1066,9 +1191,7 @@
       topProgress(30);
       try {
         const res = await fetch('/posts/top'); if (!res.ok) throw new Error();
-        topProgress(80);
-        const posts = await res.json();
-        topProgress(100);
+        const posts = await res.json(); topProgress(100);
         document.getElementById('post-count').textContent = posts.length;
         c.innerHTML = posts.length ? posts.map(renderPost).join('') : emptyState('Nothing here', '');
       } catch { topProgress(100); c.innerHTML = emptyState('Could not load', ''); }
@@ -1078,13 +1201,15 @@
       return `<div class="empty-state"><div class="icon">○</div><h3>${title}</h3><p>${sub}</p></div>`;
     }
 
-    /* ── CLUBS & TAGS ── */
+    /* ══════════════════════════════════════════
+       CLUBS & TAGS
+    ══════════════════════════════════════════ */
     async function loadClubs() {
       const res = await fetch('/clubs'); if (!res.ok) return;
       const clubs = await res.json();
       const sel = document.getElementById('club-select');
       sel.innerHTML = `<option value="">Club (optional)</option>`;
-      clubs.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.name}</option>`);
+      clubs.forEach(c => sel.innerHTML += `<option value="${c.id}">${escHtml(c.name)}</option>`);
     }
 
     async function loadTags() {
@@ -1092,7 +1217,7 @@
       const tags = await res.json();
       const sel = document.getElementById('tag-select');
       sel.innerHTML = `<option value="">Tag (optional)</option>`;
-      tags.forEach(t => sel.innerHTML += `<option value="${t.id}">${t.name}</option>`);
+      tags.forEach(t => sel.innerHTML += `<option value="${t.id}">${escHtml(t.name)}</option>`);
     }
 
     let selectedClub = null;
@@ -1106,10 +1231,7 @@
     }
 
     async function loadClubsSidebar() {
-      const [clubsRes, statusRes] = await Promise.all([
-        fetch('/clubs'),
-        fetch('/clubs/my-status')
-      ]);
+      const [clubsRes, statusRes] = await Promise.all([fetch('/clubs'), fetch('/clubs/my-status')]);
       if (!clubsRes.ok) return;
       const clubs = await clubsRes.json();
       const status = statusRes.ok ? await statusRes.json() : { member: [], pending: [] };
@@ -1163,10 +1285,9 @@
       showToast('Report submitted');
     }
 
-    function openAdmin() { window.location.href = '/admin.html'; }
-    function openMod() { window.location.href = '/mod.html'; }
-
-    /* ── COMPRESSION ── */
+    /* ══════════════════════════════════════════
+       IMAGE COMPRESSION
+    ══════════════════════════════════════════ */
     async function compressImage(file) {
       const img = document.createElement('img');
       const canvas = document.createElement('canvas');
@@ -1179,7 +1300,9 @@
       return new Promise(r => canvas.toBlob(b => r(new File([b], file.name, { type: 'image/jpeg' })), 'image/jpeg', 0.75));
     }
 
-    /* ── RENDER POST ── */
+    /* ══════════════════════════════════════════
+       RENDER POST
+    ══════════════════════════════════════════ */
     function renderPost(p) {
       const time = p.createdAt ? formatTime(p.createdAt) : '';
       const content = p.content || '';
@@ -1226,10 +1349,9 @@
       return '';
     }
 
-    /* ── UPLOAD MEDIA with XHR progress ──
-       Phase 1: real % while file travels to your server (XHR progress events)
-       Phase 2: indeterminate shimmer while server pushes to Cloudinary
-       Bar stays open until createPost calls uploadProgressDone() */
+    /* ══════════════════════════════════════════
+       UPLOAD WITH PROGRESS
+    ══════════════════════════════════════════ */
     function uploadMediaWithProgress(file) {
       return new Promise((resolve, reject) => {
         const fd = new FormData();
@@ -1240,29 +1362,21 @@
         const pct  = document.getElementById('upload-progress-pct');
         const txt  = document.getElementById('upload-progress-text');
         wrap.classList.add('visible');
-        fill.style.width = '0%';
-        fill.classList.remove('indeterminate');
-        pct.textContent = '0%';
-        txt.textContent = 'Uploading…';
+        fill.style.width = '0%'; fill.classList.remove('indeterminate');
+        pct.textContent = '0%'; txt.textContent = 'Uploading…';
         xhr.upload.addEventListener('progress', e => {
           if (e.lengthComputable) {
             const p = Math.round((e.loaded / e.total) * 100);
-            fill.style.width = p + '%';
-            pct.textContent = p + '%';
+            fill.style.width = p + '%'; pct.textContent = p + '%';
           }
         });
         xhr.addEventListener('load', () => {
-          // Server received the file — now waiting on Cloudinary, switch to shimmer
           fill.classList.add('indeterminate');
-          pct.textContent = '';
-          txt.textContent = 'Saving to cloud…';
-          try { resolve(JSON.parse(xhr.responseText)); }
-          catch { reject(new Error('Bad response')); }
+          pct.textContent = ''; txt.textContent = 'Saving to cloud…';
+          try { resolve(JSON.parse(xhr.responseText)); } catch { reject(new Error('Bad response')); }
         });
         xhr.addEventListener('error', () => {
-          txt.textContent = 'Upload failed';
-          fill.classList.remove('indeterminate');
-          wrap.classList.remove('visible');
+          txt.textContent = 'Upload failed'; fill.classList.remove('indeterminate'); wrap.classList.remove('visible');
           reject(new Error('Upload failed'));
         });
         xhr.open('POST', '/api/media/upload');
@@ -1276,23 +1390,16 @@
       const txt  = document.getElementById('upload-progress-text');
       const pct  = document.getElementById('upload-progress-pct');
       fill.classList.remove('indeterminate');
-      if (success) {
-        fill.style.width = '100%';
-        txt.textContent = 'Done';
-        pct.textContent = '✓';
-      } else {
-        txt.textContent = 'Failed';
-        pct.textContent = '';
-      }
+      if (success) { fill.style.width = '100%'; txt.textContent = 'Done'; pct.textContent = '✓'; }
+      else { txt.textContent = 'Failed'; pct.textContent = ''; }
       setTimeout(() => {
-        wrap.classList.remove('visible');
-        fill.style.width = '0%';
-        pct.textContent = '0%';
-        txt.textContent = 'Uploading…';
+        wrap.classList.remove('visible'); fill.style.width = '0%'; pct.textContent = '0%'; txt.textContent = 'Uploading…';
       }, 1400);
     }
 
-    /* ── CREATE POST ── */
+    /* ══════════════════════════════════════════
+       CREATE POST
+    ══════════════════════════════════════════ */
     async function createPost() {
       const title = document.getElementById('post-title').value.trim();
       const content = document.getElementById('post-content').value.trim();
@@ -1313,8 +1420,7 @@
             mediaType = 'video';
             if (file.size > 200 * 1024 * 1024) {
               showToast('Video too large (max 200MB)', 'error');
-              publishBtn.classList.remove('btn-loading');
-              publishBtn.innerHTML = 'Publish →';
+              publishBtn.classList.remove('btn-loading'); publishBtn.innerHTML = 'Publish →';
               return;
             }
           }
@@ -1335,8 +1441,7 @@
           showToast(await res.text() || 'Post rejected', 'error');
           document.getElementById('media-preview').innerHTML = '';
           document.getElementById('media-file').value = '';
-          publishBtn.classList.remove('btn-loading');
-          publishBtn.innerHTML = 'Publish →';
+          publishBtn.classList.remove('btn-loading'); publishBtn.innerHTML = 'Publish →';
           return;
         }
         topProgress(100);
@@ -1349,14 +1454,13 @@
         document.getElementById('tag-select').value = '';
         showToast('Posted!');
         loadPosts();
-      } catch (err) { topProgress(100); if (mediaUrl) uploadProgressDone(false); showToast('Failed to create post', 'error'); }
-      finally {
-        publishBtn.classList.remove('btn-loading');
-        publishBtn.innerHTML = 'Publish →';
-      }
+      } catch { topProgress(100); if (mediaUrl) uploadProgressDone(false); showToast('Failed to create post', 'error'); }
+      finally { publishBtn.classList.remove('btn-loading'); publishBtn.innerHTML = 'Publish →'; }
     }
 
-    /* ── COMMENTS ── */
+    /* ══════════════════════════════════════════
+       COMMENTS
+    ══════════════════════════════════════════ */
     function buildCommentTree(comments) {
       const map = {}, roots = [];
       comments.forEach(c => { c.children = []; map[c.id] = c; });
@@ -1414,11 +1518,11 @@
       const content = input.value.trim(); if (!content) return;
       if (btn) { btn.classList.add('btn-loading'); btn.innerHTML = `<span class="btn-spinner"></span>`; }
       try {
-        const res = await fetch(`/posts/${postId}/comment`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content, userId: currentUser?.id || 1, parentCommentId: null }) });
-        if (!res.ok) throw new Error();
+        const res = await fetch(`/posts/${postId}/comment`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content, parentCommentId: null }) });
+        if (!res.ok) throw new Error(await res.text());
         input.value = '';
         await loadComments(postId);
-      } catch { showToast('Failed to post comment', 'error'); }
+      } catch (e) { showToast(e.message || 'Failed to post comment', 'error'); }
       finally { if (btn) { btn.classList.remove('btn-loading'); btn.innerHTML = 'Post'; } }
     }
 
@@ -1427,8 +1531,9 @@
       const content = input.value.trim(); if (!content) return;
       try {
         const res = await fetch(`/posts/${postId}/comment`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content, parentCommentId: parentId }) });
-        if (!res.ok) throw new Error(); await loadComments(postId);
-      } catch { showToast('Failed to post reply', 'error'); }
+        if (!res.ok) throw new Error(await res.text());
+        await loadComments(postId);
+      } catch (e) { showToast(e.message || 'Failed to post reply', 'error'); }
     }
 
     async function deletePost(postId) {
@@ -1449,7 +1554,9 @@
       } catch { showToast('Could not delete', 'error'); }
     }
 
-    /* ── VOTES ── */
+    /* ══════════════════════════════════════════
+       VOTES
+    ══════════════════════════════════════════ */
     async function vote(postId, value) {
       await fetch(`/votes/${postId}?value=${value}`, { method: 'POST' });
       loadVotes(postId);
@@ -1470,29 +1577,28 @@
       } catch {}
     }
 
-    /* ── TOP PROGRESS BAR ── */
+    /* ══════════════════════════════════════════
+       TOP PROGRESS BAR
+    ══════════════════════════════════════════ */
     let _progressTimer = null;
     function topProgress(pct) {
       const bar = document.getElementById('top-progress');
       if (!bar) return;
-      bar.classList.add('active');
-      bar.style.width = pct + '%';
+      bar.classList.add('active'); bar.style.width = pct + '%';
       if (_progressTimer) clearTimeout(_progressTimer);
       if (pct >= 100) {
         _progressTimer = setTimeout(() => {
           bar.style.opacity = '0';
-          setTimeout(() => {
-            bar.style.width = '0%';
-            bar.classList.remove('active');
-            bar.style.opacity = '';
-          }, 300);
+          setTimeout(() => { bar.style.width = '0%'; bar.classList.remove('active'); bar.style.opacity = ''; }, 300);
         }, 300);
       }
     }
 
-    /* ── UTILS ── */
+    /* ══════════════════════════════════════════
+       UTILS
+    ══════════════════════════════════════════ */
     function escHtml(str) {
-      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
     function formatTime(dateStr) {
@@ -1511,33 +1617,11 @@
       document.body.appendChild(t); setTimeout(() => t.remove(), 2800);
     }
 
-    /* ── THEME ── */
-    function toggleTheme() {
-      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      const next = isDark ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', next);
-      localStorage.setItem('mvsr-theme', next);
-      updateToggleIcon();
-    }
-
-    function updateToggleIcon() {
-      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      document.querySelectorAll('.theme-toggle').forEach(btn => {
-        btn.textContent = isDark ? '☽' : '☀';
-        btn.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
-      });
-    }
-
-    // Apply saved theme immediately
-    (function() {
-      const saved = localStorage.getItem('mvsr-theme');
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const theme = saved || (prefersDark ? 'dark' : 'light');
-      document.documentElement.setAttribute('data-theme', theme);
-    })();
-
     window.addEventListener('resize', () => {
       if (window.innerWidth > 860) document.getElementById('sidebar')?.classList.remove('open');
+      // Close bottom sheet if resized to desktop
+      if (window.innerWidth > 860 && _notifOpen) closeNotifDropdown();
     });
 </script>
+</body>
 </html>

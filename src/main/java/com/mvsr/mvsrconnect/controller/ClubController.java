@@ -3,6 +3,7 @@ package com.mvsr.mvsrconnect.controller;
 import com.mvsr.mvsrconnect.model.*;
 import com.mvsr.mvsrconnect.repository.*;
 import com.mvsr.mvsrconnect.service.EmailService;
+import com.mvsr.mvsrconnect.service.PushNotificationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -22,6 +23,7 @@ public class ClubController {
     private final ClubMemberRepository clubMemberRepository;
     private final PostRepository postRepository;
     private final EmailService emailService;
+    private final PushNotificationService pushNotificationService;
 
     public ClubController(
             ClubRepository clubRepository,
@@ -29,7 +31,8 @@ public class ClubController {
             UserRepository userRepository,
             ClubMemberRepository clubMemberRepository,
             PostRepository postRepository,
-            EmailService emailService){
+            EmailService emailService,
+            PushNotificationService pushNotificationService){
 
         this.clubRepository = clubRepository;
         this.joinRepository = joinRepository;
@@ -37,6 +40,7 @@ public class ClubController {
         this.clubMemberRepository = clubMemberRepository;
         this.postRepository = postRepository;
         this.emailService = emailService;
+        this.pushNotificationService = pushNotificationService;
     }
 
     @GetMapping
@@ -114,6 +118,8 @@ public class ClubController {
         } catch (Exception e) {
             System.out.println("Email sending failed: " + e.getMessage());
         }
+        pushNotificationService.notifyClubJoinApproved(
+                req.getUser().getId(), req.getClub().getName(), req.getClub().getId());
 
         return joinRepository.save(req);
     }
@@ -133,6 +139,8 @@ public class ClubController {
         } catch (Exception e) {
             System.out.println("Email sending failed: " + e.getMessage());
         }
+        pushNotificationService.notifyClubJoinRejected(
+                req.getUser().getId(), req.getClub().getName());
 
         return joinRepository.save(req);
     }

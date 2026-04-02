@@ -33,7 +33,7 @@
 
 MVSR Connect is a **Reddit-style campus forum** built exclusively for students of MVSR Engineering College. It's a single platform where you can share posts, join clubs, vote on content, have threaded discussions, report inappropriate material, and find lost items — all locked behind Google OAuth so only real `@mvsrec.edu.in` accounts can get in.
 
-Think of it as a private, AI-moderated version of Reddit, but built specifically for your campus.
+Think of it as a private, AI-moderated version of a discussion forum, but built specifically for your campus.
 
 ---
 
@@ -79,6 +79,20 @@ Think of it as a private, AI-moderated version of Reddit, but built specifically
 - 🧑‍⚖️ **Mod Panel** — Moderators manage their club's members, posts, comments, and join requests
 - 👑 **Admin Panel** — Admins approve/reject moderator appeals and resolve all reports
 
+### Notifications
+- **In-App Notifications** — Real-time notification bell with unread badge and dropdown history
+- 🌐 **Web Push Notifications** — Native device notifications (even when tab is closed)
+- ⚡ **Event-Based Alerts**:
+    - New comments on your posts
+    - Replies to your comments
+    - Club join request approvals/rejections
+    - Moderator appeal updates
+    - Lost & Found responses
+    - Event enrollment confirmations
+    - New posts in your clubs
+- 📦 **Persistent History** — All notifications stored in DB and visible in dropdown
+- 🔕 **Smart Permission Handling** — Shows “Enable notifications” prompt only when needed
+
 ### Personal
 - 📊 **Dashboard** — View your posts, comments, clubs, upvotes received, and liked posts
 - ✏️ **Profile Editor** — Update your display name, bio, and avatar
@@ -87,17 +101,19 @@ Think of it as a private, AI-moderated version of Reddit, but built specifically
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology |
-|---|---|
-| **Backend** | Spring Boot 4.0.3 (Java 17) |
-| **Database** | PostgreSQL |
-| **ORM** | Spring Data JPA / Hibernate |
-| **Auth** | Spring Security + Google OAuth2 |
-| **Media** | Cloudinary (images + videos) |
+| Layer          | Technology |
+|----------------|---|
+| **Backend**    | Spring Boot 4.0.3 (Java 17) |
+| **Database**   | PostgreSQL |
+| **ORM**        | Spring Data JPA / Hibernate |
+| **Auth**       | Spring Security + Google OAuth2 |
+| **Media**      | Cloudinary (images + videos) |
 | **Moderation** | External Flask microservice |
-| **API Docs** | SpringDoc OpenAPI (Swagger UI) |
-| **Frontend** | Vanilla HTML / CSS / JavaScript (+ jsQR for scanning, qrcode.js for ticket generation)|
-| **Container** | Docker |
+| **API Docs**   | SpringDoc OpenAPI (Swagger UI) |
+| **Frontend**   | Vanilla HTML / CSS / JavaScript (+ jsQR for scanning, qrcode.js for ticket generation)|
+| **Container**  | Docker |
+| **Email**      | Spring Mail + Gmail SMTP (async notifications) |
+| **Notifications** | Web Push API (VAPID) + Service Workers |
 
 ---
 
@@ -122,7 +138,8 @@ src/
 │           ├── dashboard.html   # Personal dashboard
 │           ├── mod.html         # Moderator panel
 │           ├── admin.html       # Admin panel
-│           └── search.html      # Global search
+│           ├── search.html      # Global search
+│           └── sw.js            # Service Worker for push notifications
 └── test/
 ```
 
@@ -140,11 +157,12 @@ src/
 
 ### Environment Variables
 
-Set these before running the app:
+Set these in your deployment platform (e.g., Render):
+
 ```bash
 # Database
-DB_URL=jdbc:postgresql://localhost:5432/your_db
-DB_USERNAME=your_db_user
+DB_URL=your_postgresql_connection_url
+DB_USERNAME=your_db_username
 DB_PASSWORD=your_db_password
 
 # Google OAuth2
@@ -153,22 +171,41 @@ GOOGLE_CLIENT_SECRET=your_google_client_secret
 
 # Cloudinary
 CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 
-# Moderation
-MODERATION_URL=http://localhost:5001   # Flask service URL
-MODERATION_ENABLED=true                # Set to false in dev to skip checks
+# Moderation (Flask service)
+MODERATION_URL=your_moderation_service_url
+MODERATION_ENABLED=true
+
+# HuggingFace (used by moderation service if applicable)
+HUGGINGFACE_API_KEY=your_huggingface_api_key
+
+# Email (Gmail SMTP)
+MAIL_USERNAME=your_email@gmail.com
+MAIL_PASSWORD=your_gmail_app_password
+
+# Web Push Notifications (VAPID)
+VAPID_PUBLIC_KEY=your_vapid_public_key
+VAPID_PRIVATE_KEY=your_vapid_private_key
+VAPID_SUBJECT=mailto:your_email@gmail.com
 ```
-
+```md id="env-notes"
+> ⚠️ Notes:
+> - `MAIL_PASSWORD` must be a Gmail **App Password**, not your actual password
+> - `VAPID_SUBJECT` is just an identifier (use any valid email with `mailto:` prefix)
+> - All variables must be set in your hosting platform (e.g., Render) — do not hardcode secrets
+```
 ### Run Locally
 ```bash
 ./mvnw spring-boot:run
 ```
 
+
+---
 App starts at → `http://localhost:8080`
 
-### Run with Docker
+### Run with Docker (Local Deployment Only)
 ```bash
 # Build the image
 docker build -t mvsrconnect .
@@ -181,8 +218,16 @@ docker run -p 8080:8080 \
   -e GOOGLE_CLIENT_ID=your_google_client_id \
   -e GOOGLE_CLIENT_SECRET=your_google_client_secret \
   -e CLOUDINARY_CLOUD_NAME=your_cloud_name \
-  -e CLOUDINARY_API_KEY=your_api_key \
-  -e CLOUDINARY_API_SECRET=your_api_secret \
+  -e CLOUDINARY_API_KEY=your_cloudinary_api_key \
+  -e CLOUDINARY_API_SECRET=your_cloudinary_api_secret \
+  -e MODERATION_URL=http://localhost:5001 \
+  -e MODERATION_ENABLED=true \
+  -e HUGGINGFACE_API_KEY=your_huggingface_api_key \
+  -e MAIL_USERNAME=your_email@gmail.com \
+  -e MAIL_PASSWORD=your_gmail_app_password \
+  -e VAPID_PUBLIC_KEY=your_vapid_public_key \
+  -e VAPID_PRIVATE_KEY=your_vapid_private_key \
+  -e VAPID_SUBJECT=mailto:your_email@gmail.com \
   mvsrconnect
 ```
 
@@ -307,6 +352,22 @@ docker run -p 8080:8080 \
 | ![PATCH](https://img.shields.io/badge/PATCH-FCA130?style=flat-square) | `/dashboard/profile` | Update name, bio, avatar |
 | ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/api/media/upload` | Upload image or video to Cloudinary |
 
+### 🔔 Notifications
+
+| Method | Endpoint | Description |
+|---|---|---|
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/notifications` | Get latest 20 notifications |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/notifications/unread-count` | Get unread notification count |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/notifications/read-all` | Mark all notifications as read |
+
+### 🔔 Push Notifications
+
+| Method | Endpoint | Description |
+|---|---|---|
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/push/vapid-key` | Get public VAPID key |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/push/subscribe` | Save browser push subscription |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/push/unsubscribe` | Remove push subscription |
+
 ---
 
 ## 🖥️ Pages
@@ -370,6 +431,8 @@ lost_found_items     → id, type (LOST/FOUND), title, description, location, ca
 lost_found_responses → id, item_id, author_id, author_name, message, contact, mode (found_it/its_mine), created_at
 events               → id, title, description, venue, event_date, fee_in_paise, capacity, upi_id, upi_name, organizer_id, organizer_name, club_id, banner_url, banner_public_id, active, created_at
 event_enrollments    → id, event_id, user_id, user_name, user_email, user_picture, status (PENDING_PAYMENT/PENDING_APPROVAL/CONFIRMED/REJECTED/CHECKED_IN), utr_number, qr_token, enrolled_at, checked_in_at
+notifications        → id, user_id, title, body, url, read, created_at
+push_subscriptions   → id, user_id, endpoint, p256dh, auth, created_at
 ```
 
 ---

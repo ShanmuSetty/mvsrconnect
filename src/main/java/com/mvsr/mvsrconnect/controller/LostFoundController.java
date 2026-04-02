@@ -10,6 +10,7 @@ import com.mvsr.mvsrconnect.repository.LostFoundItemRepository;
 import com.mvsr.mvsrconnect.repository.LostFoundResponseRepository;
 import com.mvsr.mvsrconnect.repository.UserRepository;
 import com.mvsr.mvsrconnect.service.ModerationService;
+import com.mvsr.mvsrconnect.service.PushNotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,6 +30,8 @@ public class LostFoundController {
     @Autowired private UserRepository userRepo;
     @Autowired private ModerationService moderationService;
     @Autowired private Cloudinary cloudinary;
+
+    @Autowired private PushNotificationService pushNotificationService;
 
     // ── GET /lost-found ──────────────────────────────
     @GetMapping
@@ -228,7 +231,14 @@ public class LostFoundController {
         response.setAuthorName(user != null ? user.getName() : principal.getAttribute("name"));
         response.setAuthorId(user != null ? user.getId() : null);
 
-        return ResponseEntity.ok(responseRepo.save(response));
+        LostFoundResponse saved = responseRepo.save(response);
+
+        if (item.getAuthorId() != null) {
+            pushNotificationService.notifyLostFoundResponse(
+                    item.getAuthorId(), response.getAuthorName(), id);
+        }
+
+        return ResponseEntity.ok(saved);
     }
 
     // ── CLOUDINARY HELPER ────────────────────────────

@@ -4,6 +4,7 @@ import com.mvsr.mvsrconnect.model.*;
 import com.mvsr.mvsrconnect.repository.*;
 import com.mvsr.mvsrconnect.service.ClubService;
 import com.mvsr.mvsrconnect.service.EmailService;
+import com.mvsr.mvsrconnect.service.PushNotificationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,6 +30,7 @@ public class ModController {
     private final ModeratorAppealRepository appealRepository;
     private final ClubService clubService;
     private final EmailService emailService;
+    private final PushNotificationService pushNotificationService;
 
     public ModController(
             ModQueueRepository modQueueRepository,
@@ -40,7 +42,8 @@ public class ModController {
             ClubJoinRequestRepository joinRequestRepository,
             ModeratorAppealRepository appealRepository,
             ClubService clubService,
-            EmailService emailService) {
+            EmailService emailService,
+            PushNotificationService pushNotificationService) {
         this.modQueueRepository = modQueueRepository;
         this.clubMemberRepository = clubMemberRepository;
         this.clubRepository = clubRepository;
@@ -51,6 +54,7 @@ public class ModController {
         this.appealRepository = appealRepository;
         this.clubService = clubService;
         this.emailService = emailService;
+        this.pushNotificationService = pushNotificationService;
 
 
     }
@@ -163,7 +167,8 @@ public class ModController {
         } catch (Exception e) {
             System.out.println("Email sending failed: " + e.getMessage());
         }
-
+        pushNotificationService.notifyClubJoinApproved(
+                req.getUser().getId(), req.getClub().getName(), req.getClub().getId());
         return ResponseEntity.ok(joinRequestRepository.save(req));
     }
 
@@ -190,6 +195,8 @@ public class ModController {
         } catch (Exception e) {
             System.out.println("Email sending failed: " + e.getMessage());
         }
+        pushNotificationService.notifyClubJoinRejected(
+                req.getUser().getId(), req.getClub().getName());
         return ResponseEntity.ok(joinRequestRepository.save(req));
     }
 
@@ -269,6 +276,8 @@ public class ModController {
         } catch (Exception e) {
             System.out.println("Email sending failed: " + e.getMessage());
         }
+        pushNotificationService.notifyModeratorApproved(
+                appeal.getUser().getId(), appeal.getClub().getName());
         return ResponseEntity.ok(appeal);
     }
 
@@ -287,6 +296,8 @@ public class ModController {
         } catch (Exception e) {
             System.out.println("Email sending failed: " + e.getMessage());
         }
+        pushNotificationService.notifyModeratorRejected(
+                appeal.getUser().getId(), appeal.getClub().getName());
         return ResponseEntity.ok(appealRepository.save(appeal));
     }
 

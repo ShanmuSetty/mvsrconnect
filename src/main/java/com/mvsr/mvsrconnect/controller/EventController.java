@@ -5,6 +5,7 @@ import com.mvsr.mvsrconnect.repository.EventEnrollmentRepository;
 import com.mvsr.mvsrconnect.repository.EventRepository;
 import com.mvsr.mvsrconnect.repository.UserRepository;
 import com.mvsr.mvsrconnect.service.EventService;
+import com.mvsr.mvsrconnect.service.PushNotificationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -22,15 +23,18 @@ public class EventController {
     private final EventRepository eventRepository;
     private final EventEnrollmentRepository enrollmentRepository;
     private final UserRepository userRepository;
+    private final PushNotificationService pushNotificationService;
 
     public EventController(EventService eventService,
                            EventRepository eventRepository,
                            EventEnrollmentRepository enrollmentRepository,
-                           UserRepository userRepository) {
+                           UserRepository userRepository,
+                           PushNotificationService pushNotificationService) {
         this.eventService = eventService;
         this.eventRepository = eventRepository;
         this.enrollmentRepository = enrollmentRepository;
         this.userRepository = userRepository;
+        this.pushNotificationService = pushNotificationService;
     }
 
     // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -196,6 +200,11 @@ public class EventController {
         User user = resolveUser(principal);
         try {
             EventEnrollment updated = eventService.approveEnrollment(enrollmentId, user.getId());
+
+            pushNotificationService.notifyEventEnrollmentApproved(
+                    updated.getUserId(), eventRepository.findById(updated.getEventId())
+                            .map(Event::getTitle).orElse("an event"));
+
             return ResponseEntity.ok(updated);
         } catch (SecurityException e) {
             return ResponseEntity.status(403).body(e.getMessage());
