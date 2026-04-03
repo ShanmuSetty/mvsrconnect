@@ -30,8 +30,7 @@ public class CommentController {
                              PostRepository postRepository,
                              UserRepository userRepository,
                              ModerationService moderationService,
-                             PushNotificationService pushNotificationService){
-
+                             PushNotificationService pushNotificationService) {
         this.commentRepository = commentRepository;
         this.postRepository = postRepository;
         this.userRepository = userRepository;
@@ -47,21 +46,15 @@ public class CommentController {
         String email = principal.getAttribute("email");
         User user = userRepository.findByEmail(email).orElseThrow();
 
-        String context = "";
-
-        if(comment.getParentCommentId() != null){
-
-            Comment parent = commentRepository
-                    .findById(comment.getParentCommentId())
-                    .orElse(null);
-
-            if(parent != null){
-                context = parent.getContent();
-            }
+        // Fetch parent once — reuse for both moderation context AND push notification
+        Comment parent = null;
+        if (comment.getParentCommentId() != null) {
+            parent = commentRepository.findById(comment.getParentCommentId()).orElse(null);
         }
 
-        if(comment.getContent() != null &&
-                moderationService.isTextToxic(comment.getContent(), context)){
+        if (comment.getContent() != null &&
+                moderationService.isTextToxic(comment.getContent(),
+                        parent != null ? parent.getContent() : "")) {
             throw new org.springframework.web.server.ResponseStatusException(
                     org.springframework.http.HttpStatus.BAD_REQUEST,
                     "Toxic language detected. Please keep discussions respectful."
@@ -71,7 +64,6 @@ public class CommentController {
         Post post = postRepository.findById(postId).orElseThrow();
 
         Comment newComment = new Comment();
-
         newComment.setContent(comment.getContent());
         newComment.setPost(post);
         newComment.setUser(user);
@@ -80,41 +72,37 @@ public class CommentController {
 
         Comment saved = commentRepository.save(newComment);
 
+        // Push notifications fire async — they don't block the response
         if (!post.getAuthorId().equals(user.getId())) {
             pushNotificationService.notifyCommentOnPost(
                     post.getAuthorId(), user.getName(), post.getId());
         }
 
-        if (comment.getParentCommentId() != null) {
-            Comment parent = commentRepository.findById(comment.getParentCommentId()).orElse(null);
-            if (parent != null && !parent.getUser().getId().equals(user.getId())) {
-                pushNotificationService.notifyReplyToComment(
-                        parent.getUser().getId(), user.getName(), post.getId());
-            }
+        if (parent != null && !parent.getUser().getId().equals(user.getId())) {
+            pushNotificationService.notifyReplyToComment(
+                    parent.getUser().getId(), user.getName(), post.getId());
         }
 
         return saved;
     }
+
     @GetMapping("/{postId}/comments")
-    public List<Comment> getComments(@PathVariable Long postId){
+    public List<Comment> getComments(@PathVariable Long postId) {
         return commentRepository.findByPost_IdOrderByCreatedAtAsc(postId);
     }
+
     @DeleteMapping("/comments/{id}")
     public ResponseEntity<?> deleteComment(@PathVariable Long id,
-                                           @AuthenticationPrincipal OAuth2User principal){
-
+                                           @AuthenticationPrincipal OAuth2User principal) {
         String email = principal.getAttribute("email");
-
         User user = userRepository.findByEmail(email).orElseThrow();
-
         Comment comment = commentRepository.findById(id).orElseThrow();
 
-        if(!comment.getUser().getId().equals(user.getId())){
+        if (!comment.getUser().getId().equals(user.getId())) {
             return ResponseEntity.status(403).body("Not your comment");
         }
 
         commentRepository.deleteById(id);
-
         return ResponseEntity.ok().build();
     }
 }

@@ -1,5 +1,6 @@
 package com.mvsr.mvsrconnect.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -7,6 +8,9 @@ import java.util.Map;
 
 @Service
 public class ToxicityService {
+
+    @Value("${moderation.url:http://localhost:5001}")
+    private String moderationUrl;
 
     public boolean isToxic(String text){
 
@@ -19,7 +23,7 @@ public class ToxicityService {
             );
 
             Map response = rest.postForObject(
-                    "http://localhost:5001/check",
+                    moderationUrl + "/check",
                     req,
                     Map.class
             );

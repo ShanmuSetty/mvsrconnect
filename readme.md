@@ -139,6 +139,7 @@ src/
 │           ├── mod.html         # Moderator panel
 │           ├── admin.html       # Admin panel
 │           ├── search.html      # Global search
+│           ├── post.html        # Specific Post View
 │           └── sw.js            # Service Worker for push notifications
 └── test/
 ```
@@ -372,16 +373,17 @@ docker run -p 8080:8080 \
 
 ## 🖥️ Pages
 
-| Page | URL | What it does |
-|---|---|---|
-| **Feed** | `/` | Main feed with post creation, clubs sidebar, tag filters, voting |
-| **Lost & Found** | `/lostandfound.html` | Report lost/found items, search, claim, resolve |
-| **Dashboard** | `/dashboard.html` | Your posts, comments, clubs, liked posts, profile editor |
-| **Mod Panel** | `/mod.html` | Club moderation — members, posts, join requests, appeals |
-| **Admin Panel** | `/admin.html` | Platform-wide reports, club requests, moderator appeals |
-| **Search** | `/search.html` | Global search with tag filter bar |
-| **Events** | `/events.html` | Browse events, enroll, pay, view QR tickets, manage enrollments |
-| **QR Scanner** | `/scanner.html` | Camera scanner for check-in at event entry (mod/admin only) |
+| Page             | URL                  | What it does                                                     |
+|------------------|----------------------|------------------------------------------------------------------|
+| **Feed**         | `/`                  | Main feed with post creation, clubs sidebar, tag filters, voting |
+| **Lost & Found** | `/lostandfound.html` | Report lost/found items, search, claim, resolve                  |
+| **Dashboard**    | `/dashboard.html`    | Your posts, comments, clubs, liked posts, profile editor         |
+| **Mod Panel**    | `/mod.html`          | Club moderation — members, posts, join requests, appeals         |
+| **Admin Panel**  | `/admin.html`        | Platform-wide reports, club requests, moderator appeals          |
+| **Search**       | `/search.html`       | Global search with tag filter bar                                |
+| **Events**       | `/events.html`       | Browse events, enroll, pay, view QR tickets, manage enrollments  |
+| **QR Scanner**   | `/scanner.html`      | Camera scanner for check-in at event entry (mod/admin only)      |
+| **Post**         | `/post.html`         | Shows the selected post using postId                             |
 
 ---
 

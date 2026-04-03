@@ -432,7 +432,7 @@
 
 @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
 @keyframes dropDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
+
 
 
     /* ── ANIMATIONS ── */
@@ -564,6 +564,7 @@
             </div>
             <div class="card-reason">"${escHtml(r.reason)}"</div>
             <div class="card-actions">
+              <button class="btn-approve" onclick="window.location.href='/post.html?id=${r.postId}'">View post</button>
               <button class="btn-delete" onclick="deletePost(${r.postId})">Delete post</button>
             </div>
           </div>`).join('');

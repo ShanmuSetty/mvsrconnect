@@ -660,6 +660,7 @@
             <span>${formatTime(p.createdAt)}</span>
           </div>
           <div class="card-actions">
+            <button class="btn-approve" onclick="window.location.href='/post.html?id=${p.id}'">View post</button>
             <button class="btn-delete" onclick="deletePost(${p.id}, ${clubId})">Delete post</button>
           </div>
         </div>`;

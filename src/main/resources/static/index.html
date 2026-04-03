@@ -714,6 +714,12 @@
        ERROR REDIRECT
     ══════════════════════════════════════════ */
     const params = new URLSearchParams(window.location.search);
+
+    /* ── POST DEEP-LINK: /?post=53 → /post.html?id=53 ── */
+    if (params.get('post')) {
+      window.location.replace('/post.html?id=' + encodeURIComponent(params.get('post')));
+    }
+
     if (params.get('error') === 'unauthorized') {
       window.history.replaceState({}, '', '/');
       window.addEventListener('load', () => {
@@ -1314,7 +1320,7 @@ if ('Notification' in window && Notification.permission === 'granted' && _swRegi
       <div class="post-card" id="post-${p.id}">
         <div class="post-body">
           ${p.club ? `<span class="post-club-tag">${escHtml(p.club.name)}</span>` : ''}
-          <div class="post-title">${escHtml(p.title || 'Untitled')}</div>
+          <div class="post-title" style="cursor:pointer" onclick="window.location.href='/post.html?id=${p.id}'">${escHtml(p.title || 'Untitled')}</div>
           ${p.tags?.length ? `<div class="post-tags">${p.tags.map(t => `<span class="post-tag">${escHtml(t.name)}</span>`).join('')}</div>` : ''}
           ${preview ? `<div class="post-content">${escHtml(preview)}</div>` : ''}
           ${renderMedia(p)}
@@ -1522,19 +1528,31 @@ if ('Notification' in window && Notification.permission === 'granted' && _swRegi
       try {
         const res = await fetch(`/posts/${postId}/comment`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content, parentCommentId: null }) });
         if (!res.ok) throw new Error(await res.text());
+        const saved = await res.json();
         input.value = '';
-        await loadComments(postId);
+        // Append the returned comment directly — no second fetch needed
+        saved.user = saved.user || { name: currentUser?.name || 'You' };
+        saved.children = [];
+        const list = document.getElementById(`comment-list-${postId}`);
+        const noComments = list.querySelector('.no-comments');
+        if (noComments) noComments.remove();
+        list.insertAdjacentHTML('beforeend', renderComment(saved, postId, 0));
       } catch (e) { showToast(e.message || 'Failed to post comment', 'error'); }
       finally { if (btn) { btn.classList.remove('btn-loading'); btn.innerHTML = 'Post'; } }
     }
 
-    async function addReply(parentId, postId) {
+async function addReply(parentId, postId) {
       const input = document.getElementById(`reply-input-${parentId}`);
       const content = input.value.trim(); if (!content) return;
       try {
         const res = await fetch(`/posts/${postId}/comment`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content, parentCommentId: parentId }) });
         if (!res.ok) throw new Error(await res.text());
-        await loadComments(postId);
+        const saved = await res.json();
+        saved.user = saved.user || { name: currentUser?.name || 'You' };
+        saved.children = [];
+        const replyBox = document.getElementById(`reply-box-${parentId}`);
+        replyBox.insertAdjacentHTML('beforebegin', renderComment(saved, postId, 1));
+        replyBox.innerHTML = '';
       } catch (e) { showToast(e.message || 'Failed to post reply', 'error'); }
     }
 
@@ -1559,9 +1577,21 @@ if ('Notification' in window && Notification.permission === 'granted' && _swRegi
     /* ══════════════════════════════════════════
        VOTES
     ══════════════════════════════════════════ */
-    async function vote(postId, value) {
-      await fetch(`/votes/${postId}?value=${value}`, { method: 'POST' });
-      loadVotes(postId);
+async function vote(postId, value) {
+      try {
+        const res = await fetch(`/votes/${postId}?value=${value}`, { method: 'POST' });
+        if (!res.ok) return;
+        const data = await res.json();
+        // Update UI directly from the single response — no extra fetches
+        const upEl = document.getElementById(`up-${postId}`);
+        const downEl = document.getElementById(`down-${postId}`);
+        if (upEl) upEl.textContent = data.up;
+        if (downEl) downEl.textContent = data.down;
+        const upBtn = document.querySelector(`[onclick="vote(${postId},1)"]`);
+        const downBtn = document.querySelector(`[onclick="vote(${postId},-1)"]`);
+        if (upBtn) upBtn.classList.toggle('active', data.user === 1);
+        if (downBtn) downBtn.classList.toggle('active', data.user === -1);
+      } catch {}
     }
 
     async function loadVotes(postId) {
@@ -1605,11 +1635,12 @@ if ('Notification' in window && Notification.permission === 'granted' && _swRegi
 
     function formatTime(dateStr) {
       try {
-        const diff = Math.floor((new Date() - new Date(dateStr)) / 1000);
+        const utcStr = dateStr.endsWith('Z') ? dateStr : dateStr + 'Z';
+        const diff = Math.floor((new Date() - new Date(utcStr)) / 1000);
         if (diff < 60) return 'just now';
         if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
         if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
-        return new Date(dateStr).toLocaleDateString('en-IN', { day:'numeric', month:'short' });
+        return new Date(utcStr).toLocaleDateString('en-IN', { day:'numeric', month:'short' });
       } catch { return ''; }
     }
 
