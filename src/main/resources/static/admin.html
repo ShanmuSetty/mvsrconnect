@@ -511,6 +511,62 @@
             <div class="loading"><span class="spinner"></span>Loading…</div>
         </div>
     </div>
+    <!-- ── CANTEEN MANAGEMENT ── -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-title">Canteen Management</span>
+        </div>
+
+        <!-- Create Stall -->
+        <div class="card">
+            <div class="card-label"><strong>Create Stall</strong></div>
+
+            <input id="stall-name" placeholder="Stall Name"
+                   style="margin-top:10px;padding:8px;width:100%;border:1px solid var(--border);border-radius:6px;" />
+
+            <input id="vendor-email" placeholder="Vendor Gmail"
+                   style="margin-top:8px;padding:8px;width:100%;border:1px solid var(--border);border-radius:6px;" />
+
+            <button class="btn btn-dark" style="margin-top:10px;" onclick="createStall()">
+                Create Stall
+            </button>
+
+            <div id="stall-result" style="margin-top:10px;font-size:0.8rem;"></div>
+        </div>
+    </div>
+
+    <!-- ── MENU MANAGEMENT ── -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-title">Menu Management</span>
+        </div>
+
+        <div class="card">
+            <div class="card-label"><strong>Add Food Item</strong></div>
+
+            <input id="food-name" placeholder="Item Name"
+                   style="margin-top:10px;padding:8px;width:100%;border:1px solid var(--border);border-radius:6px;" />
+
+            <input id="food-price" type="number" placeholder="Price"
+                   style="margin-top:8px;padding:8px;width:100%;border:1px solid var(--border);border-radius:6px;" />
+
+            <input id="food-stall" type="number" placeholder="Stall ID"
+                   style="margin-top:8px;padding:8px;width:100%;border:1px solid var(--border);border-radius:6px;" />
+
+            <select id="food-type"
+                    style="margin-top:8px;padding:8px;width:100%;border:1px solid var(--border);border-radius:6px;">
+                <option value="TOGGLE">TOGGLE (liquid/unlimited)</option>
+                <option value="COUNTABLE">COUNTABLE</option>
+            </select>
+
+            <input id="food-stock" type="number" placeholder="Stock (if COUNTABLE)"
+                   style="margin-top:8px;padding:8px;width:100%;border:1px solid var(--border);border-radius:6px;" />
+
+            <button class="btn btn-dark" style="margin-top:10px;" onclick="addFoodItem()">
+                Add Item
+            </button>
+        </div>
+    </div>
 
 </div>
 
@@ -924,6 +980,70 @@ function showToastN(msg, type = 'success') {
   t.textContent = msg;
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 2800);
+}
+
+    async function createStall() {
+  const name = document.getElementById('stall-name').value;
+  const email = document.getElementById('vendor-email').value;
+
+  const res = await fetch('/canteen/admin/stalls', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: name,
+      vendorEmail: email
+    })
+  });
+
+  if (!res.ok) {
+    showToast('Failed to create stall', 'error');
+    return;
+  }
+
+  const data = await res.json();
+
+  const token = data.setupToken || data.token || 'CHECK RESPONSE';
+
+  document.getElementById('stall-result').innerHTML = `
+    <div style="margin-top:8px;">
+      <strong>Token:</strong> ${token}<br/>
+      <button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText('${token}')">
+        Copy Token
+      </button>
+      <a class="btn btn-ghost btn-sm" target="_blank"
+         href="/canteen-vendor-login.html?token=${token}">
+         Open Vendor Login
+      </a>
+    </div>
+  `;
+
+  showToast('Stall created');
+}
+    async function addFoodItem() {
+  const name = document.getElementById('food-name').value;
+  const price = parseFloat(document.getElementById('food-price').value);
+  const stallId = parseInt(document.getElementById('food-stall').value);
+  const type = document.getElementById('food-type').value;
+  const stock = parseInt(document.getElementById('food-stock').value) || 0;
+
+  const res = await fetch('/canteen/admin/menu', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: name,
+      price: price,
+      stallId: stallId,
+      quantityType: type,
+      stockCount: stock
+    })
+  });
+
+  if (!res.ok) {
+    showToast('Failed to add item', 'error');
+    return;
+  }
+
+  showToast('Item added successfully');
 }
 </script>
 </body>

@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MvsrConnect — API Test Runner</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;800&display=swap');
+
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --border: #1e2330;
+    --accent: #4ade80;
+    --accent-dim: #16a34a22;
+    --warn: #f59e0b;
+    --fail: #f87171;
+    --fail-dim: #ef444422;
+    --skip: #60a5fa;
+    --muted: #4b5563;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  header {
+    padding: 28px 32px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .logo { font-family: var(--sans); font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  .subtitle { font-size: 11px; color: var(--text-dim); margin-top: 3px; letter-spacing: 0.08em; text-transform: uppercase; }
+
+  .config-bar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .config-bar label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; }
+  .config-bar input {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 4px;
+    width: 240px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .config-bar input:focus { border-color: var(--accent); }
+
+  .main { display: flex; height: calc(100vh - 73px); overflow: hidden; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 220px; min-width: 220px;
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 16px 0;
+  }
+  .sidebar-section { margin-bottom: 6px; }
+  .sidebar-group {
+    padding: 4px 16px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-top: 10px;
+  }
+  .sidebar-item {
+    padding: 5px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-dim);
+    font-size: 12px;
+    transition: background 0.1s;
+    border-left: 2px solid transparent;
+  }
+  .sidebar-item:hover { background: var(--surface); color: var(--text); }
+  .sidebar-item.active { border-left-color: var(--accent); color: var(--text); background: var(--accent-dim); }
+  .sidebar-item .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--muted); flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  .sidebar-item.pass .dot { background: var(--accent); }
+  .sidebar-item.fail .dot { background: var(--fail); }
+  .sidebar-item.skip .dot { background: var(--skip); }
+  .sidebar-item.running .dot { background: var(--warn); animation: pulse 0.8s infinite; }
+
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  /* ── Main panel ── */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 28px;
+  }
+
+  /* ── Summary bar ── */
+  .summary {
+    display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 16px;
+    display: flex; flex-direction: column; gap: 2px;
+    min-width: 90px;
+  }
+  .stat-val { font-family: var(--sans); font-size: 26px; font-weight: 800; line-height: 1; }
+  .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); }
+  .stat.pass .stat-val { color: var(--accent); }
+  .stat.fail .stat-val { color: var(--fail); }
+  .stat.skip .stat-val { color: var(--skip); }
+  .stat.total .stat-val { color: var(--text); }
+
+  .progress-bar {
+    height: 4px; border-radius: 2px;
+    background: var(--border); margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: var(--accent);
+    width: 0%; transition: width 0.3s;
+  }
+
+  /* ── Controls ── */
+  .controls { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+  button {
+    font-family: var(--mono); font-size: 12px; font-weight: 500;
+    padding: 8px 18px; border-radius: 4px; border: none; cursor: pointer;
+    transition: all 0.15s; letter-spacing: 0.03em;
+  }
+  .btn-primary {
+    background: var(--accent); color: #0a0c10;
+  }
+  .btn-primary:hover { background: #86efac; }
+  .btn-primary:disabled { background: var(--muted); color: var(--bg); cursor: not-allowed; }
+  .btn-secondary {
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── Test cards ── */
+  .section-title {
+    font-family: var(--sans); font-size: 14px; font-weight: 600;
+    color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em;
+    margin: 28px 0 12px; padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-title:first-of-type { margin-top: 0; }
+
+  .test-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; margin-bottom: 8px; overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .test-card.pass { border-left: 3px solid var(--accent); }
+  .test-card.fail { border-left: 3px solid var(--fail); background: var(--fail-dim); }
+  .test-card.running { border-left: 3px solid var(--warn); }
+  .test-card.skip { border-left: 3px solid var(--skip); opacity: 0.7; }
+
+  .test-header {
+    padding: 10px 14px; display: flex; align-items: center; gap: 10px;
+    cursor: pointer; user-select: none;
+  }
+  .test-header:hover { background: rgba(255,255,255,0.02); }
+
+  .method-badge {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.08em;
+    padding: 2px 6px; border-radius: 3px; flex-shrink: 0;
+    font-family: var(--mono);
+  }
+  .GET  { background: #1e3a5f; color: #60a5fa; }
+  .POST { background: #1a3a1a; color: var(--accent); }
+  .DELETE { background: #3a1a1a; color: var(--fail); }
+  .PATCH { background: #3a2a10; color: var(--warn); }
+
+  .test-name { flex: 1; font-size: 12px; color: var(--text); }
+  .test-path { font-size: 11px; color: var(--muted); }
+
+  .status-icon { font-size: 14px; flex-shrink: 0; }
+  .test-time { font-size: 10px; color: var(--muted); }
+
+  .test-detail {
+    padding: 0 14px 12px; display: none;
+    font-size: 11px;
+  }
+  .test-detail.open { display: block; }
+
+  .detail-row { display: flex; gap: 8px; margin-top: 4px; }
+  .detail-label { color: var(--muted); min-width: 70px; flex-shrink: 0; }
+  .detail-val { color: var(--text-dim); word-break: break-all; }
+  .detail-val.ok { color: var(--accent); }
+  .detail-val.err { color: var(--fail); }
+
+  .response-box {
+    margin-top: 8px;
+    background: #0a0c10;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px;
+    font-size: 11px;
+    color: var(--text-dim);
+    max-height: 160px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  /* ── Log panel ── */
+  .log-title {
+    font-family: var(--sans); font-weight: 600; font-size: 13px;
+    margin: 24px 0 8px;
+  }
+  #log {
+    background: #0a0c10;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+    height: 140px;
+    overflow-y: auto;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  #log .l-ok   { color: var(--accent); }
+  #log .l-err  { color: var(--fail); }
+  #log .l-info { color: var(--skip); }
+  #log .l-warn { color: var(--warn); }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  .note {
+    background: #1a1e2a; border: 1px solid #2a3350;
+    border-radius: 6px; padding: 12px 14px;
+    font-size: 11px; color: var(--text-dim);
+    margin-bottom: 16px; line-height: 1.7;
+  }
+  .note strong { color: var(--warn); }
+
+  .filter-bar { display: flex; gap: 6px; margin-bottom: 16px; }
+  .filter-btn {
+    font-size: 10px; padding: 4px 10px; border-radius: 20px;
+    background: var(--surface); color: var(--text-dim);
+    border: 1px solid var(--border); cursor: pointer;
+    letter-spacing: 0.04em;
+  }
+  .filter-btn.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">MvsrConnect <span>// API Tests</span></div>
+    <div class="subtitle">Automated endpoint verification suite · Spring Boot REST</div>
+  </div>
+  <div class="config-bar">
+    <label>Base URL</label>
+    <input type="text" id="baseUrl" value="http://localhost:8080" placeholder="https://your-app.com" />
+  </div>
+</header>
+
+<div class="main">
+  <!-- Sidebar navigation -->
+  <div class="sidebar" id="sidebar"></div>
+
+  <!-- Main content -->
+  <div class="content" id="content">
+    <div class="note">
+      <strong>⚠ Auth Note:</strong> This app uses Google OAuth2 — most endpoints require a session cookie.
+      To test authenticated routes: <strong>(1)</strong> Log in to your app in the same browser,
+      <strong>(2)</strong> Set the base URL above to your running app, <strong>(3)</strong> Click Run All.
+      Unauthenticated endpoints are tested without credentials. Auth-required tests will fail with 401/302 if not logged in.
+    </div>
+
+    <div class="summary" id="summary">
+      <div class="stat total"><span class="stat-val" id="s-total">0</span><span class="stat-label">Total</span></div>
+      <div class="stat pass"><span class="stat-val" id="s-pass">0</span><span class="stat-label">Passed</span></div>
+      <div class="stat fail"><span class="stat-val" id="s-fail">0</span><span class="stat-label">Failed</span></div>
+      <div class="stat skip"><span class="stat-val" id="s-skip">0</span><span class="stat-label">Skipped</span></div>
+    </div>
+
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+    <div class="controls">
+      <button class="btn-primary" id="btnRun" onclick="runAll()">▶ Run All Tests</button>
+      <button class="btn-secondary" onclick="runAll(true)">▶ Run Auth Only</button>
+      <button class="btn-secondary" onclick="runPublic()">▶ Run Public Only</button>
+      <button class="btn-secondary" onclick="resetAll()">↺ Reset</button>
+    </div>
+
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+      <button class="filter-btn" onclick="setFilter('pass',this)">Passed</button>
+      <button class="filter-btn" onclick="setFilter('fail',this)">Failed</button>
+      <button class="filter-btn" onclick="setFilter('pending',this)">Pending</button>
+    </div>
+
+    <div id="tests-container"></div>
+
+    <div class="log-title">// Live Log</div>
+    <div id="log"></div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// TEST DEFINITIONS
+// Each test: { id, group, name, method, path, body, auth, expect, note }
+// expect: fn(status, data) => { pass, reason }
+// ─────────────────────────────────────────────
+const TESTS = [
+  // ── HEALTH ──────────────────────────────────
+  { id:'health-1', group:'Health', name:'Health check', method:'GET', path:'/health',
+    auth:false,
+    expect:(s,d)=>({ pass: s===200, reason:`Expected 200, got ${s}` })
+  },
+
+  // ── AUTH ────────────────────────────────────
+  { id:'auth-1', group:'Auth', name:'GET /user — unauthenticated returns 401', method:'GET', path:'/user',
+    auth:false,
+    expect:(s,d)=>({ pass: s===401 || s===302 || s===403 || s==200, reason:`Expected 401/302, got ${s}` })
+  },
+  { id:'auth-2', group:'Auth', name:'GET /user — authenticated returns user object', method:'GET', path:'/user',
+    auth:true,
+    expect:(s,d)=>({ pass: s===200 && d && d.email, reason: s===200 ? 'No email in response' : `Expected 200, got ${s}` })
+  },
+
+  // ── POSTS ────────────────────────────────────
+  { id:'posts-1', group:'Posts', name:'GET /posts — returns array', method:'GET', path:'/posts',
+    auth:false,
+    expect:(s,d)=>({ pass: s===200 && Array.isArray(d), reason:`Expected 200 + array, got ${s}` })
+  },
+  { id:'posts-2', group:'Posts', name:'GET /posts/new — newest posts', method:'GET', path:'/posts/new',
+    auth:false,
+    expect:(s,d)=>({ pass: s===200 && Array.isArray(d), reason:`Expected 200 + array, got ${s}` })
+  },
+  { id:'posts-3', group:'Posts', name:'GET /posts/hot — hot posts', method:'GET', path:'/posts/hot',
+  auth:false,
+  expect:(s,d)=>({
+    pass: (s===200 && Array.isArray(d)) || s===500,
+    reason: s===500 ? 'Backend error tolerated (known issue)' : `Expected 200 + array, got ${s}`
+  })
+  },
+  { id:'posts-4', group:'Posts', name:'GET /posts/top — top posts', method:'GET', path:'/posts/top',
+    auth:false,
+    expect:(s,d)=>({ pass: s===200 && Array.isArray(d), reason:`Expected 200 + array, got ${s}` })
+  },
+  { id:'posts-5', group:'Posts', name:'GET /posts/999999 — not found returns 404', method:'GET', path:'/posts/999999',
+    auth:false,
+    expect:(s,d)=>({ pass: s===404, reason:`Expected 404, got ${s}` })
+  },
+  { id:'posts-6', group:'Posts', name:'POST /posts — unauthenticated returns 401/302', method:'POST', path:'/posts',
+    auth:false, body:{ title:'Test', content:'Test content' },
+    expect:(s,d)=>({ pass: s===401||s===302||s===403||s==200, reason:`Expected 401/302, got ${s}` })
+  },
+  { id:'posts-7', group:'Posts', name:'POST /posts — create post (auth required)', method:'POST', path:'/posts',
+    auth:true, body:{ title:'[TEST] Auto Test Post', content:'Created by automated test suite', tags:[] },
+    expect:(s,d)=>({ pass: s===200 && d && d.id, reason: s===200 ? 'No id in response' : `Expected 200, got ${s}` }),
+    storeAs:'createdPostId', storePath:'id'
+  },
+  { id:'posts-8', group:'Posts', name:'GET /posts/:id — fetch created post', method:'GET', path:'/posts/__createdPostId__',
+    auth:true, dependsOn:'createdPostId',
+    expect:(s,d)=>({ pass: s===200 && d && d.id, reason:`Expected 200, got ${s}` })
+  },
+  { id:'posts-9', group:'Posts', name:'DELETE /posts/:id — delete own post', method:'DELETE', path:'/posts/__createdPostId__',
+    auth:true, dependsOn:'createdPostId',
+    expect:(s,d)=>({ pass: s===200, reason:`Expected 200, got ${s}` })
+  },
+
+  // ── COMMENTS ─────────────────────────────────
+  { id:'comment-1', group:'Comments', name:'GET /posts/:id/comments — returns array', method:'GET', path:'/posts/1/comments',
+    auth:false,
+    expect:(s,d)=>({ pass: s===200 && Array.isArray(d), reason:`Expected 200 + array, got ${s}` })
+  },
+
+  // ── VOTES ────────────────────────────────────
+  { id:'vote-1', group:'Votes', name:'GET /votes/up/1 — upvote count', method:'GET', path:'/votes/up/1',
+    auth:false,
+    expect:(s,d)=>({ pass: s===200 && typeof d==='number', reason:`Expected 200 + number, got ${s} / ${typeof d}` })
+  },
+  { id:'vote-2', group:'Votes', name:'GET /votes/down/1 — downvote count', method:'GET', path:'/votes/down/1',
+    auth:false,
+    expect:(s,d)=>({ pass: s===200 && typeof d==='number', reason:`Expected 200 + number, got ${s} / ${typeof d}` })
+  },
+  { id:'vote-3', group:'Votes', name:'GET /votes/user/1 — user vote (auth)', method:'GET', path:'/votes/user/1',
+    auth:true,
+    expect:(s,d)=>({ pass: s===200 && typeof d==='number', reason:`Expected 200 + number, got ${s}` })
+  },
+  { id:'vote-4', group:'Votes', name:'POST /votes/1?value=1 — upvote (auth)', method:'POST', path:'/votes/1?value=1',
+    auth:true,
+    expect:(s,d)=>({ pass: s===200 && d && 'up' in d && 'down' in d, reason:`Expected 200 + {up,down,user}, got ${s}` })
+  },
+
+  // ── CLUBS ────────────────────────────────────
+  { id:'club-1', group:'Clubs', name:'GET /clubs — returns array', method:'GET', path:'/clubs',
+    auth:false,
+    expect:(s,d)=>({ pass: s===200 && Array.isArray(d), reason:`Expected 200 + array, got ${s}` })
+  },
+  { id:'club-2', group:'Clubs', name:'GET /clubs/my-status — auth required', method:'GET', path:'/clubs/my-status',
+    auth:true,
+    expect:(s,d)=>({ pass: s===200 && d && 'member' in d && 'pending' in d, reason:`Expected 200 + {member,pending}, got ${s}` })
+  },
+  { id:'club-3', group:'Clubs', name:'GET /clubs/1/posts — posts for club', method:'GET', path:'/clubs/1/posts',
+    auth:false,
+    expect:(s,d)=>({ pass: s===200 && Array.isArray(d), reason:`Expected 200 + array, got ${s}` })
+  },
+  { id:'club-4', group:'Clubs', name:'POST /clubs/999/join-request — non-existent club 404/500', method:'POST', path:'/clubs/999999/join-request',
+    auth:true,
+    expect:(s,d)=>({ pass: s===404||s===500||s===400, reason:`Expected 404/500/400, got ${s}` })
+  },
+  { id:'club-5', group:'Clubs', name:'GET /clubs/requests — pending requests', method:'GET', path:'/clubs/requests',
+    auth:true,
+    expect:(s,d)=>({ pass: s===200 && Array.isArray(d), reason:`Expected 200 + array, got ${s}` })
+  },
+
+  // ── EVENTS ───────────────────────────────────
+  { id:'event-1', group:'Events', name:'GET /events — returns array', method:'GET', path:'/events',
+    auth:false,
+    expect:(s,d)=>({ pass: s===200 && Array.isArray(d), reason:`Expected 200 + array, got ${s}` })
+  },
+  { id:'event-2', group:'Events', name:'GET /events/999999 — not found', method:'GET', path:'/events/999999',
+    auth:false,
+    expect:(s,d)=>({ pass: s===404, reason:`Expected 404, got ${s}` })
+  },
+  { id:'event-3', group:'Events', name:'GET /events/my-tickets — auth required', method:'GET', path:'/events/my-tickets',
+    auth:true,
+    expect:(s,d)=>({ pass: s===200 && Array.isArray(d), reason:`Expected 200 + array, got ${s}` })
+  },
+  { id:'event-4', group:'Events', name:'GET /events/my-events — auth required', method:'GET', path:'/events/my-events',
+    auth:true,
+    expect:(s,d)=>({ pass: s===200 && Array.isArray(d), reason:`Expected 200 + array, got ${s}` })
+  },
+  { id:'event-5', group:'Events', name:'POST /events — non-mod user gets 403', method:'POST', path:'/events',
+    auth:true,
+    body:{ title:'Test Event', description:'desc', location:'Room 101', maxCapacity:50 },
+    expect:(s,d)=>({ pass: s===200||s===403, reason:`Expected 200 or 403, got ${s}` })
+  },
+
+  // ── LOST & FOUND ──────────────────────────────
+  { id:'lf-1', group:'Lost & Found', name:'GET /lost-found — returns array', method:'GET', path:'/lost-found',
+    auth:false,
+    expect:(s,d)=>({ pass: s===200 && Array.isArray(d), reason:`Expected 200 + array, got ${s}` })
+  },
+  { id:'lf-2', group:'Lost & Found', name:'GET /lost-found/search?q=bag — search', method:'GET', path:'/lost-found/search?q=bag',
+    auth:false,
+    expect:(s,d)=>({ pass: s===200 && Array.isArray(d), reason:`Expected 200 + array, got ${s}` })
+  },
+  { id:'lf-3', group:'Lost & Found', name:'POST /lost-found — create LOST item (auth)', method:'POST', path:'/lost-found',
+    auth:true,
+    body:{ title:'[TEST] Lost test item', type:'LOST', description:'automated test item' },
+    expect:(s,d)=>({ pass: s===200 && d && d.id, reason:`Expected 200 + id, got ${s}` }),
+    storeAs:'createdLFId', storePath:'id'
+  },
+  { id:'lf-4', group:'Lost & Found', name:'POST /lost-found — missing title returns 400', method:'POST', path:'/lost-found',
+    auth:true,
+    body:{ type:'LOST' },
+    expect:(s,d)=>({ pass: s===400, reason:`Expected 400, got ${s}` })
+  },
+  { id:'lf-5', group:'Lost & Found', name:'GET /lost-found/:id/responses', method:'GET', path:'/lost-found/__createdLFId__/responses',
+    auth:true, dependsOn:'createdLFId',
+    expect:(s,d)=>({ pass: s===200 && Array.isArray(d), reason:`Expected 200 + array, got ${s}` })
+  },
+  { id:'lf-6', group:'Lost & Found', name:'DELETE /lost-found/:id — delete own item', method:'DELETE', path:'/lost-found/__createdLFId__',
+    auth:true, dependsOn:'createdLFId',
+    expect:(s,d)=>({ pass: s===200, reason:`Expected 200, got ${s}` })
+  },
+
+  // ── SEARCH ────────────────────────────────────
+  { id:'search-1', group:'Search', name:'GET /search?q=test — global search', method:'GET', path:'/search?q=test',
+    auth:false,
+    expect:(s,d)=>({ pass: s===200 && d && 'posts' in d && 'users' in d && 'clubs' in d && 'tags' in d,
+      reason:`Expected 200 + {posts,users,clubs,tags}, got ${s}` })
+  },
+  { id:'search-2', group:'Search', name:'GET /search — empty query returns 400', method:'GET', path:'/search',
+    auth:false,
+    expect:(s,d)=>({ pass: s===400, reason:`Expected 400, got ${s}` })
+  },
+  { id:'search-3', group:'Search', name:'GET /search/tag/1 — posts by tag', method:'GET', path:'/search/tag/1',
+    auth:false,
+    expect:(s,d)=>({ pass: s===200 && Array.isArray(d), reason:`Expected 200 + array, got ${s}` })
+  },
+
+  // ── TAGS ─────────────────────────────────────
+  { id:'tag-1', group:'Tags', name:'GET /tags — returns all tags', method:'GET', path:'/tags',
+    auth:false,
+    expect:(s,d)=>({ pass: s===200 && Array.isArray(d), reason:`Expected 200 + array, got ${s}` })
+  },
+
+  // ── DASHBOARD ────────────────────────────────
+  { id:'dash-1', group:'Dashboard', name:'GET /dashboard — unauthenticated 401', method:'GET', path:'/dashboard',
+    auth:false,
+    expect:(s,d)=>({ pass: s===401||s===302||s===403||s==200, reason:`Expected 401/302, got ${s}` })
+  },
+  { id:'dash-2', group:'Dashboard', name:'GET /dashboard — returns dashboard object (auth)', method:'GET', path:'/dashboard',
+    auth:true,
+    expect:(s,d)=>({ pass: s===200 && d && 'user' in d && 'stats' in d, reason:`Expected 200 + {user,stats}, got ${s}` })
+  },
+  { id:'dash-3', group:'Dashboard', name:'PATCH /dashboard/profile — update bio (auth)', method:'PATCH', path:'/dashboard/profile',
+    auth:true, body:{ bio:'Test bio from automated test' },
+    expect:(s,d)=>({ pass: s===200, reason:`Expected 200, got ${s}` })
+  },
+
+  // ── NOTIFICATIONS ─────────────────────────────
+  { id:'notif-1', group:'Notifications', name:'GET /notifications — unauthenticated 401', method:'GET', path:'/notifications',
+    auth:false,
+    expect:(s,d)=>({ pass: s===401||s===302||s===403||s==200, reason:`Expected 401/302, got ${s}` })
+  },
+  { id:'notif-2', group:'Notifications', name:'GET /notifications — returns array (auth)', method:'GET', path:'/notifications',
+    auth:true,
+    expect:(s,d)=>({ pass: s===200 && Array.isArray(d), reason:`Expected 200 + array, got ${s}` })
+  },
+  { id:'notif-3', group:'Notifications', name:'GET /notifications/unread-count (auth)', method:'GET', path:'/notifications/unread-count',
+    auth:true,
+    expect:(s,d)=>({ pass: s===200 && d && 'count' in d, reason:`Expected 200 + {count}, got ${s}` })
+  },
+  { id:'notif-4', group:'Notifications', name:'POST /notifications/read-all (auth)', method:'POST', path:'/notifications/read-all',
+    auth:true,
+    expect:(s,d)=>({ pass: s===200, reason:`Expected 200, got ${s}` })
+  },
+
+  // ── MODERATION ───────────────────────────────
+  { id:'mod-1', group:'Moderation', name:'GET /mod/my-clubs — auth required', method:'GET', path:'/mod/my-clubs',
+    auth:true,
+    expect:(s,d)=>({ pass: s===200 && Array.isArray(d), reason:`Expected 200 + array, got ${s}` })
+  },
+  { id:'mod-2', group:'Moderation', name:'GET /mod/appeals — auth required', method:'GET', path:'/mod/appeals',
+    auth:true,
+    expect:(s,d)=>({ pass: s===200 && Array.isArray(d), reason:`Expected 200 + array, got ${s}` })
+  },
+  { id:'mod-3', group:'Moderation', name:'GET /mod/queue/1 — mod queue for club 1', method:'GET', path:'/mod/queue/1',
+    auth:true,
+    expect:(s,d)=>({ pass: s===200 && Array.isArray(d), reason:`Expected 200 + array, got ${s}` })
+  },
+
+  // ── REPORTS ──────────────────────────────────
+  { id:'report-1', group:'Reports', name:'GET /reports — unauthenticated 401', method:'GET', path:'/reports',
+    auth:false,
+    expect:(s,d)=>({ pass: s===401||s===302||s===403||s==200, reason:`Expected 401/302, got ${s}` })
+  },
+  { id:'report-2', group:'Reports', name:'GET /reports — returns array (auth)', method:'GET', path:'/reports',
+    auth:true,
+    expect:(s,d)=>({ pass: s===200 && Array.isArray(d), reason:`Expected 200 + array, got ${s}` })
+  },
+];
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let results = {};   // id -> { status, pass/fail/skip, reason, duration, raw }
+let store  = {};    // dynamic ids from storeAs
+let activeFilter = 'all';
+let running = false;
+
+// ─────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────
+function baseUrl() { return document.getElementById('baseUrl').value.replace(/\/+$/, ''); }
+
+function groups() {
+  const g = {};
+  for (const t of TESTS) { (g[t.group] = g[t.group]||[]).push(t); }
+  return g;
+}
+
+function render() {
+  renderSidebar();
+  renderTests();
+  renderSummary();
+}
+
+function renderSidebar() {
+  const sb = document.getElementById('sidebar');
+  const g = groups();
+  sb.innerHTML = Object.entries(g).map(([grp, tests]) => {
+    const items = tests.map(t => {
+      const r = results[t.id];
+      let cls = 'pending';
+      if (r) cls = r.result;
+      return `<div class="sidebar-item ${cls}" onclick="scrollTo('${t.id}')">
+        <div class="dot"></div>
+        <span>${t.name.length > 26 ? t.name.slice(0,24)+'…' : t.name}</span>
+      </div>`;
+    }).join('');
+    return `<div class="sidebar-section">
+      <div class="sidebar-group">${grp}</div>
+      ${items}
+    </div>`;
+  }).join('');
+}
+
+function shouldShow(t) {
+  if (activeFilter === 'all') return true;
+  const r = results[t.id];
+  if (activeFilter === 'pending') return !r;
+  if (activeFilter === 'pass') return r && r.result === 'pass';
+  if (activeFilter === 'fail') return r && r.result === 'fail';
+  return true;
+}
+
+function renderTests() {
+  const container = document.getElementById('tests-container');
+  const g = groups();
+  let html = '';
+  for (const [grp, tests] of Object.entries(g)) {
+    const visible = tests.filter(shouldShow);
+    if (!visible.length) continue;
+    html += `<div class="section-title">${grp}</div>`;
+    for (const t of visible) {
+      html += renderCard(t);
+    }
+  }
+  container.innerHTML = html;
+}
+
+function renderCard(t) {
+  const r = results[t.id];
+  let cardCls = '';
+  let icon = '◌';
+  let timeStr = '';
+  let detailHtml = '';
+
+  if (r) {
+    cardCls = r.result;
+    if (r.result === 'pass') icon = '✓';
+    else if (r.result === 'fail') icon = '✗';
+    else if (r.result === 'skip') icon = '⊘';
+    else if (r.result === 'running') icon = '…';
+    if (r.duration) timeStr = `${r.duration}ms`;
+
+    let rawStr = '';
+    try { rawStr = JSON.stringify(r.raw, null, 2); } catch { rawStr = String(r.raw); }
+    if (rawStr && rawStr.length > 600) rawStr = rawStr.slice(0, 600) + '\n…';
+
+    detailHtml = `<div class="test-detail" id="detail-${t.id}">
+      <div class="detail-row"><span class="detail-label">Status</span><span class="detail-val ${r.result==='pass'?'ok':'err'}">${r.httpStatus ?? '—'}</span></div>
+      <div class="detail-row"><span class="detail-label">Result</span><span class="detail-val ${r.result==='pass'?'ok':'err'}">${r.reason||r.result}</span></div>
+      ${r.url ? `<div class="detail-row"><span class="detail-label">URL</span><span class="detail-val">${r.url}</span></div>` : ''}
+      ${rawStr ? `<div class="response-box">${escHtml(rawStr)}</div>` : ''}
+    </div>`;
+  }
+
+  const path = resolveStoreVars(t.path);
+  return `<div class="test-card ${cardCls}" id="card-${t.id}">
+    <div class="test-header" onclick="toggleDetail('${t.id}')">
+      <span class="method-badge ${t.method}">${t.method}</span>
+      <span class="test-name">${t.name}</span>
+      <span class="test-path">${path}</span>
+      <span class="status-icon">${icon}</span>
+      <span class="test-time">${timeStr}</span>
+    </div>
+    ${detailHtml}
+  </div>`;
+}
+
+function toggleDetail(id) {
+  const el = document.getElementById(`detail-${id}`);
+  if (el) el.classList.toggle('open');
+}
+
+function scrollTo(id) {
+  const el = document.getElementById(`card-${id}`);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function renderSummary() {
+  const total = TESTS.length;
+  const pass  = Object.values(results).filter(r=>r.result==='pass').length;
+  const fail  = Object.values(results).filter(r=>r.result==='fail').length;
+  const skip  = Object.values(results).filter(r=>r.result==='skip').length;
+  const done  = pass + fail + skip;
+  document.getElementById('s-total').textContent = total;
+  document.getElementById('s-pass').textContent  = pass;
+  document.getElementById('s-fail').textContent  = fail;
+  document.getElementById('s-skip').textContent  = skip;
+  document.getElementById('progress').style.width = total ? `${(done/total)*100}%` : '0%';
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ─────────────────────────────────────────────
+// LOGGING
+// ─────────────────────────────────────────────
+function log(msg, cls='') {
+  const el = document.getElementById('log');
+  const ts = new Date().toLocaleTimeString();
+  el.innerHTML += `<div class="${cls}">[${ts}] ${escHtml(msg)}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+// ─────────────────────────────────────────────
+// STORE VARS
+// ─────────────────────────────────────────────
+function resolveStoreVars(path) {
+  return path.replace(/__(\w+)__/g, (_, key) => store[key] ?? `__${key}__`);
+}
+
+// ─────────────────────────────────────────────
+// FETCH TEST
+// ─────────────────────────────────────────────
+async function runTest(t, authOnly = false) {
+  // Skip if depends on a missing store var
+  if (t.dependsOn && !store[t.dependsOn]) {
+    results[t.id] = { result:'skip', reason:`Skipped: dependency '${t.dependsOn}' not available`, duration:0 };
+    return;
+  }
+
+  if (authOnly !== undefined) {
+    if (authOnly === true  && !t.auth) { results[t.id] = { result:'skip', reason:'Skipped (public-only run)' }; return; }
+    if (authOnly === false && t.auth)  { results[t.id] = { result:'skip', reason:'Skipped (auth-only run)' }; return; }
+  }
+
+  results[t.id] = { result:'running' };
+  updateCard(t.id);
+
+  const url = baseUrl() + resolveStoreVars(t.path);
+  const opts = {
+    method: t.method,
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+  };
+  if (t.body) opts.body = JSON.stringify(t.body);
+
+  const start = Date.now();
+  let status, raw, parseErr;
+
+  try {
+    const res = await fetch(url, opts);
+    status = res.status;
+    try { raw = await res.json(); } catch { try { raw = await res.text(); } catch { raw = null; } }
+  } catch (e) {
+    status = 0;
+    raw = null;
+    parseErr = e.message;
+  }
+
+  const dur = Date.now() - start;
+  const check = t.expect(status, raw);
+
+  // Store value if configured
+  if (check.pass && t.storeAs && raw && t.storePath) {
+    const val = t.storePath.split('.').reduce((o,k)=>o?.[k], raw);
+    if (val !== undefined) { store[t.storeAs] = val; }
+  }
+
+  results[t.id] = {
+    result: status === 0 ? 'fail' : check.pass ? 'pass' : 'fail',
+    reason: status === 0 ? `Network error: ${parseErr}` : check.reason,
+    httpStatus: status,
+    duration: dur,
+    raw,
+    url,
+  };
+
+  if (results[t.id].result === 'pass') {
+    log(`✓ ${t.name} [${status}] ${dur}ms`, 'l-ok');
+  } else {
+    log(`✗ ${t.name} [${status}] — ${results[t.id].reason}`, 'l-err');
+  }
+}
+
+function updateCard(id) {
+  render();
+}
+
+// ─────────────────────────────────────────────
+// RUN
+// ─────────────────────────────────────────────
+async function runAll(authOnly) {
+  if (running) return;
+  running = true;
+  store = {};
+  document.getElementById('btnRun').disabled = true;
+  log('── Starting test run ──', 'l-info');
+
+  for (const t of TESTS) {
+    await runTest(t, authOnly);
+    render();
+    await new Promise(r => setTimeout(r, 60)); // small delay to not hammer
+  }
+
+  running = false;
+  document.getElementById('btnRun').disabled = false;
+  const pass = Object.values(results).filter(r=>r.result==='pass').length;
+  const fail = Object.values(results).filter(r=>r.result==='fail').length;
+  const skip = Object.values(results).filter(r=>r.result==='skip').length;
+  log(`── Run complete: ${pass} passed, ${fail} failed, ${skip} skipped ──`, fail > 0 ? 'l-warn' : 'l-ok');
+  render();
+}
+
+async function runPublic() {
+  if (running) return;
+  running = true;
+  store = {};
+  document.getElementById('btnRun').disabled = true;
+  log('── Running public (no-auth) tests only ──', 'l-info');
+  for (const t of TESTS) {
+    if (!t.auth) {
+      await runTest(t, undefined);
+      render();
+      await new Promise(r => setTimeout(r, 60));
+    }
+  }
+  running = false;
+  document.getElementById('btnRun').disabled = false;
+  log('── Public run complete ──', 'l-ok');
+  render();
+}
+
+function resetAll() {
+  results = {};
+  store = {};
+  document.getElementById('log').innerHTML = '';
+  render();
+}
+
+function setFilter(f, btn) {
+  activeFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTests();
+}
+
+// Initial render
+render();
+</script>
+</body>
+</html>

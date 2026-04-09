@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vendor Dashboard — MVSR Connect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f5f4f0; --bg2: #eeecea; --surface: #ffffff;
+      --border: #e0deda; --border2: #c8c4be;
+      --ink: #1a1916; --ink2: #6b6760; --ink3: #a09c97;
+      --red: #c0392b; --green: #2d6a4f; --gold: #92680a;
+      --radius: 10px; --sans: 'Geist', sans-serif; --serif: 'Instrument Serif', serif;
+      --topbar-bg: rgba(245,244,240,0.88);
+    }
+    [data-theme="dark"] {
+      --bg: #111110; --bg2: #1a1917; --surface: #1f1e1c;
+      --border: #2a2825; --border2: #3d3a35;
+      --ink: #e8e6e1; --ink2: #9a9690; --ink3: #605c57;
+      --red: #e05c4b; --green: #4ade80; --gold: #e3b341;
+      --topbar-bg: rgba(17,17,16,0.88);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--ink);
+      font-family: var(--sans); font-size: 15px; line-height: 1.6;
+      min-height: 100vh; -webkit-font-smoothing: antialiased;
+      transition: background 0.2s, color 0.2s;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.035;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-size: 180px 180px;
+    }
+    .topbar {
+      position: sticky; top: 0; z-index: 200; height: 56px;
+      background: var(--topbar-bg); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px; gap: 12px;
+    }
+    .logo {
+      font-family: var(--serif); font-size: 1.2rem; color: var(--ink);
+      display: flex; align-items: center; gap: 7px; text-decoration: none;
+    }
+    .logo-dot { width: 8px; height: 8px; background: var(--ink); border-radius: 50%; }
+    .logo-sub { font-family: var(--sans); font-size: 0.75rem; color: var(--ink3); margin-left: 4px; }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+    .conn-indicator { display: flex; align-items: center; gap: 6px; font-size: 0.76rem; color: var(--ink3); }
+    .conn-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+    .conn-dot.offline { background: var(--red); animation: none; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+    /* ── Scanner button ── */
+    .scan-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: var(--sans); font-size: 0.78rem; font-weight: 500;
+      padding: 6px 14px; border-radius: 99px;
+      border: 1px solid var(--border2);
+      background: var(--surface); color: var(--ink2);
+      text-decoration: none; transition: all 0.15s; flex-shrink: 0;
+    }
+    .scan-btn:hover {
+      background: var(--ink); color: var(--bg); border-color: var(--ink);
+    }
+    [data-theme="dark"] .scan-btn:hover { background: #e8e6e1; color: #1a1916; border-color: #e8e6e1; }
+
+    .theme-toggle {
+      width: 34px; height: 34px; border-radius: 99px;
+      background: transparent; border: 1px solid var(--border2);
+      color: var(--ink2); cursor: pointer;
+      display: flex; align-items: center; justify-content: center; font-size: 0.95rem; transition: all 0.15s;
+    }
+    .theme-toggle:hover { background: var(--bg2); color: var(--ink); }
+
+    .page { max-width: 1100px; margin: 0 auto; padding: 28px 24px 80px; position: relative; z-index: 1; }
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+    .page-title { font-family: var(--serif); font-size: 1.8rem; letter-spacing: -0.4px; }
+    .page-date { font-size: 0.78rem; color: var(--ink3); margin-top: 4px; }
+
+    .layout { display: grid; grid-template-columns: 360px 1fr; gap: 16px; }
+
+    .panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 20px;
+    }
+    .panel-title {
+      font-family: var(--serif); font-size: 1rem; color: var(--ink);
+      margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .order-count-pill {
+      font-family: var(--sans); font-size: 0.7rem; font-weight: 500;
+      padding: 2px 10px; border-radius: 99px;
+      background: var(--bg2); color: var(--ink3); border: 1px solid var(--border);
+    }
+
+    /* ── Add item form ── */
+    .add-form {
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 14px 16px; margin-bottom: 16px;
+      background: var(--bg);
+    }
+    .add-form-title {
+      font-size: 0.78rem; font-weight: 600; color: var(--ink3);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      margin-bottom: 12px;
+    }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .field { display: flex; flex-direction: column; gap: 3px; }
+    .field label { font-size: 0.72rem; color: var(--ink3); font-weight: 500; }
+    .field input, .field select {
+      padding: 6px 9px;
+      border: 1px solid var(--border2); border-radius: 6px;
+      font-size: 0.84rem; font-family: var(--sans);
+      background: var(--surface); color: var(--ink);
+      outline: none; transition: border-color 0.15s;
+      width: 100%;
+    }
+    .field input:focus, .field select:focus { border-color: var(--ink); }
+    .field select { cursor: pointer; }
+    #stockRow { display: none; }
+    #stockRow.visible { display: flex; flex-direction: column; gap: 3px; }
+
+    /* ── Image upload zone ── */
+    .img-upload-zone {
+      position: relative; border: 1.5px dashed var(--border2);
+      border-radius: 8px; background: var(--surface);
+      transition: border-color 0.15s, background 0.15s;
+      cursor: pointer; overflow: hidden;
+    }
+    .img-upload-zone:hover { border-color: var(--ink); }
+    .img-upload-zone.drag-over { border-color: var(--ink); background: var(--bg2); }
+    .img-upload-zone.has-image { border-style: solid; border-color: var(--border2); }
+    .img-upload-placeholder {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 4px;
+      padding: 14px 10px; color: var(--ink3);
+    }
+    .img-upload-placeholder svg { opacity: 0.5; }
+    .img-upload-placeholder span { font-size: 0.75rem; text-align: center; line-height: 1.4; }
+    .img-upload-placeholder strong { font-size: 0.72rem; color: var(--ink2); }
+    #imgPreviewThumb {
+      display: none; width: 100%; height: 90px;
+      object-fit: cover; border-radius: 6px;
+    }
+    #imgPreviewThumb.visible { display: block; }
+    .img-upload-input {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .img-upload-progress {
+      display: none; align-items: center; gap: 8px;
+      padding: 10px 12px; font-size: 0.78rem; color: var(--ink3);
+    }
+    .img-upload-progress.visible { display: flex; }
+    .img-clear-btn {
+      position: absolute; top: 6px; right: 6px; z-index: 2;
+      background: rgba(0,0,0,0.55); border: none; border-radius: 50%;
+      width: 22px; height: 22px; cursor: pointer; display: none;
+      align-items: center; justify-content: center; color: #fff; font-size: 0.75rem;
+      transition: background 0.12s;
+    }
+    .img-clear-btn:hover { background: rgba(0,0,0,0.8); }
+    .img-clear-btn.visible { display: flex; }
+    .spinner-sm {
+      display: inline-block; width: 14px; height: 14px;
+      border: 1.5px solid var(--border2); border-top-color: var(--ink);
+      border-radius: 50%; animation: spin 0.6s linear infinite; flex-shrink: 0;
+    }
+
+    .form-actions { display: flex; gap: 6px; margin-top: 10px; }
+    .btn-add {
+      flex: 1; padding: 7px 14px; border: none; border-radius: 6px;
+      font-size: 0.82rem; font-weight: 500; cursor: pointer;
+      background: var(--ink); color: var(--bg); font-family: var(--sans); transition: opacity 0.15s;
+    }
+    .btn-add:hover:not(:disabled) { opacity: 0.8; }
+    .btn-add:disabled { opacity: 0.45; cursor: not-allowed; }
+    [data-theme="dark"] .btn-add:not(:disabled) { background: #e8e6e1; color: #1a1916; }
+    .btn-clear {
+      padding: 7px 12px; border: 1px solid var(--border2); border-radius: 6px;
+      font-size: 0.82rem; font-weight: 500; cursor: pointer;
+      background: transparent; color: var(--ink2); font-family: var(--sans); transition: all 0.15s;
+    }
+    .btn-clear:hover { background: var(--bg2); color: var(--ink); }
+
+    /* ── Menu items ── */
+    .menu-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+    }
+    .menu-item:last-child { border-bottom: none; }
+    .item-thumb {
+      width: 40px; height: 40px; border-radius: 6px; object-fit: cover;
+      border: 1px solid var(--border); flex-shrink: 0;
+      background: var(--bg2); display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; overflow: hidden;
+    }
+    .item-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 5px; }
+    .item-info { flex: 1; min-width: 0; }
+    .item-name { font-size: 0.88rem; font-weight: 500; color: var(--ink); }
+    .item-meta { font-size: 0.74rem; color: var(--ink3); margin-top: 1px; }
+    .item-price { color: var(--gold); font-weight: 500; }
+    .item-cat-pill {
+      display: inline-block; font-size: 0.65rem; font-weight: 500;
+      padding: 1px 7px; border-radius: 99px;
+      background: var(--bg2); color: var(--ink3);
+      border: 1px solid var(--border); margin-left: 4px;
+    }
+
+    /* Toggle switch */
+    .toggle-wrap { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .toggle { position: relative; width: 38px; height: 22px; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; inset: 0; background: var(--border2);
+      border-radius: 22px; cursor: pointer; transition: background 0.2s;
+    }
+    .slider:before {
+      content: ''; position: absolute; width: 16px; height: 16px;
+      left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: transform 0.2s;
+    }
+    input:checked + .slider { background: var(--green); }
+    input:checked + .slider:before { transform: translateX(16px); }
+    .toggle-label { font-size: 0.72rem; color: var(--ink3); min-width: 20px; }
+
+    .stock-input {
+      width: 56px; padding: 5px 8px;
+      border: 1px solid var(--border2); border-radius: 6px;
+      font-size: 0.85rem; text-align: center; font-family: var(--sans);
+      background: var(--bg); color: var(--ink); outline: none; transition: border-color 0.15s;
+    }
+    .stock-input:focus { border-color: var(--ink); }
+    .set-btn {
+      padding: 5px 10px; border: none; border-radius: 6px;
+      font-size: 0.76rem; font-weight: 500; cursor: pointer;
+      background: var(--ink); color: var(--bg); font-family: var(--sans); transition: opacity 0.15s;
+    }
+    .set-btn:hover { opacity: 0.8; }
+    [data-theme="dark"] .set-btn { background: #e8e6e1; color: #1a1916; }
+
+    /* Order cards */
+    .order-card {
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 14px 16px; margin-bottom: 10px;
+      animation: fadeUp 0.3s ease both; transition: border-color 0.15s;
+    }
+    .order-card.paid { border-color: rgba(45,106,79,0.35); background: rgba(45,106,79,0.04); }
+    .order-card.preparing { border-color: rgba(146,104,10,0.35); background: rgba(146,104,10,0.04); }
+    .order-card.verify { border-color: rgba(192,57,43,0.25); background: rgba(192,57,43,0.03); }
+    .order-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .token-num { font-family: var(--serif); font-size: 1.5rem; color: var(--ink); }
+    .badge {
+      font-size: 0.68rem; font-weight: 600; padding: 3px 10px;
+      border-radius: 99px; display: inline-block;
+    }
+    .badge-paid { background: rgba(45,106,79,0.12); color: var(--green); border: 1px solid rgba(45,106,79,0.2); }
+    .badge-preparing { background: rgba(146,104,10,0.1); color: var(--gold); border: 1px solid rgba(146,104,10,0.2); }
+    .badge-verify { background: rgba(192,57,43,0.08); color: var(--red); border: 1px solid rgba(192,57,43,0.2); }
+    .order-items { font-size: 0.82rem; color: var(--ink2); margin-bottom: 10px; }
+    .order-item-row { display: flex; justify-content: space-between; padding: 2px 0; }
+    .order-total { font-size: 0.88rem; font-weight: 500; color: var(--ink); margin-bottom: 10px; }
+    .utr-info {
+      font-size: 0.76rem; color: var(--gold);
+      background: rgba(146,104,10,0.08); border: 1px solid rgba(146,104,10,0.2);
+      padding: 4px 10px; border-radius: 6px; margin-bottom: 10px;
+    }
+    .btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .btn {
+      font-family: var(--sans); font-size: 0.76rem; font-weight: 500;
+      padding: 6px 14px; border-radius: 99px; border: none; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-prepare { background: rgba(146,104,10,0.1); color: var(--gold); border: 1px solid rgba(146,104,10,0.2); }
+    .btn-prepare:hover { background: rgba(146,104,10,0.2); }
+    .btn-ready { background: rgba(45,106,79,0.12); color: var(--green); border: 1px solid rgba(45,106,79,0.2); }
+    .btn-ready:hover { background: rgba(45,106,79,0.22); }
+    .btn-verify { background: var(--ink); color: var(--bg); }
+    .btn-verify:hover { opacity: 0.8; }
+    [data-theme="dark"] .btn-verify { background: #e8e6e1; color: #1a1916; }
+    .btn-cancel { background: rgba(192,57,43,0.08); color: var(--red); border: 1px solid rgba(192,57,43,0.2); }
+    .btn-cancel:hover { background: rgba(192,57,43,0.16); }
+
+    .empty { text-align: center; padding: 48px 20px; color: var(--ink3); }
+    .empty-icon { font-size: 2rem; margin-bottom: 8px; opacity: 0.6; }
+    .empty p { font-size: 0.82rem; }
+    .loading { text-align: center; padding: 32px 20px; color: var(--ink3); font-size: 0.83rem; }
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 1.5px solid var(--border2); border-top-color: var(--ink);
+      border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 6px;
+    }
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 999;
+      background: var(--ink); color: var(--bg); border-radius: 99px; padding: 10px 20px;
+      font-size: 0.82rem; font-weight: 500; animation: slideUp 0.22s ease; max-width: 300px;
+    }
+    .toast.error { background: var(--red); color: #fff; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+    @media (max-width: 768px) {
+      .layout { grid-template-columns: 1fr; }
+      .topbar { padding: 0 16px; }
+      .page { padding: 20px 16px 60px; }
+      .form-grid { grid-template-columns: 1fr; }
+      /* Hide label on mobile, keep icon */
+      .scan-btn span { display: none; }
+      .scan-btn { padding: 6px 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="/" class="logo">
+    <span class="logo-dot"></span>
+    MVSR Connect
+    <span class="logo-sub">· Vendor</span>
+  </a>
+  <div class="topbar-right">
+    <div class="conn-indicator">
+      <span class="conn-dot" id="connDot"></span>
+      <span id="connLabel">Connecting…</span>
+    </div>
+    <a href="/scanner-canteen.html" class="scan-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+        <rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3m0 4h4v-4m-4 0h-3"/>
+      </svg>
+      <span>Scan QR</span>
+    </a>
+    <button class="theme-toggle" onclick="toggleTheme()">☀</button>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title"><span id="stallName">Canteen</span> <em style="font-style:italic;color:var(--ink2)">Dashboard</em></h1>
+      <div class="page-date" id="todayDate"></div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- ── Left: Menu Inventory ── -->
+    <div class="panel">
+      <div class="panel-title">Menu Inventory</div>
+
+      <div class="add-form">
+        <div class="add-form-title">Add item</div>
+
+        <div class="form-grid">
+          <div class="field" style="grid-column:1/-1">
+            <label for="newName">Item name *</label>
+            <input id="newName" placeholder="e.g. Samosa, Cold Coffee…">
+          </div>
+          <div class="field">
+            <label for="newPrice">Price (₹) *</label>
+            <input id="newPrice" type="number" min="0" step="0.5" placeholder="0.00">
+          </div>
+          <div class="field">
+            <label for="newCategory">Category</label>
+            <input id="newCategory" placeholder="Snacks, Drinks, Meals…">
+          </div>
+          <div class="field">
+            <label for="newQType">Quantity type *</label>
+            <select id="newQType" onchange="onQTypeChange(this.value)">
+              <option value="TOGGLE">Toggle (available / unavailable)</option>
+              <option value="COUNTABLE">Countable (track stock)</option>
+            </select>
+          </div>
+          <div class="field" id="stockRow">
+            <label for="newStock">Initial stock</label>
+            <input id="newStock" type="number" min="0" value="0" placeholder="0">
+          </div>
+          <div class="field" style="grid-column:1/-1">
+            <label>Item photo <span style="color:var(--ink3);font-weight:400">(optional)</span></label>
+            <div class="img-upload-zone" id="uploadZone"
+                 ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+              <input type="file" class="img-upload-input" id="imageFileInput"
+                     accept="image/jpeg,image/png,image/webp,image/gif"
+                     onchange="onFileSelected(event)">
+              <div class="img-upload-placeholder" id="uploadPlaceholder">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="3" width="18" height="18" rx="3"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <path d="M21 15l-5-5L5 21"/>
+                </svg>
+                <strong>Click to upload or drag &amp; drop</strong>
+                <span>JPG, PNG, WebP · max 5 MB</span>
+              </div>
+              <div class="img-upload-progress" id="uploadProgress">
+                <span class="spinner-sm"></span>
+                <span id="uploadProgressText">Uploading…</span>
+              </div>
+              <img id="imgPreviewThumb" alt="Preview" onerror="clearImage()">
+              <button type="button" class="img-clear-btn" id="imgClearBtn" onclick="clearImage()" title="Remove image">×</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-add" id="addItemBtn" onclick="addItem()">Add item</button>
+          <button class="btn-clear" onclick="clearForm()">Clear</button>
+        </div>
+      </div>
+
+      <div id="menuList"></div>
+    </div>
+
+    <!-- ── Right: Live Orders ── -->
+    <div class="panel">
+      <div class="panel-title">
+        Live Orders
+        <span class="order-count-pill" id="orderCountPill">0 active</span>
+      </div>
+      <div id="orderList"><div class="empty"><div class="empty-icon">🎉</div><p>No active orders</p></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const saved = localStorage.getItem('mvsr-theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
+  })();
+  function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const next = isDark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('mvsr-theme', next);
+    document.querySelectorAll('.theme-toggle').forEach(b => b.textContent = next === 'dark' ? '☽' : '☀');
+  }
+  window.addEventListener('load', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.querySelectorAll('.theme-toggle').forEach(b => b.textContent = isDark ? '☽' : '☀');
+  });
+
+  document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-IN', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  });
+
+  const API = '/canteen/vendor/api';
+  let orders = {};
+  let uploadedImageUrl = null;
+  let isUploading = false;
+
+  function onQTypeChange(val) {
+    const row = document.getElementById('stockRow');
+    row.className = val === 'COUNTABLE' ? 'field visible' : 'field';
+  }
+
+  function clearForm() {
+    ['newName','newPrice','newCategory','newStock'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('newQType').value = 'TOGGLE';
+    onQTypeChange('TOGGLE');
+    clearImage();
+  }
+
+  function onDragOver(e) {
+    e.preventDefault();
+    document.getElementById('uploadZone').classList.add('drag-over');
+  }
+  function onDragLeave(e) {
+    document.getElementById('uploadZone').classList.remove('drag-over');
+  }
+  function onDrop(e) {
+    e.preventDefault();
+    document.getElementById('uploadZone').classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) uploadImage(file);
+  }
+  function onFileSelected(e) {
+    const file = e.target.files[0];
+    if (file) uploadImage(file);
+    e.target.value = '';
+  }
+
+  async function uploadImage(file) {
+    if (isUploading) return;
+    if (!file.type.startsWith('image/')) { showToast('Please select an image file', 'error'); return; }
+    if (file.size > 5 * 1024 * 1024) { showToast('Image must be under 5 MB', 'error'); return; }
+    isUploading = true;
+    setUploadState('uploading');
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await fetch(`${API}/menu/upload-image`, { method: 'POST', credentials: 'include', body: formData });
+      if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || 'Upload failed'); }
+      const data = await res.json();
+      uploadedImageUrl = data.url;
+      setUploadState('done', data.url);
+    } catch (e) {
+      showToast('Upload failed: ' + e.message, 'error');
+      setUploadState('idle');
+    } finally {
+      isUploading = false;
+    }
+  }
+
+  function setUploadState(state, url) {
+    const zone        = document.getElementById('uploadZone');
+    const placeholder = document.getElementById('uploadPlaceholder');
+    const progress    = document.getElementById('uploadProgress');
+    const thumb       = document.getElementById('imgPreviewThumb');
+    const clearBtn    = document.getElementById('imgClearBtn');
+    placeholder.style.display = 'none';
+    progress.classList.remove('visible');
+    thumb.classList.remove('visible');
+    clearBtn.classList.remove('visible');
+    zone.classList.remove('has-image');
+    if (state === 'uploading') {
+      progress.classList.add('visible');
+      document.getElementById('addItemBtn').disabled = true;
+    } else if (state === 'done' && url) {
+      thumb.src = url; thumb.classList.add('visible');
+      clearBtn.classList.add('visible'); zone.classList.add('has-image');
+      document.getElementById('addItemBtn').disabled = false;
+    } else {
+      placeholder.style.display = '';
+      document.getElementById('addItemBtn').disabled = false;
+    }
+  }
+
+  function clearImage() {
+    uploadedImageUrl = null;
+    setUploadState('idle');
+  }
+
+  async function loadMenu() {
+    const res = await fetch(`${API}/menu`, { credentials: 'include' });
+    if (res.status === 401) { location.href = '/canteen-vendor-login.html'; return; }
+    const items = await res.json();
+    const el = document.getElementById('menuList');
+    if (!items.length) {
+      el.innerHTML = '<p style="color:var(--ink3);font-size:.83rem">No menu items yet.</p>';
+      return;
+    }
+    el.innerHTML = items.map(item => `
+      <div class="menu-item" id="menuItem-${item.id}">
+        <div class="item-thumb">
+          ${item.imageUrl
+            ? `<img src="${escHtml(item.imageUrl)}" alt="${escHtml(item.name)}" onerror="this.parentElement.textContent='🍽️'">`
+            : '🍽️'}
+        </div>
+        <div class="item-info">
+          <div class="item-name">${escHtml(item.name)}</div>
+          <div class="item-meta">
+            <span class="item-price">₹${parseFloat(item.price).toFixed(2)}</span>
+            ${item.category ? `<span class="item-cat-pill">${escHtml(item.category)}</span>` : ''}
+            <span style="margin-left:4px;color:var(--ink3)">${item.quantityType === 'COUNTABLE' ? '· Stock' : ''}</span>
+          </div>
+        </div>
+        ${item.quantityType === 'TOGGLE' ? `
+          <div class="toggle-wrap">
+            <label class="toggle">
+              <input type="checkbox" ${item.available ? 'checked' : ''} onchange="toggleItem(${item.id}, this.checked)">
+              <span class="slider"></span>
+            </label>
+            <span class="toggle-label" id="tlabel-${item.id}">${item.available ? 'On' : 'Off'}</span>
+          </div>
+        ` : `
+          <div style="display:flex;align-items:center;gap:5px">
+            <input class="stock-input" type="number" min="0" value="${item.stockCount}" id="stock-${item.id}"/>
+            <button class="set-btn" onclick="setStock(${item.id})">Set</button>
+          </div>
+        `}
+        <button onclick="deleteItem(${item.id})"
+          style="margin-left:6px;background:none;border:none;color:var(--red);cursor:pointer;font-size:0.85rem;padding:4px;border-radius:4px;transition:background 0.12s"
+          onmouseover="this.style.background='rgba(192,57,43,0.1)'"
+          onmouseout="this.style.background='none'"
+          title="Delete item">✕</button>
+      </div>`).join('');
+  }
+
+  async function addItem() {
+    if (isUploading) { showToast('Please wait for image upload to finish'); return; }
+    const name     = document.getElementById('newName').value.trim();
+    const price    = document.getElementById('newPrice').value.trim();
+    const category = document.getElementById('newCategory').value.trim();
+    const qType    = document.getElementById('newQType').value;
+    const stock    = parseInt(document.getElementById('newStock').value) || 0;
+    if (!name || !price) { showToast('Name and price are required', 'error'); return; }
+    const payload = { name, price, category, quantityType: qType, imageUrl: uploadedImageUrl || null };
+    if (qType === 'COUNTABLE') payload.stockCount = stock;
+    const btn = document.getElementById('addItemBtn');
+    btn.disabled = true; btn.textContent = 'Adding…';
+    await fetch(`${API}/menu`, {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    clearForm(); loadMenu(); showToast('Item added ✓');
+    btn.disabled = false; btn.textContent = 'Add item';
+  }
+
+  async function toggleItem(itemId, available) {
+    document.getElementById(`tlabel-${itemId}`).textContent = available ? 'On' : 'Off';
+    await fetch(`${API}/menu/${itemId}/toggle`, {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ available })
+    });
+  }
+
+  async function setStock(itemId) {
+    const count = parseInt(document.getElementById(`stock-${itemId}`).value) || 0;
+    await fetch(`${API}/menu/${itemId}/stock`, {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ count })
+    });
+    showToast('Stock updated');
+  }
+
+  async function deleteItem(id) {
+    if (!confirm('Delete this item?')) return;
+    await fetch(`${API}/menu/${id}`, { method: 'DELETE', credentials: 'include' });
+    document.getElementById(`menuItem-${id}`)?.remove();
+    showToast('Item deleted');
+  }
+
+  async function loadOrders() {
+    const res = await fetch(`${API}/orders`, { credentials: 'include' });
+    const list = await res.json();
+    orders = {};
+    list.forEach(o => orders[o.id] = o);
+    renderOrders();
+  }
+
+  function renderOrders() {
+    const list = Object.values(orders).sort((a, b) => a.tokenNumber - b.tokenNumber);
+    const el = document.getElementById('orderList');
+    document.getElementById('orderCountPill').textContent = `${list.length} active`;
+    if (!list.length) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">🎉</div><p>No active orders</p></div>';
+      return;
+    }
+    el.innerHTML = list.map(o => orderCard(o)).join('');
+  }
+
+  function orderCard(o) {
+    const isPendingVerify = o.status === 'PENDING_VENDOR_VERIFY';
+    const isPaid = o.status === 'PAID';
+    const isPreparing = o.status === 'PREPARING';
+    const cardClass = isPaid ? 'paid' : isPreparing ? 'preparing' : isPendingVerify ? 'verify' : '';
+    const badgeClass = isPaid ? 'badge-paid' : isPreparing ? 'badge-preparing' : isPendingVerify ? 'badge-verify' : '';
+    const badgeLabel = { PAID: 'Payment confirmed', PREPARING: 'Preparing', PENDING_VENDOR_VERIFY: 'Verify payment' }[o.status] || o.status;
+    const itemsHtml = (o.items || []).map(i =>
+      `<div class="order-item-row"><span>${i.quantity}× ${escHtml(i.name)}</span><span>₹${(i.unitPrice * i.quantity).toFixed(2)}</span></div>`
+    ).join('');
+    return `
+      <div class="order-card ${cardClass}" id="order-${o.id}">
+        <div class="order-header">
+          <span class="token-num">#${o.tokenNumber}</span>
+          <span class="badge ${badgeClass}">${badgeLabel}</span>
+        </div>
+        <div class="order-items">${itemsHtml}</div>
+        <div class="order-total">Total: ₹${parseFloat(o.totalAmount).toFixed(2)}</div>
+        ${isPendingVerify && o.utrNumber ? `<div class="utr-info">UTR: ${escHtml(o.utrNumber)}</div>` : ''}
+        <div class="btn-row">
+          ${isPaid || isPendingVerify ? `<button class="btn btn-prepare" onclick="updateStatus(${o.id},'PREPARING')">Mark preparing</button>` : ''}
+          ${isPreparing ? `<button class="btn btn-ready" onclick="updateStatus(${o.id},'READY')">Mark ready ✓</button>` : ''}
+          ${isPendingVerify ? `<button class="btn btn-verify" onclick="updateStatus(${o.id},'PAID')">Verify payment</button>` : ''}
+          <button class="btn btn-cancel" onclick="updateStatus(${o.id},'CANCELLED')">Cancel</button>
+        </div>
+      </div>`;
+  }
+
+  async function updateStatus(orderId, status) {
+    await fetch(`${API}/orders/${orderId}/status`, {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    if (status === 'READY' || status === 'CANCELLED') {
+      delete orders[orderId];
+    } else if (orders[orderId]) {
+      orders[orderId].status = status;
+    }
+    renderOrders();
+    showToast('Order updated');
+  }
+
+  function connectSse() {
+    const sse = new EventSource(`${API}/sse`);
+    const dot = document.getElementById('connDot');
+    const label = document.getElementById('connLabel');
+    sse.addEventListener('new-order', e => {
+      const order = JSON.parse(e.data);
+      orders[order.id] = order;
+      renderOrders();
+    });
+    sse.onopen = () => { dot.className = 'conn-dot'; label.textContent = 'Live'; };
+    sse.onerror = () => {
+      dot.className = 'conn-dot offline'; label.textContent = 'Reconnecting…';
+      setTimeout(connectSse, 3000); sse.close();
+    };
+  }
+
+  function escHtml(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function showToast(msg, type = '') {
+    const t = document.createElement('div');
+    t.className = 'toast' + (type ? ' ' + type : '');
+    t.textContent = msg;
+    document.body.appendChild(t); setTimeout(() => t.remove(), 2500);
+  }
+
+  loadMenu(); loadOrders(); connectSse();
+  setInterval(loadOrders, 30000);
+</script>
+</body>
+</html>

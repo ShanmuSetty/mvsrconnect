@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>Canteen Scanner — MVSR Connect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f4f0; --bg2: #eeecea; --surface: #ffffff;
+      --border: #e0deda; --border2: #c8c4be;
+      --ink: #1a1916; --ink2: #6b6760; --ink3: #a09c97;
+      --red: #c0392b; --green: #2d6a4f; --gold: #92680a;
+      --radius: 10px; --sans: 'Geist', sans-serif; --serif: 'Instrument Serif', serif;
+      --topbar-bg: rgba(245,244,240,0.88);
+    }
+    [data-theme="dark"] {
+      --bg: #111110; --bg2: #1a1917; --surface: #1f1e1c;
+      --border: #2a2825; --border2: #3d3a35;
+      --ink: #e8e6e1; --ink2: #9a9690; --ink3: #605c57;
+      --red: #e05c4b; --green: #4ade80; --gold: #e3b341;
+      --topbar-bg: rgba(17,17,16,0.88);
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--ink);
+      font-family: var(--sans); font-size: 15px; line-height: 1.6;
+      min-height: 100vh; -webkit-font-smoothing: antialiased;
+      transition: background 0.2s, color 0.2s;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      opacity: 0.035;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-size: 180px 180px;
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      position: sticky; top: 0; z-index: 200; height: 56px;
+      background: var(--topbar-bg); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px; gap: 12px;
+    }
+    .logo {
+      font-family: var(--serif); font-size: 1.2rem; letter-spacing: -0.2px;
+      color: var(--ink); display: flex; align-items: center; gap: 7px;
+      text-decoration: none; flex-shrink: 0;
+    }
+    .logo-dot { width: 8px; height: 8px; background: var(--ink); border-radius: 50%; display: inline-block; }
+    .topbar-right { display: flex; align-items: center; gap: 8px; }
+    .theme-toggle {
+      width: 34px; height: 34px; border-radius: 99px;
+      background: transparent; border: 1px solid var(--border2);
+      color: var(--ink2); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.95rem; transition: all 0.15s;
+    }
+    .theme-toggle:hover { background: var(--bg2); color: var(--ink); }
+    .btn {
+      font-family: var(--sans); font-size: 0.8rem; font-weight: 500;
+      padding: 7px 18px; border-radius: 99px; cursor: pointer; border: none;
+      transition: all 0.15s; white-space: nowrap; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+    .btn-primary { background: var(--ink); color: var(--bg); }
+    .btn-primary:hover { opacity: 0.85; }
+    [data-theme="dark"] .btn-primary { background: #e8e6e1; color: #1a1916; }
+    .btn-ghost { background: transparent; color: var(--ink2); border: 1px solid var(--border2); }
+    .btn-ghost:hover { background: var(--bg2); color: var(--ink); border-color: var(--ink); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Page ── */
+    .page {
+      max-width: 480px; margin: 0 auto;
+      padding: 32px 24px 80px; position: relative; z-index: 1;
+    }
+    .page-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: 24px; gap: 12px;
+    }
+    .page-title { font-family: var(--serif); font-size: 1.8rem; letter-spacing: -0.5px; line-height: 1.1; }
+
+    /* ── Auth error ── */
+    #auth-error {
+      display: none; text-align: center; padding: 80px 20px; color: var(--red);
+    }
+    #auth-error h2 { font-family: var(--serif); font-size: 1.4rem; margin-bottom: 8px; }
+    #auth-error p { font-size: 0.85rem; color: var(--ink3); margin-bottom: 16px; }
+
+    /* ── Stall info bar ── */
+    .stall-bar {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 12px 16px;
+      margin-bottom: 20px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .stall-bar-name { font-weight: 600; font-size: 0.92rem; color: var(--ink); }
+    .stall-bar-sub { font-size: 0.74rem; color: var(--ink3); margin-top: 2px; }
+    .stall-count {
+      font-size: 0.72rem; font-weight: 600; color: var(--ink3);
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 99px; padding: 3px 10px; white-space: nowrap;
+    }
+
+    /* ── Scanner box ── */
+    .scanner-box {
+      background: var(--surface); border: 2px solid var(--border);
+      border-radius: 14px; overflow: hidden;
+      position: relative; margin-bottom: 14px;
+      transition: border-color 0.2s;
+    }
+    .scanner-box.scanning { border-color: var(--ink); }
+    .scanner-box.success  { border-color: var(--green); }
+    .scanner-box.error    { border-color: var(--red); }
+
+    #video { width: 100%; display: block; }
+
+    .scan-line {
+      position: absolute; left: 0; right: 0; height: 2px;
+      background: var(--ink); opacity: 0.6;
+      animation: scandown 2s ease-in-out infinite; display: none;
+    }
+    .scanner-box.scanning .scan-line { display: block; }
+    @keyframes scandown { 0% { top: 0; } 50% { top: 100%; } 100% { top: 0; } }
+
+    .scan-corners { position: absolute; inset: 16px; pointer-events: none; }
+    .corner {
+      position: absolute; width: 20px; height: 20px;
+      border-color: var(--ink); border-style: solid; opacity: 0.5;
+    }
+    .corner.tl { top:0; left:0; border-width: 2px 0 0 2px; border-radius: 3px 0 0 0; }
+    .corner.tr { top:0; right:0; border-width: 2px 2px 0 0; border-radius: 0 3px 0 0; }
+    .corner.bl { bottom:0; left:0; border-width: 0 0 2px 2px; border-radius: 0 0 0 3px; }
+    .corner.br { bottom:0; right:0; border-width: 0 2px 2px 0; border-radius: 0 0 3px 0; }
+
+    .cam-idle {
+      position: absolute; inset: 0; min-height: 220px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 8px;
+      background: var(--bg2);
+    }
+    .cam-idle-icon { font-size: 2rem; opacity: 0.4; }
+    .cam-idle-text { font-size: 0.8rem; color: var(--ink3); }
+
+    /* Flash overlay for scan feedback */
+    .scan-flash {
+      position: absolute; inset: 0; pointer-events: none;
+      opacity: 0; transition: opacity 0.15s;
+    }
+    .scan-flash.green { background: rgba(45,106,79,0.15); }
+    .scan-flash.red   { background: rgba(192,57,43,0.15); }
+    .scan-flash.show  { opacity: 1; }
+
+    /* ── Controls ── */
+    .controls { display: flex; gap: 8px; margin-bottom: 20px; }
+    .controls .btn { flex: 1; justify-content: center; padding: 10px 16px; font-size: 0.85rem; }
+
+    /* ── Result card ── */
+    .result-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+      margin-bottom: 14px; display: none;
+      animation: fadeUp 0.22s ease;
+    }
+    .result-card.show { display: block; }
+    .result-card.ok  { border-color: var(--green); }
+    .result-card.err { border-color: var(--red); }
+    .result-card.warn{ border-color: var(--gold); }
+
+    /* Status header strip */
+    .result-status-strip {
+      padding: 10px 16px;
+      font-size: 0.78rem; font-weight: 600; letter-spacing: 0.04em;
+      text-transform: uppercase; display: flex; align-items: center; gap: 8px;
+    }
+    .result-card.ok  .result-status-strip { background: rgba(45,106,79,0.08); color: var(--green); }
+    .result-card.err .result-status-strip { background: rgba(192,57,43,0.08); color: var(--red); }
+    .result-card.warn .result-status-strip { background: rgba(146,104,10,0.08); color: var(--gold); }
+    .result-status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: currentColor; flex-shrink: 0;
+    }
+
+    .result-body { padding: 16px; }
+
+    /* Token + items */
+    .result-token {
+      font-family: var(--serif); font-size: 2.8rem; line-height: 1;
+      color: var(--ink); margin-bottom: 14px; letter-spacing: -1px;
+    }
+    .result-token-label {
+      font-size: 0.68rem; color: var(--ink3); text-transform: uppercase;
+      letter-spacing: 0.5px; margin-bottom: 4px;
+    }
+
+    .result-items { margin-bottom: 14px; }
+    .result-item-row {
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: 0.83rem; padding: 5px 0;
+      border-bottom: 1px dashed var(--border);
+    }
+    .result-item-row:last-child { border-bottom: none; }
+    .result-item-name { color: var(--ink); font-weight: 500; }
+    .result-item-right { color: var(--ink3); font-size: 0.78rem; }
+
+    .result-total {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 0; border-top: 1px solid var(--border2);
+      font-size: 0.88rem; margin-bottom: 4px;
+    }
+    .result-total-label { color: var(--ink2); }
+    .result-total-amt { font-weight: 600; color: var(--gold); font-size: 1rem; }
+
+    .result-meta {
+      font-size: 0.72rem; color: var(--ink3);
+      display: flex; justify-content: space-between;
+    }
+
+    /* Error message */
+    .result-error-msg {
+      font-size: 0.88rem; color: var(--ink2);
+      padding: 8px 0 4px;
+    }
+
+    /* ── Log ── */
+    .log-section { margin-top: 4px; }
+    .log-title {
+      font-size: 0.67rem; color: var(--ink3); margin-bottom: 8px;
+      font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px;
+    }
+    .log-list { display: flex; flex-direction: column; gap: 5px; }
+    .log-item {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 9px 14px;
+      font-size: 0.8rem;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .log-item.ok   { border-left: 3px solid var(--green); }
+    .log-item.err  { border-left: 3px solid var(--red); }
+    .log-item.warn { border-left: 3px solid var(--gold); }
+    .log-time { font-size: 0.7rem; color: var(--ink3); white-space: nowrap; }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 1.5px solid var(--border2); border-top-color: var(--ink);
+      border-radius: 50%; animation: spin 0.6s linear infinite;
+      vertical-align: middle; margin-right: 5px;
+    }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+    @media (max-width: 680px) {
+      .topbar { padding: 0 16px; }
+      .page { padding: 20px 16px 60px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="/canteen-vendor.html" class="logo"><span class="logo-dot"></span>MVSR Connect</a>
+  <div class="topbar-right">
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">☀</button>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- Auth error -->
+  <div id="auth-error">
+    <h2>Access Denied</h2>
+    <p>Only authenticated vendors can use the canteen scanner.</p>
+    <a href="/canteen-vendor-login.html" class="btn btn-ghost">← Vendor Login</a>
+  </div>
+
+  <!-- Scanner UI -->
+  <div id="scanner-ui" style="display:none">
+
+    <div class="page-header">
+      <h1 class="page-title">Order <em style="font-style:italic;color:var(--ink2)">Scanner</em></h1>
+      <a href="/canteen-vendor.html" class="btn btn-ghost" style="align-self:center;">← Dashboard</a>
+    </div>
+
+    <!-- Stall info -->
+    <div class="stall-bar">
+      <div>
+        <div class="stall-bar-name" id="stall-name">Loading…</div>
+        <div class="stall-bar-sub">Scan customer QR to mark order as picked up</div>
+      </div>
+      <div class="stall-count" id="scan-count">0 scanned</div>
+    </div>
+
+    <!-- Camera -->
+    <div class="scanner-box" id="scanner-box">
+      <video id="video" playsinline muted></video>
+      <div class="scan-line"></div>
+      <div class="scan-corners">
+        <div class="corner tl"></div><div class="corner tr"></div>
+        <div class="corner bl"></div><div class="corner br"></div>
+      </div>
+      <div class="scan-flash" id="scan-flash"></div>
+      <div class="cam-idle" id="cam-idle">
+        <div class="cam-idle-icon">📷</div>
+        <div class="cam-idle-text">Tap "Start Scanner" to open camera</div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button class="btn btn-primary" id="start-btn" onclick="startScanner()">Start Scanner</button>
+      <button class="btn btn-ghost"   id="stop-btn"  onclick="stopScanner()" disabled>Stop</button>
+    </div>
+
+    <!-- Result card -->
+    <div class="result-card" id="result-card">
+      <div class="result-status-strip" id="result-strip">
+        <span class="result-status-dot"></span>
+        <span id="result-strip-text"></span>
+      </div>
+      <div class="result-body">
+        <!-- success view -->
+        <div id="result-success-view">
+          <div class="result-token-label">Token Number</div>
+          <div class="result-token" id="r-token">#--</div>
+          <div class="result-items" id="r-items"></div>
+          <div class="result-total">
+            <span class="result-total-label">Total</span>
+            <span class="result-total-amt" id="r-total">₹0</span>
+          </div>
+          <div class="result-meta">
+            <span id="r-placed"></span>
+            <span id="r-order-id"></span>
+          </div>
+        </div>
+        <!-- error view -->
+        <div id="result-error-view" style="display:none">
+          <div class="result-error-msg" id="r-error-msg"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scan log -->
+    <div id="log-section" class="log-section" style="display:none">
+      <div class="log-title">Recent Scans</div>
+      <div class="log-list" id="log-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<script>
+  // ── Theme ──
+  (function() {
+    const saved = localStorage.getItem('mvsr-theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
+  })();
+  function toggleTheme() {
+    const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('mvsr-theme', next);
+    document.getElementById('theme-toggle').textContent = next === 'dark' ? '☽' : '☀';
+  }
+  window.addEventListener('load', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.getElementById('theme-toggle').textContent = isDark ? '☽' : '☀';
+  });
+
+  // ── State ──
+  let stream = null;
+  let rafId = null;
+  let scanning = false;
+  let lastCode = null;
+  let scanCount = 0;
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+  // ── Init ──
+  async function init() {
+    try {
+      // Verify vendor session via any authenticated vendor endpoint
+      const r = await fetch('/canteen/vendor/api/menu');
+      if (!r.ok) throw new Error('not vendor');
+
+      // Load stall name from menu response (all items have stallId, we just need stall name)
+      // Simpler: fetch orders to confirm access and grab stall context
+      document.getElementById('auth-error').style.display = 'none';
+      document.getElementById('scanner-ui').style.display = 'block';
+
+      // Try to get stall name
+      loadStallInfo();
+    } catch(e) {
+      document.getElementById('auth-error').style.display = 'block';
+    }
+  }
+
+  async function loadStallInfo() {
+    try {
+      // GET /canteen/vendor/api/stall-info — add this endpoint, or derive from orders
+      // Fallback: just show "Your Stall"
+      const r = await fetch('/canteen/vendor/api/stall-info');
+      if (r.ok) {
+        const data = await r.json();
+        document.getElementById('stall-name').textContent = data.name || 'Your Stall';
+      } else {
+        document.getElementById('stall-name').textContent = 'Your Stall';
+      }
+    } catch(e) {
+      document.getElementById('stall-name').textContent = 'Your Stall';
+    }
+  }
+
+  // ── Camera ──
+  async function startScanner() {
+    if (scanning) return;
+    const video = document.getElementById('video');
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      video.srcObject = stream;
+      await video.play();
+      scanning = true;
+      lastCode = null;
+      document.getElementById('cam-idle').style.display = 'none';
+      document.getElementById('scanner-box').classList.add('scanning');
+      document.getElementById('start-btn').disabled = true;
+      document.getElementById('stop-btn').disabled = false;
+      requestAnimationFrame(tick);
+    } catch(e) {
+      alert('Camera access denied or unavailable. Please allow camera permission.');
+    }
+  }
+
+  function stopScanner() {
+    scanning = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+    const video = document.getElementById('video');
+    video.srcObject = null;
+    document.getElementById('cam-idle').style.display = 'flex';
+    document.getElementById('scanner-box').className = 'scanner-box';
+    document.getElementById('start-btn').disabled = false;
+    document.getElementById('stop-btn').disabled = true;
+  }
+
+  function tick() {
+    if (!scanning) return;
+    const video = document.getElementById('video');
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+      if (code && code.data && code.data !== lastCode) {
+        lastCode = code.data;
+        handleScan(code.data);
+      }
+    }
+    rafId = requestAnimationFrame(tick);
+  }
+
+  // ── Handle scan ──
+  async function handleScan(rawCode) {
+    // Expect format: "orderId.hexcode"
+    if (!rawCode.match(/^\d+\.[a-f0-9]+$/i)) {
+      showResult('err', null, 'Not a canteen QR code');
+      flash('red');
+      addLog('Invalid QR', 'err');
+      cooldown();
+      return;
+    }
+
+    try {
+      const res = await fetch('/canteen/vendor/api/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: rawCode })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        const msg = data.error || 'Scan failed';
+        const isWarn = msg.toLowerCase().includes('not ready') || msg.toLowerCase().includes('status');
+        const type = isWarn ? 'warn' : 'err';
+        showResult(type, null, msg + (data.status ? ` (${friendlyStatus(data.status)})` : ''));
+        flash('red');
+        addLog('Order #' + rawCode.split('.')[0] + ' — ' + msg, type);
+        cooldown();
+        return;
+      }
+
+      // Success
+      scanCount++;
+      document.getElementById('scan-count').textContent = scanCount + ' scanned';
+      showResult('ok', data, null);
+      flash('green');
+      addLog('Token #' + data.tokenNumber + ' — picked up ✓', 'ok');
+      cooldown();
+
+    } catch(e) {
+      showResult('err', null, 'Network error. Try again.');
+      flash('red');
+      cooldown();
+    }
+  }
+
+  function cooldown() {
+    // Prevent re-scanning same code for 3 seconds
+    setTimeout(() => { lastCode = null; }, 3000);
+  }
+
+  function flash(color) {
+    const el = document.getElementById('scan-flash');
+    el.className = 'scan-flash ' + color + ' show';
+    setTimeout(() => el.classList.remove('show'), 300);
+  }
+
+  // ── Render result ──
+  function showResult(type, order, errorMsg) {
+    const card = document.getElementById('result-card');
+    card.className = 'result-card show ' + type;
+
+    const stripText = document.getElementById('result-strip-text');
+    const successView = document.getElementById('result-success-view');
+    const errorView = document.getElementById('result-error-view');
+
+    const labels = {
+      ok: '✓ Picked Up — Order Complete',
+      err: '✗ Scan Failed',
+      warn: '⚠ Cannot Complete'
+    };
+    stripText.textContent = labels[type] || '';
+
+    if (type === 'ok' && order) {
+      successView.style.display = 'block';
+      errorView.style.display = 'none';
+
+      document.getElementById('r-token').textContent = '#' + order.tokenNumber;
+
+      // Items list
+      const itemsEl = document.getElementById('r-items');
+      itemsEl.innerHTML = (order.items || []).map(i => `
+        <div class="result-item-row">
+          <span class="result-item-name">${escHtml(i.name)}</span>
+          <span class="result-item-right">×${i.quantity} &nbsp; ₹${(parseFloat(i.unitPrice) * i.quantity).toFixed(2)}</span>
+        </div>`).join('');
+
+      document.getElementById('r-total').textContent = '₹' + parseFloat(order.totalAmount).toFixed(2);
+
+      const placed = order.createdAt
+        ? new Date(order.createdAt).toLocaleString('en-IN', { timeStyle: 'short', dateStyle: 'medium' })
+        : '';
+      document.getElementById('r-placed').textContent = 'Placed: ' + placed;
+      document.getElementById('r-order-id').textContent = 'Order #' + order.id;
+
+    } else {
+      successView.style.display = 'none';
+      errorView.style.display = 'block';
+      document.getElementById('r-error-msg').textContent = errorMsg || 'Unknown error';
+    }
+  }
+
+  // ── Log ──
+  function addLog(text, type) {
+    document.getElementById('log-section').style.display = 'block';
+    const list = document.getElementById('log-list');
+    const item = document.createElement('div');
+    item.className = 'log-item ' + type;
+    item.innerHTML = `
+      <span>${escHtml(text)}</span>
+      <span class="log-time">${new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>`;
+    list.insertBefore(item, list.firstChild);
+    while (list.children.length > 20) list.removeChild(list.lastChild);
+  }
+
+  // ── Helpers ──
+  function friendlyStatus(s) {
+    return { PENDING_PAYMENT: 'Not paid', PAID: 'Paid — not marked ready',
+             PREPARING: 'Still preparing', CANCELLED: 'Cancelled',
+             PICKED_UP: 'Already picked up' }[s] || s;
+  }
+  function escHtml(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  init();
+</script>
+</body>
+</html>
