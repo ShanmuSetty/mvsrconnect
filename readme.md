@@ -22,7 +22,7 @@
 
 <br/>
 
-*Post · Comment · Vote · Join Clubs · Moderate · Lost & Found*  
+*Post · Comment · Vote · Join Clubs · Order Food · Lost & Found · Events*  
 *Exclusively for `@mvsrec.edu.in` accounts*
 
 </div>
@@ -31,9 +31,9 @@
 
 ## 📌 What is MVSR Connect?
 
-MVSR Connect is a **Reddit-style campus forum** built exclusively for students of MVSR Engineering College. It's a single platform where you can share posts, join clubs, vote on content, have threaded discussions, report inappropriate material, and find lost items — all locked behind Google OAuth so only real `@mvsrec.edu.in` accounts can get in.
+MVSR Connect is a **full-featured campus platform** built exclusively for students of MVSR Engineering College. It's a single app where you can share posts, join clubs, vote on content, have threaded discussions, report inappropriate material, find lost items, attend events with QR ticketing, and order food from canteen stalls — all locked behind Google OAuth so only real `@mvsrec.edu.in` accounts can get in.
 
-Think of it as a private, AI-moderated version of a discussion forum, but built specifically for your campus.
+Think of it as a private, AI-moderated Reddit + campus OS, built specifically for your campus.
 
 ---
 
@@ -53,6 +53,17 @@ Think of it as a private, AI-moderated version of a discussion forum, but built 
 - 📬 Submit join requests; moderators approve or reject
 - 📋 Post within clubs — only members can post inside a club
 - 🛡️ Apply to become a club moderator via the appeal system
+
+### 🍽️ Canteen
+- 🏪 **Browse Stalls** — List all active food stalls on campus with their menu
+- 🛒 **Order Food** — Add items from a stall to cart and place orders
+- 💳 **Flexible Payment** — Supports UPI (Razorpay) or pay-at-counter (cash) modes, configurable via `CANTEEN_PAYMENT_MODE` env var
+- 🖨️ **Token System** — Each order gets a unique token number for pickup
+- 📡 **Live Order Updates** — Vendors receive new orders in real-time via Server-Sent Events (SSE)
+- 🧑‍🍳 **Vendor Dashboard** — Vendors log in via a separate whitelist-based session, view live orders, and mark them ready/served
+- 📦 **Inventory Management** — Vendors manage food items, pricing, availability, and quantity per stall
+- 🧾 **Order History** — Students see their current and past orders with live status
+- 📷 **QR Scanner** — Canteen scanner page to verify and serve orders at the counter
 
 ### Lost & Found
 - 🔎 **Report Lost Items** — Post what you lost with location, date, category, and a photo
@@ -82,38 +93,40 @@ Think of it as a private, AI-moderated version of a discussion forum, but built 
 ### Notifications
 - **In-App Notifications** — Real-time notification bell with unread badge and dropdown history
 - 🌐 **Web Push Notifications** — Native device notifications (even when tab is closed)
-- ⚡ **Event-Based Alerts**:
-    - New comments on your posts
-    - Replies to your comments
-    - Club join request approvals/rejections
-    - Moderator appeal updates
-    - Lost & Found responses
-    - Event enrollment confirmations
-    - New posts in your clubs
+- ⚡ **Event-Based Alerts** — New comments, replies, club approvals, event confirmations, Lost & Found responses, and more
 - 📦 **Persistent History** — All notifications stored in DB and visible in dropdown
-- 🔕 **Smart Permission Handling** — Shows “Enable notifications” prompt only when needed
+- 🔕 **Smart Permission Handling** — Shows "Enable notifications" prompt only when needed
 
 ### Personal
 - 📊 **Dashboard** — View your posts, comments, clubs, upvotes received, and liked posts
 - ✏️ **Profile Editor** — Update your display name, bio, and avatar
 
+### 🛟 Support
+- 📬 **Support Page** — Students can submit bug reports, feature requests, or account issues directly from `support.html`
+- 📎 **Screenshot / Recording Upload** — Attach images or video recordings alongside a bug report for easier debugging
+- 🏷️ **Priority Tagging** — Reports are tagged Low / Medium / High priority
+- 📧 **Email Routing** — Reports are emailed directly to the admin inbox via `EmailService`
+
 ---
 
 ## 🛠️ Tech Stack
 
-| Layer          | Technology |
-|----------------|---|
-| **Backend**    | Spring Boot 4.0.3 (Java 17) |
-| **Database**   | PostgreSQL |
-| **ORM**        | Spring Data JPA / Hibernate |
-| **Auth**       | Spring Security + Google OAuth2 |
-| **Media**      | Cloudinary (images + videos) |
+| Layer | Technology |
+|---|---|
+| **Backend** | Spring Boot 4.0.3 (Java 17) |
+| **Database** | PostgreSQL |
+| **ORM** | Spring Data JPA / Hibernate |
+| **Auth** | Spring Security + Google OAuth2 |
+| **Vendor Auth** | Custom session-based whitelist filter (`VendorAuthFilter`) |
+| **Media** | Cloudinary (images + videos) |
 | **Moderation** | External Flask microservice |
-| **API Docs**   | SpringDoc OpenAPI (Swagger UI) |
-| **Frontend**   | Vanilla HTML / CSS / JavaScript (+ jsQR for scanning, qrcode.js for ticket generation)|
-| **Container**  | Docker |
-| **Email**      | Spring Mail + Gmail SMTP (async notifications) |
+| **Payment** | Razorpay (canteen + events) |
+| **API Docs** | SpringDoc OpenAPI (Swagger UI) |
+| **Frontend** | Vanilla HTML / CSS / JavaScript (+ jsQR, qrcode.js) |
+| **Container** | Docker |
+| **Email** | Spring Mail + Gmail SMTP (async) |
 | **Notifications** | Web Push API (VAPID) + Service Workers |
+| **Realtime** | Server-Sent Events (SSE) for vendor live orders |
 
 ---
 
@@ -122,24 +135,29 @@ Think of it as a private, AI-moderated version of a discussion forum, but built 
 src/
 ├── main/
 │   ├── java/com/mvsr/mvsrconnect/
-│   │   ├── config/              # SecurityConfig, OAuth2LoginSuccessHandler, CloudinaryConfig
-│   │   ├── controller/          # REST controllers (Posts, Comments, Clubs, Votes, Search, LostFound, Events…)
-│   │   ├── dto/                 # Data transfer objects (LostFoundItemDTO…)
-│   │   ├── model/               # JPA entities (User, Post, Club, Comment, Vote, Report, LostFoundItem, Event, EventEnrollment…)
+│   │   ├── config/              # SecurityConfig, OAuth2LoginSuccessHandler, CloudinaryConfig, VendorAuthFilter
+│   │   ├── controller/          # REST controllers (Posts, Comments, Clubs, Votes, Search, LostFound, Events, Canteen…)
+│   │   ├── dto/                 # Data transfer objects
+│   │   ├── model/               # JPA entities (User, Post, Club, Comment, Vote, Report, LostFoundItem, Event, FoodItem, CanteenOrder…)
 │   │   ├── repository/          # Spring Data repositories
-│   │   └── service/             # Business logic (ModerationService, ClubService, ReportService, EventService…)
+│   │   └── service/             # Business logic (ModerationService, CanteenService, EventService, PushNotificationService…)
 │   └── resources/
 │       ├── application.properties
 │       └── static/              # Frontend pages
 │           ├── index.html       # Main feed
 │           ├── events.html      # Events board — browse, enroll, pay, manage
+│           ├── canteen.html     # Student canteen — browse stalls, order food, track orders
+│           ├── canteen-vendor.html     # Vendor dashboard — live orders, order management
+│           ├── canteen-vendor-login.html  # Vendor login (whitelist-based session)
 │           ├── scanner.html     # QR check-in scanner (mod/admin only)
+│           ├── scanner-canteen.html # Canteen order pickup scanner
 │           ├── lostandfound.html # Lost & Found board
 │           ├── dashboard.html   # Personal dashboard
 │           ├── mod.html         # Moderator panel
 │           ├── admin.html       # Admin panel
 │           ├── search.html      # Global search
-│           ├── post.html        # Specific Post View
+│           ├── post.html        # Single post view
+│           ├── support.html     # Support & bug report form
 │           └── sw.js            # Service Worker for push notifications
 └── test/
 ```
@@ -155,6 +173,7 @@ src/
 - Google Cloud project with OAuth2 credentials
 - Cloudinary account
 - *(Optional)* Flask moderation microservice running on port `5001`
+- *(Optional)* Razorpay account for payment features
 
 ### Environment Variables
 
@@ -179,7 +198,7 @@ CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 MODERATION_URL=your_moderation_service_url
 MODERATION_ENABLED=true
 
-# HuggingFace (used by moderation service if applicable)
+# HuggingFace (used by moderation service)
 HUGGINGFACE_API_KEY=your_huggingface_api_key
 
 # Email (Gmail SMTP)
@@ -190,23 +209,29 @@ MAIL_PASSWORD=your_gmail_app_password
 VAPID_PUBLIC_KEY=your_vapid_public_key
 VAPID_PRIVATE_KEY=your_vapid_private_key
 VAPID_SUBJECT=mailto:your_email@gmail.com
+
+# Razorpay (for paid events + canteen UPI)
+RAZORPAY_KEY_ID=your_razorpay_key_id
+RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+
+# Canteen
+CANTEEN_PAYMENT_MODE=AUTO          # AUTO (Razorpay) or CASH
+APP_BASE_URL=https://your-deployed-url.com
 ```
-```md id="env-notes"
+
 > ⚠️ Notes:
 > - `MAIL_PASSWORD` must be a Gmail **App Password**, not your actual password
-> - `VAPID_SUBJECT` is just an identifier (use any valid email with `mailto:` prefix)
-> - All variables must be set in your hosting platform (e.g., Render) — do not hardcode secrets
-```
+> - `CANTEEN_PAYMENT_MODE=CASH` skips Razorpay and goes straight to pay-at-counter
+> - All variables must be set in your hosting platform — do not hardcode secrets
+
 ### Run Locally
 ```bash
 ./mvnw spring-boot:run
 ```
 
-
----
 App starts at → `http://localhost:8080`
 
-### Run with Docker (Local Deployment Only)
+### Run with Docker
 ```bash
 # Build the image
 docker build -t mvsrconnect .
@@ -223,12 +248,12 @@ docker run -p 8080:8080 \
   -e CLOUDINARY_API_SECRET=your_cloudinary_api_secret \
   -e MODERATION_URL=http://localhost:5001 \
   -e MODERATION_ENABLED=true \
-  -e HUGGINGFACE_API_KEY=your_huggingface_api_key \
   -e MAIL_USERNAME=your_email@gmail.com \
   -e MAIL_PASSWORD=your_gmail_app_password \
   -e VAPID_PUBLIC_KEY=your_vapid_public_key \
   -e VAPID_PRIVATE_KEY=your_vapid_private_key \
   -e VAPID_SUBJECT=mailto:your_email@gmail.com \
+  -e CANTEEN_PAYMENT_MODE=CASH \
   mvsrconnect
 ```
 
@@ -283,23 +308,35 @@ docker run -p 8080:8080 \
 | ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/clubs/requests/{id}/approve` | Approve a join request |
 | ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/clubs/requests/{id}/reject` | Reject a join request |
 
+### 🍽️ Canteen
+
+| Method | Endpoint | Description |
+|---|---|---|
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/canteen/stalls` | List all active food stalls |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/canteen/stalls/{stallId}/menu` | Get menu items for a stall |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/canteen/order` | Place a food order |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/canteen/my-orders` | Get current student's orders |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/canteen/vendor/orders` | Live orders for vendor (requires vendor session) |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/canteen/vendor/orders/{id}/status` | Update order status (READY / SERVED) |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/canteen/vendor/sse` | SSE stream for real-time order notifications |
+
 ### Events
 
 | Method | Endpoint | Description |
 |---|---|---|
-| ![GET](…) | `/events` | All active events (sorted by date) |
-| ![POST](…) | `/events` | Create an event (mod/admin) |
-| ![GET](…) | `/events/{id}` | Get a single event (public view, UPI stripped) |
-| ![POST](…) | `/events/{id}/enroll` | Enroll in an event |
-| ![POST](…) | `/events/{id}/pay` | Submit UTR after UPI payment |
-| ![GET](…) | `/events/{id}/my-enrollment` | Get current user's enrollment for an event |
-| ![GET](…) | `/events/{id}/enrollments` | List all enrollments (organizer/admin) |
-| ![POST](…) | `/events/enrollments/{id}/approve` | Approve payment → issue QR |
-| ![POST](…) | `/events/enrollments/{id}/reject` | Reject payment |
-| ![GET](…) | `/events/verify/{token}` | Verify a QR token (scanner) |
-| ![POST](…) | `/events/checkin/{token}` | Mark attendee as checked in |
-| ![GET](…) | `/events/my-tickets` | Current user's enrolled tickets |
-| ![GET](…) | `/events/my-events` | Events created by current user |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/events` | All active events |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/events` | Create an event (mod/admin) |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/events/{id}` | Get a single event |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/events/{id}/enroll` | Enroll in an event |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/events/{id}/pay` | Submit UTR after UPI payment |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/events/{id}/my-enrollment` | Get current user's enrollment |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/events/{id}/enrollments` | List all enrollments (organizer/admin) |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/events/enrollments/{id}/approve` | Approve payment → issue QR |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/events/enrollments/{id}/reject` | Reject payment |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/events/verify/{token}` | Verify a QR token |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/events/checkin/{token}` | Mark attendee as checked in |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/events/my-tickets` | Current user's tickets |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/events/my-events` | Events created by current user |
 
 ### Lost & Found
 
@@ -308,25 +345,25 @@ docker run -p 8080:8080 \
 | ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/lost-found` | All items (newest first) |
 | ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/lost-found` | Report a lost or found item |
 | ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/lost-found/search?q=` | Search items by keyword |
-| ![DELETE](https://img.shields.io/badge/DELETE-F93E3E?style=flat-square) | `/lost-found/{id}` | Delete an item (author / admin) |
+| ![DELETE](https://img.shields.io/badge/DELETE-F93E3E?style=flat-square) | `/lost-found/{id}` | Delete an item |
 | ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/lost-found/{id}/resolve` | Mark item as resolved |
 | ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/lost-found/{id}/responses` | View responses (author / admin only) |
-| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/lost-found/{id}/respond` | Submit a finder / ownership claim |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/lost-found/{id}/respond` | Submit a claim |
 
-### Moderator Panel
+### Moderation
 
 | Method | Endpoint | Description |
 |---|---|---|
 | ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/mod/my-clubs` | Clubs where I'm a moderator |
-| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/mod/club/{id}` | Club dashboard (members, posts, requests) |
-| ![DELETE](https://img.shields.io/badge/DELETE-F93E3E?style=flat-square) | `/mod/club/{id}/posts/{postId}` | Delete a post as moderator |
-| ![DELETE](https://img.shields.io/badge/DELETE-F93E3E?style=flat-square) | `/mod/club/{id}/comments/{commentId}` | Delete a comment as moderator |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/mod/club/{id}` | Club dashboard |
+| ![DELETE](https://img.shields.io/badge/DELETE-F93E3E?style=flat-square) | `/mod/club/{id}/posts/{postId}` | Delete post as moderator |
+| ![DELETE](https://img.shields.io/badge/DELETE-F93E3E?style=flat-square) | `/mod/club/{id}/comments/{commentId}` | Delete comment as moderator |
 | ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/mod/club/{id}/requests/{reqId}/approve` | Approve join request |
 | ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/mod/club/{id}/requests/{reqId}/reject` | Reject join request |
 | ![DELETE](https://img.shields.io/badge/DELETE-F93E3E?style=flat-square) | `/mod/club/{id}/members/{memberId}` | Remove a member |
-| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/mod/appeal` | Submit appeal to become a moderator |
-| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/mod/appeals` | List pending appeals (admin) |
-| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/mod/appeals/{id}/approve` | Approve appeal → user becomes moderator |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/mod/appeal` | Submit moderator appeal |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/mod/appeals` | Pending appeals (admin) |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/mod/appeals/{id}/approve` | Approve appeal |
 | ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/mod/appeals/{id}/reject` | Reject appeal |
 
 ### Reports
@@ -334,14 +371,14 @@ docker run -p 8080:8080 \
 | Method | Endpoint | Description |
 |---|---|---|
 | ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/reports` | Report a post |
-| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/reports` | List open reports (admin) |
-| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/reports/{id}/resolve` | Resolve a report (admin) |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/reports` | Open reports (admin) |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/reports/{id}/resolve` | Resolve a report |
 
 ### Search & Tags
 
 | Method | Endpoint | Description |
 |---|---|---|
-| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/search?q=` | Global search (posts, users, clubs, tags) |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/search?q=` | Global search |
 | ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/search/tag/{tagId}` | Filter posts by tag |
 | ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/tags` | List all tags |
 
@@ -349,41 +386,47 @@ docker run -p 8080:8080 \
 
 | Method | Endpoint | Description |
 |---|---|---|
-| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/dashboard` | Personal stats, posts, comments, clubs |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/dashboard` | Personal stats + activity |
 | ![PATCH](https://img.shields.io/badge/PATCH-FCA130?style=flat-square) | `/dashboard/profile` | Update name, bio, avatar |
 | ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/api/media/upload` | Upload image or video to Cloudinary |
 
-### 🔔 Notifications
+### Notifications
 
 | Method | Endpoint | Description |
 |---|---|---|
-| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/notifications` | Get latest 20 notifications |
-| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/notifications/unread-count` | Get unread notification count |
-| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/notifications/read-all` | Mark all notifications as read |
-
-### 🔔 Push Notifications
-
-| Method | Endpoint | Description |
-|---|---|---|
-| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/push/vapid-key` | Get public VAPID key |
-| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/push/subscribe` | Save browser push subscription |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/notifications` | Latest 20 notifications |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/notifications/unread-count` | Unread count |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/notifications/read-all` | Mark all as read |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/push/vapid-key` | Public VAPID key |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/push/subscribe` | Save push subscription |
 | ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/push/unsubscribe` | Remove push subscription |
+
+### Support
+
+| Method | Endpoint | Description |
+|---|---|---|
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/api/support` | Submit a bug report / feature request (multipart, with optional file attachment) |
 
 ---
 
-## 🖥️ Pages
+## Pages
 
-| Page             | URL                  | What it does                                                     |
-|------------------|----------------------|------------------------------------------------------------------|
-| **Feed**         | `/`                  | Main feed with post creation, clubs sidebar, tag filters, voting |
-| **Lost & Found** | `/lostandfound.html` | Report lost/found items, search, claim, resolve                  |
-| **Dashboard**    | `/dashboard.html`    | Your posts, comments, clubs, liked posts, profile editor         |
-| **Mod Panel**    | `/mod.html`          | Club moderation — members, posts, join requests, appeals         |
-| **Admin Panel**  | `/admin.html`        | Platform-wide reports, club requests, moderator appeals          |
-| **Search**       | `/search.html`       | Global search with tag filter bar                                |
-| **Events**       | `/events.html`       | Browse events, enroll, pay, view QR tickets, manage enrollments  |
-| **QR Scanner**   | `/scanner.html`      | Camera scanner for check-in at event entry (mod/admin only)      |
-| **Post**         | `/post.html`         | Shows the selected post using postId                             |
+| Page | URL | What it does |
+|---|---|---|
+| **Feed** | `/` | Main feed with post creation, clubs sidebar, tag filters, voting |
+| **Lost & Found** | `/lostandfound.html` | Report lost/found items, search, claim, resolve |
+| **Dashboard** | `/dashboard.html` | Your posts, comments, clubs, liked posts, profile editor |
+| **Mod Panel** | `/mod.html` | Club moderation — members, posts, join requests, appeals |
+| **Admin Panel** | `/admin.html` | Platform-wide reports, club requests, moderator appeals |
+| **Search** | `/search.html` | Global search with tag filter bar |
+| **Events** | `/events.html` | Browse events, enroll, pay, view QR tickets, manage enrollments |
+| **QR Scanner** | `/scanner.html` | Camera scanner for check-in at event entry (mod/admin only) |
+| **Post** | `/post.html` | Single post view |
+| **Canteen** | `/canteen.html` | Browse stalls, order food, track order status |
+| **Vendor Login** | `/canteen-vendor-login.html` | Vendor authentication (whitelist-based session) |
+| **Vendor Dashboard** | `/canteen-vendor.html` | Live order management + inventory for vendors |
+| **Canteen Scanner** | `/scanner-canteen.html` | Scan QR codes to serve/confirm canteen orders |
+| **Support** | `/support.html` | Bug reports, feature requests, account issues — with screenshot upload |
 
 ---
 
@@ -391,11 +434,12 @@ docker run -p 8080:8080 \
 
 | Role | What they can do |
 |---|---|
-| `USER` | Post, comment, vote, join clubs, report posts, use Lost & Found |
+| `USER` | Post, comment, vote, join clubs, report posts, use Lost & Found, order food |
 | `MODERATOR` | Everything above + manage club posts, comments, members, and join requests |
-| `ADMIN` | Everything above + approve/reject moderator appeals, resolve all reports, manage all clubs, delete any Lost & Found item |
+| `ADMIN` | Everything above + approve/reject appeals, resolve all reports, manage all clubs |
+| `VENDOR` | Separate session via vendor login — manage stall menu, view live orders, update order status |
 
-> Roles are stored in the `users` table. The first admin must be set manually in the database.
+> Roles are stored in the `users` table. The first admin must be set manually in the database. Vendor sessions are managed via `VendorSession` with a 12-hour expiry.
 
 ---
 
@@ -417,24 +461,30 @@ If the Flask service is unavailable, moderation **fails open** (content is allow
 ---
 
 ## 🗄️ Database Schema (Key Tables)
+
 ```
 users                → id, name, email, google_id, picture, role, bio
-posts                → id, title, content, author_id, author_name, media_url, media_type, club_id, created_at
+posts                → id, title, content, author_id, club_id, media_url, media_type, created_at
 comments             → id, content, post_id, user_id, parent_comment_id, created_at
 votes                → id, post_id, user_id, value (+1 / -1)
 clubs                → id, name, description, created_at
 club_members         → id, club_id, user_id, role (MEMBER/MODERATOR/PRESIDENT), joined_at
-club_join_requests   → id, club_id, user_id, status (PENDING/APPROVED/REJECTED), created_at
+club_join_requests   → id, club_id, user_id, status, created_at
 moderator_appeals    → id, club_id, user_id, reason, status, created_at
 reports              → id, post_id, user_id, reason, status (OPEN/RESOLVED), created_at
 tags                 → id, name
 post_tags            → post_id, tag_id
-lost_found_items     → id, type (LOST/FOUND), title, description, location, category, date, author_id, author_name, media_url, media_type, media_public_id, resolved, created_at
-lost_found_responses → id, item_id, author_id, author_name, message, contact, mode (found_it/its_mine), created_at
-events               → id, title, description, venue, event_date, fee_in_paise, capacity, upi_id, upi_name, organizer_id, organizer_name, club_id, banner_url, banner_public_id, active, created_at
-event_enrollments    → id, event_id, user_id, user_name, user_email, user_picture, status (PENDING_PAYMENT/PENDING_APPROVAL/CONFIRMED/REJECTED/CHECKED_IN), utr_number, qr_token, enrolled_at, checked_in_at
+lost_found_items     → id, type (LOST/FOUND), title, description, location, category, date, author_id, media_url, resolved, created_at
+lost_found_responses → id, item_id, author_id, message, contact, mode, created_at
+events               → id, title, description, venue, event_date, fee_in_paise, capacity, upi_id, organizer_id, banner_url, active, created_at
+event_enrollments    → id, event_id, user_id, status, utr_number, qr_token, enrolled_at, checked_in_at
 notifications        → id, user_id, title, body, url, read, created_at
 push_subscriptions   → id, user_id, endpoint, p256dh, auth, created_at
+food_stalls          → id, name, description, active, vendor_emails (whitelist)
+food_items           → id, stall_id, name, description, price, available, quantity_type
+canteen_orders       → id, student_id, stall_id, token_number, status, total_amount, payment_mode, created_at
+order_items          → id, order_id, food_item_id, quantity, price_at_order
+vendor_sessions      → id, email, token, stall_id, created_at, expires_at
 ```
 
 ---
@@ -453,7 +503,15 @@ ORDER BY
 DESC
 ```
 
-Where the numerator is the net vote score and the denominator grows over time. The `+2` prevents brand-new posts from dividing by zero, and the `1.5` exponent controls how aggressively older posts decay out of the feed.
+The numerator is the net vote score. The denominator grows over time — the `+2` prevents division by zero on new posts, and the `1.5` exponent controls how fast older posts decay out of the feed.
+
+---
+
+## 🛟 Support
+
+Found a bug or something's broken? Open the **[Support Page](https://mvsrconnect.onrender.com/support.html)** to send a report directly, or email:
+
+📧 **shanmusetty@gmail.com**
 
 ---
 

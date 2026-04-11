@@ -119,7 +119,8 @@
     .scanner-box.success  { border-color: var(--green); }
     .scanner-box.error    { border-color: var(--red); }
 
-    #video { width: 100%; display: block; }
+    /* min-height prevents the box from collapsing to 0 before camera loads */
+    #video { width: 100%; display: block; min-height: 240px; background: var(--bg2); }
 
     .scan-line {
       position: absolute; left: 0; right: 0; height: 2px;
@@ -140,7 +141,7 @@
     .corner.br { bottom:0; right:0; border-width: 0 2px 2px 0; border-radius: 0 0 3px 0; }
 
     .cam-idle {
-      position: absolute; inset: 0; min-height: 220px;
+      position: absolute; inset: 0; min-height: 240px;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center; gap: 8px;
       background: var(--bg2);
@@ -148,7 +149,7 @@
     .cam-idle-icon { font-size: 2rem; opacity: 0.4; }
     .cam-idle-text { font-size: 0.8rem; color: var(--ink3); }
 
-    /* Flash overlay for scan feedback */
+    /* Flash overlay */
     .scan-flash {
       position: absolute; inset: 0; pointer-events: none;
       opacity: 0; transition: opacity 0.15s;
@@ -173,23 +174,18 @@
     .result-card.err { border-color: var(--red); }
     .result-card.warn{ border-color: var(--gold); }
 
-    /* Status header strip */
     .result-status-strip {
       padding: 10px 16px;
       font-size: 0.78rem; font-weight: 600; letter-spacing: 0.04em;
       text-transform: uppercase; display: flex; align-items: center; gap: 8px;
     }
-    .result-card.ok  .result-status-strip { background: rgba(45,106,79,0.08); color: var(--green); }
-    .result-card.err .result-status-strip { background: rgba(192,57,43,0.08); color: var(--red); }
+    .result-card.ok   .result-status-strip { background: rgba(45,106,79,0.08);  color: var(--green); }
+    .result-card.err  .result-status-strip { background: rgba(192,57,43,0.08);  color: var(--red); }
     .result-card.warn .result-status-strip { background: rgba(146,104,10,0.08); color: var(--gold); }
-    .result-status-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: currentColor; flex-shrink: 0;
-    }
+    .result-status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
 
     .result-body { padding: 16px; }
 
-    /* Token + items */
     .result-token {
       font-family: var(--serif); font-size: 2.8rem; line-height: 1;
       color: var(--ink); margin-bottom: 14px; letter-spacing: -1px;
@@ -202,8 +198,7 @@
     .result-items { margin-bottom: 14px; }
     .result-item-row {
       display: flex; justify-content: space-between; align-items: baseline;
-      font-size: 0.83rem; padding: 5px 0;
-      border-bottom: 1px dashed var(--border);
+      font-size: 0.83rem; padding: 5px 0; border-bottom: 1px dashed var(--border);
     }
     .result-item-row:last-child { border-bottom: none; }
     .result-item-name { color: var(--ink); font-weight: 500; }
@@ -217,16 +212,8 @@
     .result-total-label { color: var(--ink2); }
     .result-total-amt { font-weight: 600; color: var(--gold); font-size: 1rem; }
 
-    .result-meta {
-      font-size: 0.72rem; color: var(--ink3);
-      display: flex; justify-content: space-between;
-    }
-
-    /* Error message */
-    .result-error-msg {
-      font-size: 0.88rem; color: var(--ink2);
-      padding: 8px 0 4px;
-    }
+    .result-meta { font-size: 0.72rem; color: var(--ink3); display: flex; justify-content: space-between; }
+    .result-error-msg { font-size: 0.88rem; color: var(--ink2); padding: 8px 0 4px; }
 
     /* ── Log ── */
     .log-section { margin-top: 4px; }
@@ -237,8 +224,7 @@
     .log-list { display: flex; flex-direction: column; gap: 5px; }
     .log-item {
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: 8px; padding: 9px 14px;
-      font-size: 0.8rem;
+      border-radius: 8px; padding: 9px 14px; font-size: 0.8rem;
       display: flex; justify-content: space-between; align-items: center;
     }
     .log-item.ok   { border-left: 3px solid var(--green); }
@@ -246,16 +232,8 @@
     .log-item.warn { border-left: 3px solid var(--gold); }
     .log-time { font-size: 0.7rem; color: var(--ink3); white-space: nowrap; }
 
-    /* ── Spinner ── */
-    .spinner {
-      display: inline-block; width: 14px; height: 14px;
-      border: 1.5px solid var(--border2); border-top-color: var(--ink);
-      border-radius: 50%; animation: spin 0.6s linear infinite;
-      vertical-align: middle; margin-right: 5px;
-    }
-
     @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes spin   { to { transform: rotate(360deg); } }
 
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -278,14 +256,12 @@
 
 <div class="page">
 
-  <!-- Auth error -->
   <div id="auth-error">
     <h2>Access Denied</h2>
     <p>Only authenticated vendors can use the canteen scanner.</p>
     <a href="/canteen-vendor-login.html" class="btn btn-ghost">← Vendor Login</a>
   </div>
 
-  <!-- Scanner UI -->
   <div id="scanner-ui" style="display:none">
 
     <div class="page-header">
@@ -293,7 +269,6 @@
       <a href="/canteen-vendor.html" class="btn btn-ghost" style="align-self:center;">← Dashboard</a>
     </div>
 
-    <!-- Stall info -->
     <div class="stall-bar">
       <div>
         <div class="stall-bar-name" id="stall-name">Loading…</div>
@@ -302,7 +277,6 @@
       <div class="stall-count" id="scan-count">0 scanned</div>
     </div>
 
-    <!-- Camera -->
     <div class="scanner-box" id="scanner-box">
       <video id="video" playsinline muted></video>
       <div class="scan-line"></div>
@@ -317,20 +291,17 @@
       </div>
     </div>
 
-    <!-- Controls -->
     <div class="controls">
       <button class="btn btn-primary" id="start-btn" onclick="startScanner()">Start Scanner</button>
       <button class="btn btn-ghost"   id="stop-btn"  onclick="stopScanner()" disabled>Stop</button>
     </div>
 
-    <!-- Result card -->
     <div class="result-card" id="result-card">
       <div class="result-status-strip" id="result-strip">
         <span class="result-status-dot"></span>
         <span id="result-strip-text"></span>
       </div>
       <div class="result-body">
-        <!-- success view -->
         <div id="result-success-view">
           <div class="result-token-label">Token Number</div>
           <div class="result-token" id="r-token">#--</div>
@@ -344,14 +315,12 @@
             <span id="r-order-id"></span>
           </div>
         </div>
-        <!-- error view -->
         <div id="result-error-view" style="display:none">
           <div class="result-error-msg" id="r-error-msg"></div>
         </div>
       </div>
     </div>
 
-    <!-- Scan log -->
     <div id="log-section" class="log-section" style="display:none">
       <div class="log-title">Recent Scans</div>
       <div class="log-list" id="log-list"></div>
@@ -360,7 +329,7 @@
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <script>
   // ── Theme ──
   (function() {
@@ -381,26 +350,20 @@
 
   // ── State ──
   let stream = null;
-  let rafId = null;
-  let scanning = false;
-  let lastCode = null;
+  let rafId  = null;
+  let scanning  = false;
+  let lastCode  = null;
   let scanCount = 0;
   const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const ctx    = canvas.getContext('2d', { willReadFrequently: true });
 
   // ── Init ──
   async function init() {
     try {
-      // Verify vendor session via any authenticated vendor endpoint
       const r = await fetch('/canteen/vendor/api/menu');
       if (!r.ok) throw new Error('not vendor');
-
-      // Load stall name from menu response (all items have stallId, we just need stall name)
-      // Simpler: fetch orders to confirm access and grab stall context
-      document.getElementById('auth-error').style.display = 'none';
-      document.getElementById('scanner-ui').style.display = 'block';
-
-      // Try to get stall name
+      document.getElementById('auth-error').style.display  = 'none';
+      document.getElementById('scanner-ui').style.display  = 'block';
       loadStallInfo();
     } catch(e) {
       document.getElementById('auth-error').style.display = 'block';
@@ -409,8 +372,6 @@
 
   async function loadStallInfo() {
     try {
-      // GET /canteen/vendor/api/stall-info — add this endpoint, or derive from orders
-      // Fallback: just show "Your Stall"
       const r = await fetch('/canteen/vendor/api/stall-info');
       if (r.ok) {
         const data = await r.json();
@@ -429,17 +390,29 @@
     const video = document.getElementById('video');
     try {
       stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+        video: {
+          facingMode: { ideal: 'environment' },
+          width:  { ideal: 1280 },
+          height: { ideal: 720 }
+        }
       });
       video.srcObject = stream;
-      await video.play();
+
+      // KEY FIX: wait until the browser has decoded the video dimensions
+      // before starting the decode loop. Without this, jsQR receives a 0×0
+      // canvas on every frame and silently returns null — this was the bug.
+      await new Promise(resolve => {
+        video.onloadedmetadata = () => video.play().then(resolve);
+      });
+
       scanning = true;
       lastCode = null;
       document.getElementById('cam-idle').style.display = 'none';
       document.getElementById('scanner-box').classList.add('scanning');
       document.getElementById('start-btn').disabled = true;
-      document.getElementById('stop-btn').disabled = false;
-      requestAnimationFrame(tick);
+      document.getElementById('stop-btn').disabled  = false;
+      rafId = requestAnimationFrame(tick);
+
     } catch(e) {
       alert('Camera access denied or unavailable. Please allow camera permission.');
     }
@@ -447,37 +420,53 @@
 
   function stopScanner() {
     scanning = false;
-    if (rafId) cancelAnimationFrame(rafId);
+    if (rafId)  { cancelAnimationFrame(rafId); rafId = null; }
     if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
     const video = document.getElementById('video');
     video.srcObject = null;
     document.getElementById('cam-idle').style.display = 'flex';
-    document.getElementById('scanner-box').className = 'scanner-box';
+    document.getElementById('scanner-box').className  = 'scanner-box';
     document.getElementById('start-btn').disabled = false;
-    document.getElementById('stop-btn').disabled = true;
+    document.getElementById('stop-btn').disabled  = true;
   }
 
   function tick() {
     if (!scanning) return;
     const video = document.getElementById('video');
-    if (video.readyState === video.HAVE_ENOUGH_DATA) {
-      canvas.width = video.videoWidth;
+
+    // Only attempt decode when we have real pixel data
+    if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0) {
+      canvas.width  = video.videoWidth;
       canvas.height = video.videoHeight;
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+
+      // attemptBoth handles light-on-dark and dark-on-light QR codes
+      const code = jsQR(imageData.data, imageData.width, imageData.height,
+                        { inversionAttempts: 'attemptBoth' });
+
       if (code && code.data && code.data !== lastCode) {
         lastCode = code.data;
         handleScan(code.data);
       }
     }
+
     rafId = requestAnimationFrame(tick);
   }
 
+  // ── Extract bare "orderId.hex" from whatever the QR contains ──
+  // Handles: bare "42.a3f9c1d2e4b56780", full URL, or path-only URL
+  function extractCode(raw) {
+    if (!raw) return null;
+    const match = raw.match(/(\d+\.[a-f0-9]{16})/i);
+    return match ? match[1] : null;
+  }
+
   // ── Handle scan ──
-  async function handleScan(rawCode) {
-    // Expect format: "orderId.hexcode"
-    if (!rawCode.match(/^\d+\.[a-f0-9]+$/i)) {
+  async function handleScan(rawQr) {
+    const code = extractCode(rawQr);
+
+    if (!code) {
       showResult('err', null, 'Not a canteen QR code');
       flash('red');
       addLog('Invalid QR', 'err');
@@ -489,7 +478,7 @@
       const res = await fetch('/canteen/vendor/api/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: rawCode })
+        body: JSON.stringify({ code })
       });
       const data = await res.json();
 
@@ -499,12 +488,11 @@
         const type = isWarn ? 'warn' : 'err';
         showResult(type, null, msg + (data.status ? ` (${friendlyStatus(data.status)})` : ''));
         flash('red');
-        addLog('Order #' + rawCode.split('.')[0] + ' — ' + msg, type);
+        addLog('Order #' + code.split('.')[0] + ' — ' + msg, type);
         cooldown();
         return;
       }
 
-      // Success
       scanCount++;
       document.getElementById('scan-count').textContent = scanCount + ' scanned';
       showResult('ok', data, null);
@@ -520,7 +508,6 @@
   }
 
   function cooldown() {
-    // Prevent re-scanning same code for 3 seconds
     setTimeout(() => { lastCode = null; }, 3000);
   }
 
@@ -535,26 +522,20 @@
     const card = document.getElementById('result-card');
     card.className = 'result-card show ' + type;
 
-    const stripText = document.getElementById('result-strip-text');
+    const stripText   = document.getElementById('result-strip-text');
     const successView = document.getElementById('result-success-view');
-    const errorView = document.getElementById('result-error-view');
+    const errorView   = document.getElementById('result-error-view');
 
-    const labels = {
-      ok: '✓ Picked Up — Order Complete',
-      err: '✗ Scan Failed',
-      warn: '⚠ Cannot Complete'
-    };
+    const labels = { ok: '✓ Picked Up — Order Complete', err: '✗ Scan Failed', warn: '⚠ Cannot Complete' };
     stripText.textContent = labels[type] || '';
 
     if (type === 'ok' && order) {
       successView.style.display = 'block';
-      errorView.style.display = 'none';
+      errorView.style.display   = 'none';
 
       document.getElementById('r-token').textContent = '#' + order.tokenNumber;
 
-      // Items list
-      const itemsEl = document.getElementById('r-items');
-      itemsEl.innerHTML = (order.items || []).map(i => `
+      document.getElementById('r-items').innerHTML = (order.items || []).map(i => `
         <div class="result-item-row">
           <span class="result-item-name">${escHtml(i.name)}</span>
           <span class="result-item-right">×${i.quantity} &nbsp; ₹${(parseFloat(i.unitPrice) * i.quantity).toFixed(2)}</span>
@@ -565,12 +546,12 @@
       const placed = order.createdAt
         ? new Date(order.createdAt).toLocaleString('en-IN', { timeStyle: 'short', dateStyle: 'medium' })
         : '';
-      document.getElementById('r-placed').textContent = 'Placed: ' + placed;
+      document.getElementById('r-placed').textContent   = 'Placed: ' + placed;
       document.getElementById('r-order-id').textContent = 'Order #' + order.id;
 
     } else {
       successView.style.display = 'none';
-      errorView.style.display = 'block';
+      errorView.style.display   = 'block';
       document.getElementById('r-error-msg').textContent = errorMsg || 'Unknown error';
     }
   }
@@ -590,10 +571,16 @@
 
   // ── Helpers ──
   function friendlyStatus(s) {
-    return { PENDING_PAYMENT: 'Not paid', PAID: 'Paid — not marked ready',
-             PREPARING: 'Still preparing', CANCELLED: 'Cancelled',
-             PICKED_UP: 'Already picked up' }[s] || s;
+    return {
+      PENDING_PAYMENT:       'Not paid',
+      PAID:                  'Paid — not marked ready',
+      PREPARING:             'Still preparing',
+      CANCELLED:             'Cancelled',
+      PICKED_UP:             'Already picked up',
+      PENDING_VENDOR_VERIFY: 'Awaiting vendor verification'
+    }[s] || s;
   }
+
   function escHtml(s) {
     if (!s) return '';
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');

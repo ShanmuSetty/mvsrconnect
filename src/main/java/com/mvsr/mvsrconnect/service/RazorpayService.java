@@ -44,7 +44,7 @@ public class RazorpayService {
                 "description", "Canteen Order #" + orderId,
                 "customer", Map.of("name", studentName, "email", studentEmail),
                 "notify", Map.of("sms", false, "email", false),
-                "callback_url", baseUrl + "/canteen/order/" + orderId + "/payment-callback",
+                "callback_url", baseUrl + "canteen/order/" + orderId + "/payment-callback",
                 "callback_method", "get"
         ));
 

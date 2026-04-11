@@ -254,7 +254,8 @@ public class VendorController {
                 ));
 
             canteenService.updateOrderStatus(orderId, "PICKED_UP", stallId);
-            return ResponseEntity.ok(canteenService.buildOrderSummary(order));
+            CanteenOrder fresh = orderRepo.findById(orderId).orElseThrow();
+            return ResponseEntity.ok(canteenService.buildOrderSummary(fresh));
 
         } catch (NumberFormatException e) {
             return ResponseEntity.badRequest().body(Map.of("error", "Invalid QR code"));

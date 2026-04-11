@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Support · MVSR Connect</title>
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #f5f4f0;
+      --bg2:      #eeecea;
+      --surface:  #ffffff;
+      --border:   #e0deda;
+      --border2:  #c8c4be;
+      --ink:      #1a1916;
+      --ink2:     #6b6760;
+      --ink3:     #a09c97;
+      --accent:   #1a1916;
+      --red:      #c0392b;
+      --green:    #2d6a4f;
+      --radius:   10px;
+      --sans:     'Geist', sans-serif;
+      --serif:    'Instrument Serif', serif;
+      --topbar-bg: rgba(245,244,240,0.88);
+    }
+
+    [data-theme="dark"] {
+      --bg:       #111110;
+      --bg2:      #1a1917;
+      --surface:  #1f1e1c;
+      --border:   #2a2825;
+      --border2:  #3d3a35;
+      --ink:      #e8e6e1;
+      --ink2:     #9a9690;
+      --ink3:     #605c57;
+      --accent:   #e8e6e1;
+      --red:      #e05c4b;
+      --green:    #4ade80;
+      --topbar-bg: rgba(17,17,16,0.88);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      opacity: 0.035;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-size: 180px 180px;
+    }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      position: sticky; top: 0; z-index: 200;
+      height: 56px;
+      background: var(--topbar-bg);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      gap: 12px;
+    }
+
+    .logo {
+      font-family: var(--serif); font-size: 1.2rem;
+      letter-spacing: -0.2px; color: var(--ink);
+      display: flex; align-items: center; gap: 7px;
+      text-decoration: none; flex-shrink: 0;
+    }
+    .logo-dot { width: 8px; height: 8px; background: var(--ink); border-radius: 50%; display: inline-block; }
+
+    .topbar-right { display: flex; align-items: center; gap: 8px; }
+
+    .btn {
+      font-family: var(--sans); font-size: 0.8rem; font-weight: 500;
+      padding: 7px 18px; border-radius: 99px; cursor: pointer;
+      border: none; transition: all 0.15s ease; letter-spacing: 0.1px; white-space: nowrap;
+      text-decoration: none; display: inline-flex; align-items: center;
+    }
+    .btn-ghost { background: transparent; color: var(--ink2); border: 1px solid var(--border2); }
+    .btn-ghost:hover { background: var(--bg2); color: var(--ink); }
+    .btn-dark { background: #1a1916; color: #fff; }
+    .btn-dark:hover { background: #333; }
+    [data-theme="dark"] .btn-dark { background: #e8e6e1; color: #1a1916; }
+    [data-theme="dark"] .btn-dark:hover { background: #fff; }
+    .btn-sm { padding: 5px 13px; font-size: 0.75rem; }
+
+    .theme-toggle {
+      width: 34px; height: 34px; border-radius: 99px;
+      background: transparent; border: 1px solid var(--border2);
+      color: var(--ink2); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.95rem; transition: all 0.15s ease;
+    }
+    .theme-toggle:hover { background: var(--bg2); color: var(--ink); }
+
+    /* ── PAGE LAYOUT ── */
+    .page-wrap {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+      position: relative; z-index: 1;
+    }
+
+    /* ── BREADCRUMB ── */
+    .breadcrumb {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.72rem; color: var(--ink3);
+      margin-bottom: 32px;
+    }
+    .breadcrumb a { color: var(--ink3); text-decoration: none; transition: color 0.15s; }
+    .breadcrumb a:hover { color: var(--ink); }
+    .breadcrumb-sep { color: var(--border2); }
+
+    /* ── HERO ── */
+    .hero { margin-bottom: 36px; }
+    .hero-eyebrow {
+      font-size: 0.72rem; font-weight: 500; letter-spacing: 1.2px;
+      text-transform: uppercase; color: var(--ink3); margin-bottom: 10px;
+      display: block;
+    }
+    .hero h1 {
+      font-family: var(--serif);
+      font-size: clamp(2rem, 5vw, 2.8rem);
+      line-height: 1.1; letter-spacing: -0.5px;
+      color: var(--ink); margin-bottom: 10px;
+    }
+    .hero h1 em { font-style: italic; color: var(--ink2); }
+    .hero p { font-size: 0.93rem; color: var(--ink2); line-height: 1.7; max-width: 480px; }
+
+    /* ── QUICK LINKS ── */
+    .quick-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 8px; margin-bottom: 28px;
+    }
+    .quick-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px 14px;
+      text-align: center; cursor: pointer;
+      transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    }
+    .quick-card:hover {
+      border-color: var(--border2); background: var(--bg2);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .quick-card.selected {
+      background: var(--ink); border-color: var(--ink);
+    }
+    [data-theme="dark"] .quick-card.selected { background: #e8e6e1; border-color: #e8e6e1; }
+    .quick-icon { font-size: 1.2rem; margin-bottom: 6px; }
+    .quick-card span {
+      display: block; font-size: 0.78rem; font-weight: 500;
+      color: var(--ink2); transition: color 0.15s;
+    }
+    .quick-card.selected span { color: #fff; }
+    [data-theme="dark"] .quick-card.selected span { color: #1a1916; }
+    .quick-card:hover span { color: var(--ink); }
+
+    /* ── FORM CARD ── */
+    .form-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .form-section-label {
+      font-size: 0.67rem; font-weight: 600; letter-spacing: 1.3px;
+      text-transform: uppercase; color: var(--ink3);
+      margin-bottom: 16px; display: block;
+    }
+
+    .field { margin-bottom: 12px; }
+    .field label {
+      display: block; font-size: 0.72rem; font-weight: 500;
+      color: var(--ink3); margin-bottom: 5px; letter-spacing: 0.3px;
+    }
+    .field input, .field select, .field textarea {
+      width: 100%; background: var(--bg);
+      border: 1px solid var(--border); border-radius: 7px;
+      color: var(--ink); padding: 9px 13px;
+      font-family: var(--sans); font-size: 0.875rem; font-weight: 400;
+      outline: none; transition: border-color 0.15s, background 0.15s;
+      resize: none; appearance: none; -webkit-appearance: none;
+    }
+    .field textarea { min-height: 100px; line-height: 1.6; }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      border-color: var(--ink); background: var(--surface);
+    }
+    .field input::placeholder, .field textarea::placeholder { color: var(--ink3); }
+    .field select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23a09c97' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 13px center;
+      padding-right: 34px;
+    }
+    .field select option { background: var(--surface); }
+
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    /* ── PRIORITY PILLS ── */
+    .priority-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .priority-pill {
+      font-size: 0.73rem; font-weight: 500; padding: 5px 13px;
+      border-radius: 99px; border: 1px solid var(--border2);
+      background: transparent; color: var(--ink2); cursor: pointer;
+      font-family: var(--sans); transition: all 0.12s ease;
+      user-select: none;
+    }
+    .priority-pill:hover { border-color: var(--ink); color: var(--ink); background: var(--bg2); }
+    .priority-pill.active-low  { border-color: var(--green); color: var(--green); background: rgba(45,106,79,0.08); }
+    .priority-pill.active-medium { border-color: #b07d2a; color: #b07d2a; background: rgba(176,125,42,0.08); }
+    .priority-pill.active-high { border-color: var(--red); color: var(--red); background: rgba(192,57,43,0.08); }
+    [data-theme="dark"] .priority-pill.active-low  { border-color: var(--green); color: var(--green); }
+    [data-theme="dark"] .priority-pill.active-medium { border-color: #e6a94a; color: #e6a94a; }
+    [data-theme="dark"] .priority-pill.active-high { border-color: var(--red); color: var(--red); }
+
+    /* ── FILE DROP ── */
+    .upload-box {
+      border: 1px dashed var(--border2); border-radius: 7px;
+      padding: 20px; text-align: center; cursor: pointer;
+      color: var(--ink3); font-size: 0.82rem;
+      transition: all 0.15s ease; position: relative;
+    }
+    .upload-box:hover, .upload-box.drag { border-color: var(--ink); color: var(--ink); background: var(--bg2); }
+    .upload-box input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer;
+      width: 100%; height: 100%;
+    }
+    .upload-icon { font-size: 1.2rem; margin-bottom: 6px; }
+    .upload-hint { font-size: 0.7rem; color: var(--ink3); margin-top: 3px; }
+
+    .file-preview {
+      display: none; align-items: center; gap: 8px;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 7px; padding: 8px 12px;
+      margin-top: 8px; font-size: 0.82rem; color: var(--ink2);
+    }
+    .file-preview.show { display: flex; }
+    .file-preview-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .file-remove { cursor: pointer; color: var(--ink3); font-size: 0.85rem; flex-shrink: 0; transition: color 0.15s; }
+    .file-remove:hover { color: var(--red); }
+
+    /* ── THIN DIVIDER ── */
+    .thin-divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+    /* ── SUBMIT ── */
+    .submit-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; margin-top: 16px; flex-wrap: wrap;
+    }
+    .submit-note { font-size: 0.72rem; color: var(--ink3); }
+    .submit-btn {
+      font-family: var(--sans); font-size: 0.83rem; font-weight: 500;
+      padding: 9px 22px; border-radius: 99px; cursor: pointer;
+      border: none; transition: all 0.15s ease;
+      background: #1a1916; color: #fff;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .submit-btn:hover { background: #333; }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    [data-theme="dark"] .submit-btn { background: #e8e6e1; color: #1a1916; }
+    [data-theme="dark"] .submit-btn:hover { background: #fff; }
+
+    /* ── STATUS BANNER ── */
+    .status-banner {
+      display: none; align-items: center; gap: 10px;
+      padding: 12px 16px; border-radius: 7px;
+      font-size: 0.83rem; margin-top: 12px;
+    }
+    .status-banner.success {
+      display: flex;
+      background: rgba(45,106,79,0.08); border: 1px solid rgba(45,106,79,0.25); color: var(--green);
+    }
+    .status-banner.error {
+      display: flex;
+      background: rgba(192,57,43,0.07); border: 1px solid rgba(192,57,43,0.2); color: var(--red);
+    }
+    [data-theme="dark"] .status-banner.success { background: rgba(74,222,128,0.07); border-color: rgba(74,222,128,0.2); }
+    [data-theme="dark"] .status-banner.error   { background: rgba(224,92,75,0.08); border-color: rgba(224,92,75,0.2); }
+
+    /* ── CONTACT TILES ── */
+    .contact-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .contact-tile {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px;
+      transition: border-color 0.15s;
+    }
+    .contact-tile:hover { border-color: var(--border2); }
+    .contact-tile-label {
+      font-size: 0.67rem; font-weight: 600; letter-spacing: 1px;
+      text-transform: uppercase; color: var(--ink3); margin-bottom: 6px; display: block;
+    }
+    .contact-tile h3 { font-family: var(--serif); font-size: 0.98rem; color: var(--ink); margin-bottom: 3px; }
+    .contact-tile p { font-size: 0.8rem; color: var(--ink2); }
+    .contact-tile a { color: var(--ink2); font-size: 0.82rem; font-weight: 500; text-decoration: none; transition: color 0.15s; }
+    .contact-tile a:hover { color: var(--ink); }
+
+    /* ── SPINNER ── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .btn-spinner {
+      display: inline-block; width: 10px; height: 10px;
+      border: 1.5px solid rgba(255,255,255,0.35); border-top-color: #fff;
+      border-radius: 50%; animation: spin 0.55s linear infinite;
+      vertical-align: middle;
+    }
+    [data-theme="dark"] .submit-btn .btn-spinner {
+      border-color: rgba(26,25,22,0.3); border-top-color: #1a1916;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .page-wrap > * { animation: fadeUp 0.35s ease both; }
+    .page-wrap > *:nth-child(1) { animation-delay: 0.04s; }
+    .page-wrap > *:nth-child(2) { animation-delay: 0.08s; }
+    .page-wrap > *:nth-child(3) { animation-delay: 0.12s; }
+    .page-wrap > *:nth-child(4) { animation-delay: 0.16s; }
+    .page-wrap > *:nth-child(5) { animation-delay: 0.2s; }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+    @media (max-width: 600px) {
+      .topbar { padding: 0 16px; }
+      .page-wrap { padding: 32px 16px 64px; }
+      .quick-grid { grid-template-columns: 1fr 1fr; }
+      .field-row { grid-template-columns: 1fr; }
+      .contact-row { grid-template-columns: 1fr; }
+      .submit-row { flex-direction: column; align-items: stretch; }
+      .submit-btn { text-align: center; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<nav class="topbar">
+  <a href="/" class="logo">
+    <span class="logo-dot"></span>
+    MVSR Connect
+  </a>
+  <div class="topbar-right">
+    <a href="/" class="btn btn-ghost btn-sm">← Back to Feed</a>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle theme">☀</button>
+  </div>
+</nav>
+
+<div class="page-wrap">
+
+  <!-- BREADCRUMB -->
+  <div class="breadcrumb">
+    <a href="/">Home</a>
+    <span class="breadcrumb-sep">/</span>
+    <span>Support</span>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <span class="hero-eyebrow">Support Center</span>
+    <h1>How can we <em>help?</em></h1>
+    <p>Found a bug or something's off? Drop a message and a screenshot — we'll get it sorted within 24–48 hours.</p>
+  </div>
+
+  <!-- QUICK LINKS -->
+  <div class="quick-grid">
+    <div class="quick-card" onclick="setCategory('Bug Report', this)">
+      <div class="quick-icon">🐛</div>
+      <span>Bug Report</span>
+    </div>
+    <div class="quick-card" onclick="setCategory('Feature Request', this)">
+      <div class="quick-icon">💡</div>
+      <span>Suggestion</span>
+    </div>
+    <div class="quick-card" onclick="setCategory('Account Issue', this)">
+      <div class="quick-icon">🔐</div>
+      <span>Account</span>
+    </div>
+  </div>
+
+  <!-- FORM -->
+  <div class="form-card">
+    <span class="form-section-label">Send a report</span>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Your Name</label>
+        <input type="text" id="name" placeholder="e.g. Ravi Kumar" />
+      </div>
+      <div class="field">
+        <label>College Email</label>
+        <input type="email" id="email" placeholder="you@mvsrec.edu.in" />
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Category</label>
+        <select id="category">
+          <option value="">Select…</option>
+          <option>Bug Report</option>
+          <option>Feature Request</option>
+          <option>Account Issue</option>
+          <option>Content / Moderation</option>
+          <option>Canteen / Orders</option>
+          <option>Events / Tickets</option>
+          <option>Notifications</option>
+          <option>Lost &amp; Found</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Priority</label>
+        <div class="priority-row" style="padding-top:2px">
+          <div class="priority-pill active-low" data-priority="low" onclick="setPriority(this)">Low</div>
+          <div class="priority-pill" data-priority="medium" onclick="setPriority(this)">Medium</div>
+          <div class="priority-pill" data-priority="high" onclick="setPriority(this)">High</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Subject</label>
+      <input type="text" id="subject" placeholder="Brief one-liner about the issue" />
+    </div>
+
+    <div class="field">
+      <label>Description</label>
+      <textarea id="description" placeholder="What happened? What were you trying to do? Any error messages? Steps to reproduce are super helpful."></textarea>
+    </div>
+
+    <div class="thin-divider"></div>
+
+    <div class="field">
+      <label>Screenshot / Recording (optional)</label>
+      <div class="upload-box" id="upload-box"
+           ondragover="handleDragOver(event)"
+           ondragleave="handleDragLeave(event)"
+           ondrop="handleDrop(event)">
+        <input type="file" id="fileInput" accept="image/*,video/*,.gif" onchange="handleFile(this.files[0])" />
+        <div class="upload-icon">📎</div>
+        <div>Drag &amp; drop or click to browse</div>
+        <div class="upload-hint">PNG, JPG, GIF, MP4 · max 10 MB</div>
+      </div>
+      <div class="file-preview" id="filePreview">
+        <span>📄</span>
+        <span class="file-preview-name" id="fileName"></span>
+        <span class="file-remove" onclick="removeFile()" title="Remove">✕</span>
+      </div>
+    </div>
+
+    <div class="submit-row">
+      <span class="submit-note">We'll reply to your college email</span>
+      <button class="submit-btn" id="submitBtn" onclick="handleSubmit()">Send Report →</button>
+    </div>
+
+    <div class="status-banner" id="statusBanner"></div>
+  </div>
+
+  <!-- CONTACT TILES -->
+  <div class="contact-row">
+    <div class="contact-tile">
+      <span class="contact-tile-label">Direct Email</span>
+      <h3>Dev Inbox</h3>
+      <p><a href="mailto:shanmusetty@gmail.com">shanmusetty@gmail.com</a></p>
+    </div>
+    <div class="contact-tile">
+      <span class="contact-tile-label">Response Time</span>
+      <h3>Usually 24–48 hrs</h3>
+      <p style="margin-top:2px"><a href="#">Check platform status ↗</a></p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  /* ── THEME ── */
+  (function() {
+    const saved = localStorage.getItem('mvsr-theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
+  })();
+
+  function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const next = isDark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('mvsr-theme', next);
+    updateToggleIcon();
+  }
+
+  function updateToggleIcon() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const btn = document.getElementById('theme-toggle');
+    if (btn) { btn.textContent = isDark ? '☽' : '☀'; btn.title = isDark ? 'Switch to light mode' : 'Switch to dark mode'; }
+  }
+
+  window.addEventListener('load', updateToggleIcon);
+
+  /* ── QUICK CARDS ── */
+  function setCategory(cat, card) {
+    document.querySelectorAll('.quick-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    document.getElementById('category').value = cat;
+  }
+
+  /* ── PRIORITY ── */
+  let selectedPriority = 'low';
+  function setPriority(el) {
+    document.querySelectorAll('.priority-pill').forEach(p => p.className = 'priority-pill');
+    const p = el.dataset.priority;
+    el.classList.add('active-' + p);
+    selectedPriority = p;
+  }
+
+  /* ── FILE HANDLING ── */
+  let selectedFile = null;
+
+  function handleFile(file) {
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      showStatus('error', 'File is too large. Max 10 MB.');
+      return;
+    }
+    selectedFile = file;
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('filePreview').classList.add('show');
+  }
+
+  function removeFile() {
+    selectedFile = null;
+    document.getElementById('fileInput').value = '';
+    document.getElementById('filePreview').classList.remove('show');
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    document.getElementById('upload-box').classList.add('drag');
+  }
+  function handleDragLeave() {
+    document.getElementById('upload-box').classList.remove('drag');
+  }
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('upload-box').classList.remove('drag');
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  }
+
+  /* ── STATUS ── */
+  function showStatus(type, msg) {
+    const el = document.getElementById('statusBanner');
+    el.className = 'status-banner ' + type;
+    el.textContent = (type === 'success' ? '✓  ' : '⚠  ') + msg;
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  /* ── SUBMIT ── */
+  async function handleSubmit() {
+    const name        = document.getElementById('name').value.trim();
+    const email       = document.getElementById('email').value.trim();
+    const category    = document.getElementById('category').value;
+    const subject     = document.getElementById('subject').value.trim();
+    const description = document.getElementById('description').value.trim();
+
+    if (!name || !email || !category || !subject || !description) {
+      showStatus('error', 'Please fill in all required fields.');
+      return;
+    }
+    if (!email.includes('@')) {
+      showStatus('error', 'Please enter a valid email address.');
+      return;
+    }
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="btn-spinner"></span> Sending…';
+
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('email', email);
+    formData.append('category', category);
+    formData.append('subject', subject);
+    formData.append('description', description);
+    formData.append('priority', selectedPriority);
+    if (selectedFile) formData.append('attachment', selectedFile);
+
+    try {
+      const resp = await fetch('/api/support', { method: 'POST', body: formData, credentials: 'include' });
+      if (resp.ok) {
+        showStatus('success', "Report sent! We'll reply to your email soon. Thanks for helping improve MVSR Connect.");
+        document.getElementById('name').value = '';
+        document.getElementById('email').value = '';
+        document.getElementById('category').value = '';
+        document.getElementById('subject').value = '';
+        document.getElementById('description').value = '';
+        document.querySelectorAll('.quick-card').forEach(c => c.classList.remove('selected'));
+        document.querySelectorAll('.priority-pill').forEach(p => p.className = 'priority-pill');
+        document.querySelector('[data-priority="low"]').classList.add('active-low');
+        selectedPriority = 'low';
+        removeFile();
+      } else {
+        throw new Error('Server error');
+      }
+    } catch {
+      showStatus('error', 'Something went wrong. Email us directly at shanmusetty@gmail.com');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = 'Send Report →';
+    }
+  }
+</script>
+</body>
+</html>
