@@ -44,12 +44,12 @@ Think of it as a private, AI-moderated Reddit + campus OS, built specifically fo
 - 📰 **Feed** — Create posts with text, images, or videos. Sort by **Hot**, **Top**, or **Recent**.
 - 🗳️ **Reddit-style Voting** — Upvote and downvote posts. Hot ranking uses a time-decay algorithm.
 - 💬 **Threaded Comments** — Nested replies with full toxicity filtering before publishing.
-- 🏷️ **Tags** — Tag posts and filter the feed by tag (Announcement, Event, Question, etc.).
+- 🏷️ **Tags** — Tag posts and filter the feed by tag (Announcement, Discussion, Question, Help, News, General, Opportunity).
 - 🔍 **Global Search** — Search across posts, users, clubs, and tags simultaneously.
 - 📎 **Media Uploads** — Images and videos via Cloudinary. Images are auto-compressed client-side before upload.
 
 ### Clubs
-- 🎭 Join clubs (Drama, Music, Photo/Videography, Book, Dance, and more)
+- 🎭 Join clubs (Drama, Dance, Music, Media, Tech, Sports, and more)
 - 📬 Submit join requests; moderators approve or reject
 - 📋 Post within clubs — only members can post inside a club
 - 🛡️ Apply to become a club moderator via the appeal system
