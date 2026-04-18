@@ -16,7 +16,6 @@ public class User {
 
     private String googleId;
 
-    @Column(unique = true)
     private String name;
 
     @Column(length = 500)

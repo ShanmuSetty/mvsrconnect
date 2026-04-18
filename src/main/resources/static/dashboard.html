@@ -523,8 +523,15 @@
             <textarea id="edit-bio" placeholder="Tell people about yourself…"></textarea>
         </div>
         <div class="field">
-            <label>Avatar URL</label>
-            <input type="url" id="edit-avatar" placeholder="https://…">
+            <label>Avatar</label>
+            <div id="avatar-upload-box" style="display:flex;align-items:center;gap:14px">
+                <img id="avatar-preview" src="" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:1px solid var(--border2);background:var(--bg2)">
+                <div>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('avatar-file-input').click()">Choose photo</button>
+                    <input type="file" id="avatar-file-input" accept="image/*" hidden onchange="handleAvatarFile(this)">
+                    <div style="font-size:0.7rem;color:var(--ink3);margin-top:4px" id="avatar-upload-status">JPG, PNG or WebP</div>
+                </div>
+            </div>
         </div>
         <div class="modal-footer">
             <button class="btn btn-ghost btn-sm" onclick="closeEditModal()">Cancel</button>
@@ -557,6 +564,31 @@
 
     // ── STATE ──
     let dashData = null;
+
+    let _pendingAvatarUrl = null;
+
+async function handleAvatarFile(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    // Show local preview immediately
+    document.getElementById('avatar-preview').src = URL.createObjectURL(file);
+    document.getElementById('avatar-upload-status').textContent = 'Uploading…';
+
+    const fd = new FormData();
+    fd.append('file', file);
+
+    try {
+        const res = await fetch('/api/media/upload', { method: 'POST', body: fd });
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        _pendingAvatarUrl = data.url;
+        document.getElementById('avatar-upload-status').textContent = '✓ Ready to save';
+    } catch {
+        document.getElementById('avatar-upload-status').textContent = '✗ Upload failed';
+        showToast('Could not upload image', 'error');
+    }
+}
 
     // ── INIT ──
     window.addEventListener('load', async () => {
@@ -713,41 +745,39 @@
       if (!user) return;
       document.getElementById('edit-name').value = user.name || '';
       document.getElementById('edit-bio').value = user.bio || '';
-      document.getElementById('edit-avatar').value = user.picture || '';
+      const pic = user.picture || '';
+    document.getElementById('avatar-preview').src = pic;
+    _pendingAvatarUrl = null; // reset any pending upload
       document.getElementById('edit-modal').classList.add('open');
     }
     function closeEditModal() { document.getElementById('edit-modal').classList.remove('open'); }
     function handleOverlayClick(e) { if (e.target === document.getElementById('edit-modal')) closeEditModal(); }
 
     async function saveProfile() {
-      const name = document.getElementById('edit-name').value.trim();
-      const bio = document.getElementById('edit-bio').value.trim();
-      const picture = document.getElementById('edit-avatar').value.trim();
-      try {
+    const name = document.getElementById('edit-name').value.trim();
+    const bio = document.getElementById('edit-bio').value.trim();
+    const picture = _pendingAvatarUrl || dashData?.user?.picture || '';
+
+    try {
         const res = await fetch('/dashboard/profile', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, bio, picture })
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, bio, picture })
         });
-        if (!res.ok) {
-    const msg = await res.text();
-    showToast(msg || 'Could not save profile', 'error');
-    return;
-}
+        if (!res.ok) { showToast(await res.text() || 'Could not save', 'error'); return; }
         const updated = await res.json();
         dashData.user = updated;
-        // Refresh displayed info
         document.getElementById('profile-name').textContent = updated.name || 'Anonymous';
+        const pic = updated.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(updated.name||'U')}&background=1a1916&color=fff&size=80`;
+        document.getElementById('avatar-img').src = pic;
         const bioWrap = document.getElementById('profile-bio-wrap');
         bioWrap.innerHTML = updated.bio
-          ? `<div class="profile-bio">${escHtml(updated.bio)}</div>`
-          : `<span class="profile-bio-placeholder">No bio yet. Add one to tell people about yourself.</span>`;
-        const pic = updated.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(updated.name || 'U')}&background=1a1916&color=fff&size=80`;
-        document.getElementById('avatar-img').src = pic;
+            ? `<div class="profile-bio">${escHtml(updated.bio)}</div>`
+            : `<span class="profile-bio-placeholder">No bio yet. Add one to tell people about yourself.</span>`;
         closeEditModal();
         showToast('Profile updated');
-      } catch { showToast('Could not save profile', 'error'); }
-    }
+    } catch { showToast('Could not save profile', 'error'); }
+}
 
     // ── UTILS ──
     function escHtml(str) {

@@ -657,7 +657,7 @@
   let stream = null;
   let rafId = null;
   let scanning = false;
-  let lastToken = null;
+  let lastCode = null;
   let eventId = null;
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -711,7 +711,7 @@
       document.getElementById('scanner-box').classList.add('active');
       document.getElementById('start-btn').disabled = true;
       document.getElementById('stop-btn').disabled = false;
-      lastToken = null;
+      lastCode = null;
       requestAnimationFrame(tick);
     } catch(e) {
       alert('Camera access denied or unavailable. Please allow camera permission.');
@@ -733,22 +733,33 @@
   function tick() {
     if (!scanning) return;
     const video = document.getElementById('video');
-    if (video.readyState === video.HAVE_ENOUGH_DATA) {
-      canvas.height = video.videoHeight;
-      canvas.width = video.videoWidth;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
-      if (code && code.data) {
-        const token = extractToken(code.data);
-        if (token && token !== lastToken) {
-          lastToken = token;
-          handleScan(token);
+
+    if (video.readyState === video.HAVE_ENOUGH_DATA
+        && video.videoWidth > 0
+        && video.videoHeight > 0) {
+
+        // Downsample to max 640px wide — jsQR doesn't need full resolution
+        const MAX = 640;
+        const scale = Math.min(1, MAX / video.videoWidth);
+        canvas.width  = Math.floor(video.videoWidth  * scale);
+        canvas.height = Math.floor(video.videoHeight * scale);
+
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height,
+                          { inversionAttempts: 'attemptBoth' });
+
+        if (code && code.data) {
+            const token = code.data;
+            if (token && token !== lastCode) {
+                lastCode = token;
+                handleScan(token);
+            }
         }
-      }
     }
+
     rafId = requestAnimationFrame(tick);
-  }
+}
 
   function extractToken(data) {
     const match = data.match(/\/events\/verify\/([a-f0-9-]{36})/i);
@@ -768,7 +779,7 @@
         addLog('Invalid QR', 'err');
         box.classList.remove('active', 'success');
         box.classList.add('error');
-        setTimeout(() => { box.classList.remove('error'); box.classList.add('active'); lastToken = null; }, 2500);
+        setTimeout(() => { box.classList.remove('error'); box.classList.add('active'); lastCode = null; }, 2500);
         return;
       }
       showResult(data, null, data.alreadyIn ? 'warn' : 'ok');
@@ -842,7 +853,7 @@
           btn.style.display = 'none';
           btn.disabled = false;
           btn.textContent = '✓ Check In';
-          lastToken = null;
+          lastCode = null;
         }, 2000);
         loadEventInfo();
       } else {
